@@ -466,7 +466,7 @@ const handleCreateNew = () => {
                                             <div className="flex items-center justify-between">
                                                 <span className="text-gray-900 dark:text-gray-100">{option.label}</span>
                                                 {option.creator && (
-                                                    <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-500 dark:text-gray-400">
+                                                    <span className="text-xs bg-primary/20 dark:bg-gray-700 px-2 py-1 rounded text-primary dark:text-gray-400">
                                                         Added by {option.creator}
                                                     </span>
                                                 )}
@@ -499,6 +499,27 @@ const handleCreateNew = () => {
                                             dropdownIndicator: () => '!text-gray-500 hover:!text-gray-700',
                                             clearIndicator: () => '!text-gray-500 hover:!text-red-600',
                                         }}
+
+                                                      styles={{
+                input: (base) => ({ ...base, color: 'inherit' }),
+                menuList: (base) => ({
+                  ...base,
+                  '::-webkit-scrollbar': {
+                    width: '4px',
+                  },
+                  '::-webkit-scrollbar-track': {
+                    background: 'transparent',
+                    borderRadius: '4px',
+                  },
+                  '::-webkit-scrollbar-thumb': {
+                    background: '#516def',
+                    borderRadius: '4px',
+                  },
+                  '::-webkit-scrollbar-thumb:hover': {
+                    background: '#333333',
+                  },
+                }),
+              }}
                                     />
 
                                     {/* Selected Page Indicator */}

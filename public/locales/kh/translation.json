@@ -63,7 +63,7 @@
     "pagination": "Pagination",
     "popovers": "Popovers",
     "progress_bar": "Progress Bar",
-    "search": "Search",
+    "search": "ស្វែងរក",
     "tooltips": "Tooltips",
     "treeview": "Treeview",
     "typography": "Typography",
@@ -89,7 +89,7 @@
     "date_and_range_picker": "Date & Range Picker",
     "clipboard": "Clipboard",
     "user_and_pages": "User And Pages",
-    "profile": "Profile",
+    "profile": "ប្រូហ្វាល",
     "account_settings": "Account Settings",
     "knowledge_base": "Knowledge Base",
     "contact_form": "Contact Form",
@@ -127,6 +127,15 @@
     "contact_us_boxed": "Contact Us Boxed",
     "contact_us_cover": "Contact Us Cover",
     "share.new_link_generated_and_copied": "តំណថ្មីត្រូវបានបង្កើត និងចម្លង",
+    "team_member":"សមាជិកក្រុម",
+    "workspace_role":"តួនាទី & សិទ្ធិ",
+    "telegram_bot":"តេលេក្រាម បត",
+    "settings":"ការកំណត់",
+    "users_and_team_setting":"អ្នកប្រើប្រាស់ និងការកំណត់ក្រុម",
+    "facebookreportgenerator":"បង្កើតបាយការណ៍ហ្វេសប៊ុក",
+    "tiktokreportgenerator":"បង្កើតរបាយការណ៍តីកតុក",
+    "report_history":"ប្រវត្តិរបាយការណ៍",
+    "pagemanager":"គ្រប់គ្រងទំព័រ",
 
 
 

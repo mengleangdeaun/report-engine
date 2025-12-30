@@ -219,8 +219,13 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                 </button>
             </div>
 
+            <div>
+                {/* Report Summary */}
+                Start Date - End Date
+            </div>
+
             {/* Champions Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
                 <ChampionCard 
                     title={t('report.highest_view')} 
                     post={champions?.highest_view} 
@@ -248,7 +253,7 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <StatCard 
                     label={t('report.reach')} 
                     value={kpi?.reach || 0} 

@@ -100,11 +100,22 @@ class FacebookAnalyzer
         // 4. Sort & Finalize
         $col = collect($posts)->sortBy('date');
 
+
+
+        $startDate = $col->first()['date'] ?? null;
+        $endDate   = $col->last()['date'] ?? null;
+
+        $duration = ($startDate && $endDate)
+            ? Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate)) + 1
+            : 0;
+
+
+
         return [
             'period' => [
-                'start'    => $col->first()['date'] ?? null,
-                'end'      => $col->last()['date'] ?? null,
-                'duration' => $col->unique('date')->count() . ' Days Active'
+                'start'    => $startDate,
+                'end'      => $endDate,
+                'duration' => $duration . ' Days Active',
             ],
             'total_content' => $col->count(),
             'breakdown'     => $types,
