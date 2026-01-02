@@ -937,9 +937,12 @@ const isAdmin = useMemo(() => {
                                         <li>
                                             <NavLink to="/apps/settings/roles">{t('workspace_role')}</NavLink>
                                         </li>
+                                        {can('bot_telegram') &&(
                                         <li>
                                             <NavLink to="/apps/settings/telegram">{t('telegram_bot')}</NavLink>
                                         </li>
+                                        )}
+
                                     </ul>
                                 </AnimateHeight>
                             </li>
