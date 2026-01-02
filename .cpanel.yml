@@ -1,0 +1,16 @@
+---
+deployment:
+  tasks:
+    # 1. Define where things go
+    - export COREPATH=/home3/degrando/report-engine-core/
+    - export PUBLICPATH=/home3/degrando/report-engine.degrandonline.com/
+
+    # 2. Sync everything EXCEPT 'public' to your Laravel Core folder
+    - /usr/bin/rsync -avz --exclude 'public' --exclude '.git' --exclude 'node_modules' ./ $COREPATH
+
+    # 3. Sync everything INSIDE 'public/' to your subdomain folder
+    - /usr/bin/rsync -avz public/ $PUBLICPATH
+
+    # 4. Set storage permissions so Laravel can write logs/cache
+    - /bin/chmod -R 775 $COREPATH/storage
+    - /bin/chmod -R 775 $COREPATH/bootstrap/cache
