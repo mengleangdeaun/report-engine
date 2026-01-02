@@ -168,7 +168,10 @@ const fetchPageNames = async () => {
             replace: true 
         });
 
-        toast.success(`Switched to report from ${new Date(report.created_at).toLocaleDateString()}`);
+                toast.success(
+          `Switched to report from ${new Date(report.start_date).toLocaleDateString()} 
+          to ${new Date(report.end_date).toLocaleDateString()}`
+        );
     };
 
     // --- EXPORT TO CSV ---
@@ -261,268 +264,346 @@ const handleCreateNew = () => {
             `}</style>
 
             {/* HEADER */}
-    <div className="flex items-center justify-between no-print mb-5">
-    <div className="flex items-center gap-3">
-        {showBackButton && (
-            <Link 
-                to={backPath} 
-                className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:border-gray-900 hover:text-gray-900 dark:hover:border-white dark:hover:text-white hover:scale-105 active:scale-95 transition-all shadow-sm"
-                title="Go Back"
-            >
-                <IconArrowLeft size={20} />
-            </Link>
-        )}
+      <div className="mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+                {showBackButton && (
+                    <Link 
+                        to={backPath} 
+                        className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-700 dark:text-gray-300 hover:border-gray-900 hover:text-gray-900 dark:hover:border-white dark:hover:text-white hover:scale-105 active:scale-95 transition-all shadow-sm"
+                        title="Go Back"
+                    >
+                        <IconArrowLeft size={20} />
+                    </Link>
+                )}
 
-        <div className="bg-gradient-to-br from-black to-gray-900 p-3 rounded-xl text-white shadow-lg shadow-black/25">
-            <IconBrandTiktok size={24} />
-        </div>
-        
-        <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white truncate">
-                TikTok Analytics
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-0.5 truncate">
-                {backPath.includes('manager') ? 'Viewing report from Account Manager' : 'Analyze your TikTok content performance.'}
-            </p>
-        </div>
-    </div>
-
-    <div className="flex gap-2">
-        {pageId && (
-                    <button 
+                <div className="bg-gradient-to-br from-black to-gray-900 p-3 rounded-xl text-white shadow-lg shadow-black/25">
+                    <IconBrandTiktok size={24} />
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white truncate">
+                        TikTok Analytics
+                    </h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold mt-0.5 truncate">
+                        {backPath.includes('manager') ? 'Viewing report from Account Manager' : 'Analyze your TikTok content performance.'}
+                    </p>
+                </div>
+            </div>
+            <div className="flex items-center gap-2">
+                {pageId && (
+                    <button
                         onClick={() => setIsHistoryOpen(true)}
-                        className="h-10 px-3 sm:px-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 active:scale-95 transition-all font-medium text-sm shadow-sm"
+                        className="h-10 px-3 sm:px-4
+                                  flex items-center gap-2
+                                  rounded-lg
+                                  bg-white dark:bg-[#121212]
+                                  border border-gray-200 dark:border-gray-700
+                                  text-gray-700 dark:text-gray-300
+                                  active:scale-95
+                                  transition-all duration-200
+                                  shadow-sm
+                                  group"
+                        aria-label="View history"
                     >
                         <IconHistory size={18} />
-                        <span className="hidden sm:inline">History</span>
+                        <span className="hidden sm:inline text-sm font-medium">
+                            History
+                        </span>
                     </button>
-        )}
-        {reportData && (
-        
-            <button 
-                onClick={handleCreateNew} 
-                className="h-10 px-5 bg-gray-700 text-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700  rounded-lg
-                flex items-center gap-2 dark:text-gray-300 hover:border-gray-900 dark:hover:border-gray-400 dark:hover:text-white hover:shadow-gray-600/40 transition-all shadow-sm"
-            >
-                <IconPlus size={18} strokeWidth={2.5} />
-                <span>Create New</span>
-            </button>
-        )}
-    </div>
-</div>
+                )}
+
+                {reportData && (
+                    <button
+                        onClick={handleCreateNew}
+                        className="h-10 px-3 sm:px-5
+                                  flex items-center gap-2
+                                  rounded-lg
+                                  bg-[#FE2C55]
+                                  text-white font-semibold text-sm
+                                  border border-[#FE2C55]
+                                  hover:bg-[#e0264d]
+                                  hover:shadow-lg hover:shadow-[#FE2C55]/40
+                                  active:scale-95
+                                  transition-all duration-200
+                                  group"
+                        aria-label="Create new report"
+                    >
+                        <IconPlus
+                            size={18}
+                            strokeWidth={2.5}
+                            className="group-hover:rotate-90 transition-transform duration-200"
+                        />
+                        <span className="hidden sm:inline">
+                            Create New
+                        </span>
+                    </button>
+                )}
+            </div>
+        </div>
+      </div>
 
             {/* INPUT SECTION (Hidden if data exists) */}
-      {!reportData && (
-  <div className="max-w-4xl mx-auto py-12 px-4 no-print">
+{!reportData && (
+  <div className="max-w-4xl mx-auto">
     {/* Header */}
     <div className="text-center mb-12">
-      <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-        Create Your TikTok Report
-      </h2>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+        TikTok Analytics Report
+      </h1>
       <p className="text-lg text-gray-600 dark:text-gray-400">
-        Select your profile and upload your data to generate comprehensive analytics
+        Generate comprehensive insights from your TikTok performance data
       </p>
     </div>
 
-    {/* Single Unified Card – TikTok Accent */}
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-      {/* TikTok-inspired header bar */}
-      <div className="bg-black px-8 py-5 flex items-center gap-4">
-        <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-        </svg>
-        <h3 className="text-2xl font-semibold text-white">
-          TikTok Profile Analytics Generator
-        </h3>
+    {/* Main Card */}
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {/* Card Header */}
+      <div className="bg-gradient-to-r from-gray-900 to-black px-8 py-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-white">
+              TikTok Analytics Generator
+            </h2>
+            <p className="text-white/90 text-sm mt-1">
+              Two-step process to generate your performance report
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="p-8 lg:p-12">
+      {/* Card Content */}
+      <div className="p-8 lg:p-10">
         <div className="space-y-12">
-          {/* Step 1: Select TikTok Profile */}
-          <div>
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex-shrink-0 w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md">
+          {/* Step 1 */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-gray-100 dark:bg-gray-900/50 rounded-xl flex items-center justify-center font-bold text-gray-900 dark:text-gray-100 text-lg border border-gray-200 dark:border-gray-700">
                 1
               </div>
-              <h4 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                Select TikTok Profile
-              </h4>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Select TikTok Profile
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                  Choose an existing profile or create a new one for analysis
+                </p>
+              </div>
             </div>
 
-            <CreatableSelect
-              isClearable
-              options={pageOptions}
-              value={pageName}
-              onChange={setPageName}
-              onCreateOption={handleCreatePage}
-              placeholder="Select or Type New..."
-              formatCreateLabel={(inputValue) => `Create new: "${inputValue}"`}
-formatOptionLabel={(option: any) => (
-        <div className="flex items-center justify-between">
-            <span className="font-medium text-white-dark">{option.label}</span>
-            {option.creator && (
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
-                    Added by {option.creator}
-                </span>
-            )}
-        </div>
-    )}
-              menuPlacement="auto"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                TikTok Profile Selection
+              </label>
+              <CreatableSelect
+                isClearable
+                options={pageOptions}
+                value={pageName}
+                onChange={setPageName}
+                onCreateOption={handleCreatePage}
+                placeholder="Select profile or create new..."
+                formatCreateLabel={(inputValue) => `Create: "${inputValue}"`}
+                formatOptionLabel={(option: any) => (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-900 dark:text-gray-100">{option.label}</span>
+                    {option.creator && (
+                      <span className="text-xs bg-gray-100 dark:bg-gray-900/30 px-2 py-1 rounded text-gray-700 dark:text-gray-400">
+                        Added by {option.creator}
+                      </span>
+                    )}
+                  </div>
+                )}
+                menuPlacement="auto"
+                classNames={{
+                  control: ({ isFocused }) => `
+                    !min-h-12 !rounded-lg !border !bg-white dark:!bg-gray-800
+                    !px-3 !py-2 !shadow-sm !border-gray-300 dark:!border-gray-600
+                    ${isFocused 
+                      ? '!border-gray-900 !ring-2 !ring-gray-900/20 dark:!ring-gray-100/20' 
+                      : 'hover:!border-gray-400 dark:hover:!border-gray-500'
+                    }
+                  `,
+                  input: () => '!text-gray-900 dark:!text-gray-100 !text-sm',
+                  singleValue: () => '!text-gray-900 dark:!text-gray-100 !font-medium',
+                  placeholder: () => '!text-gray-500 dark:!text-gray-400',
+                  menu: () => '!mt-2 !rounded-lg !border !border-gray-200 dark:!border-gray-700 !shadow-xl !bg-white dark:!bg-gray-800',
+                  menuList: () => '!py-2 !max-h-64',
+                  option: ({ isFocused, isSelected }) => `
+                    !px-4 !py-3 !text-sm !transition-colors
+                    ${isSelected 
+                      ? '!bg-gray-900 !text-white dark:!bg-gray-100 dark:!text-gray-900' 
+                      : isFocused 
+                      ? '!bg-gray-100 dark:!bg-gray-700 !text-gray-900 dark:!text-gray-100' 
+                      : '!text-gray-900 dark:!text-gray-200'
+                    }
+                  `,
+                  dropdownIndicator: () => '!text-gray-500 hover:!text-gray-700',
+                  clearIndicator: () => '!text-gray-500 hover:!text-red-600',
+                }}
+                styles={{
+                  menuList: (base) => ({
+                    ...base,
+                    '::-webkit-scrollbar': { width: '6px' },
+                    '::-webkit-scrollbar-track': { background: 'transparent' },
+                    '::-webkit-scrollbar-thumb': { 
+                      background: '#111827', 
+                      borderRadius: '4px' 
+                    },
+                  }),
+                }}
+              />
 
-              classNames={{
-                // Main control (input box)
-                control: ({ isFocused, isDisabled }) =>
-                  `!min-h-10 !border !rounded-md !bg-white dark:!bg-gray-800 !px-3 !py-2 !text-sm
-                   !border-gray-300 dark:!border-gray-600
-                   ${isDisabled ? '!opacity-60 !cursor-not-allowed' : '!cursor-pointer'}
-                   ${isFocused 
-                     ? '!border-black !outline-none !shadow-[0_0_0_3px_rgba(0,0,0,0.2)]' 
-                     : '!shadow-sm hover:!border-black'
-                   }`,
-
-                // Input text
-                input: () => '!text-gray-900 dark:!text-gray-100',
-
-                // Selected single value
-                singleValue: () => '!text-gray-900 dark:!text-gray-100',
-
-                // Placeholder
-                placeholder: () => '!text-gray-500 dark:!text-gray-400',
-
-                // Dropdown menu
-                menu: () => '!mt-1 !bg-white dark:!bg-gray-800 !border !border-gray-300 dark:!border-gray-600 !shadow-xl !z-50 !overflow-hidden',
-
-                // Menu list (scrollable area)
-                menuList: () => '!py-1 !max-h-60 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 dark:scrollbar-thumb-gray-900 dark:scrollbar-track-gray-900',
-
-                // Individual options
-                option: ({ isFocused, isSelected }) =>
-                  `!px-4 !py-2.5 !text-sm !transition-all
-                   ${isSelected 
-                     ? '!bg-black !text-white' 
-                     : isFocused 
-                       ? '!bg-gray-100 dark:!bg-gray-700 !text-gray-900 dark:!text-gray-100' 
-                       : '!text-gray-900 dark:!text-gray-200'
-                   }
-                   ${isSelected && isFocused ? '!bg-gray-900' : ''}`,
-
-                // Indicators (dropdown arrow, clear button)
-                dropdownIndicator: () => '!text-gray-500 hover:!text-gray-700',
-                clearIndicator: () => '!text-gray-500 hover:!text-red-600',
-
-                // Hide separator line
-                indicatorSeparator: () => '!flex',
-
-                // Multi-value chips
-                multiValue: () => '!bg-gray-200 dark:!bg-gray-700 !rounded-md',
-                multiValueLabel: () => '!text-gray-900 dark:!text-gray-100',
-                multiValueRemove: () => '!hover:bg-red-500 !hover:text-white !rounded-md',
-              }}
-
-              styles={{
-                input: (base) => ({ ...base, color: 'inherit' }),
-                menuList: (base) => ({
-                  ...base,
-                  '::-webkit-scrollbar': {
-                    width: '4px',
-                  },
-                  '::-webkit-scrollbar-track': {
-                    background: 'transparent',
-                    borderRadius: '4px',
-                  },
-                  '::-webkit-scrollbar-thumb': {
-                    background: '#000000',
-                    borderRadius: '4px',
-                  },
-                  '::-webkit-scrollbar-thumb:hover': {
-                    background: '#333333',
-                  },
-                }),
-              }}
-            />
-
-            {/* Selected Profile Indicator */}
-            {pageName && (
-              <div className="mt-5 flex items-center gap-3 text-base animate-fade-in">
-                <div className="flex-shrink-0 w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+              {/* Selection Confirmation */}
+              {pageName && (
+                <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                        Selected: <span className="font-semibold">{pageName.label}</span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Selected profile:</span>{' '}
-                  <span className="font-semibold text-black dark:text-white">{pageName.label}</span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Step 2: Upload Data */}
-          <div>
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex-shrink-0 w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md">
+          {/* Step 2 */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-gray-100 dark:bg-gray-900/50 rounded-xl flex items-center justify-center font-bold text-gray-900 dark:text-gray-100 text-lg border border-gray-200 dark:border-gray-700">
                 2
               </div>
-              <h4 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                Upload Your Data
-              </h4>
-            </div>
-
-            {/* Enhanced Upload Area */}
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-2xl p-10 text-center transition-all duration-300 hover:border-black hover:bg-black/5 dark:hover:bg-black/10">
-              <div className="mb-8">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-black/10 dark:bg-black/20 rounded-3xl mb-6">
-                  <svg className="w-12 h-12 text-black dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5.5 5.5 0 1117.9 6h.1a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                </div>
-                <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  Drag & drop your file here
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  or click to browse • Supported: CSV, XLSX, XLS
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Upload Data Files
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                  Upload exported data from TikTok Analytics
                 </p>
               </div>
+            </div>
 
-              <div className="max-w-md mx-auto space-y-5" key={resetKey}>
-                <input
-                  type="file"
-                  className="block w-full text-sm text-gray-700 dark:text-gray-300 
-                    file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 
-                    file:text-sm file:font-semibold file:bg-black file:text-white 
-                    hover:file:bg-gray-900 cursor-pointer transition-colors"
-                  onChange={handleFileChange}
-                  accept=".csv,.xlsx,.xls"
-                />
+            {/* Upload Area */}
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-gray-900/50 dark:hover:border-gray-400 hover:bg-gray-50/50 dark:hover:bg-gray-900/10 transition-colors">
+              <div className="max-w-md mx-auto space-y-6" key={resetKey}>
+                <div className="relative">
+                  <input
+                    type="file"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    onChange={handleFileChange}
+                    accept=".csv,.xlsx,.xls"
+                    id="tiktok-file-upload"
+                  />
+                  <label
+                    htmlFor="tiktok-file-upload"
+                    className="block w-full p-6 bg-gray-50 dark:bg-gray-900/50 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 cursor-pointer hover:border-gray-900 dark:hover:border-gray-400 transition-colors"
+                  >
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                        <svg className="w-7 h-7 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5.5 5.5 0 1117.9 6h.1a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          Click to upload or drag & drop
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          CSV, XLSX, XLS (Max 10MB)
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {file && (
+                  <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <p className="text-sm font-medium text-green-800 dark:text-green-300">
+                      ✓ File selected: <span className="font-semibold">{file.name}</span>
+                    </p>
+                  </div>
+                )}
 
                 <button
                   onClick={handleGenerate}
                   disabled={loading || !pageName || !file}
-                  className="w-full py-4 px-6 bg-black hover:bg-gray-900 disabled:bg-gray-400 disabled:cursor-not-allowed 
-                    text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl 
-                    transition-all duration-200 flex items-center justify-center gap-3"
+                  className="w-full inline-flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-gray-900 to-black hover:from-black hover:to-gray-900 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl"
                 >
                   {loading ? (
                     <>
-                      <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      Processing...
+                      Processing Data...
                     </>
                   ) : (
                     <>
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
-                      Generate Report
+                      Generate Analytics Report
                     </>
                   )}
                 </button>
+
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <p>Ensure your file contains standard TikTok export columns</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    {/* Features Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-500/10 dark:to-gray-500/5 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="w-12 h-12 rounded-lg bg-gray-500/10 flex items-center justify-center mb-4">
+          <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+        <h4 className="font-semibold text-gray-800 dark:text-gray-300 mb-2">Video Performance</h4>
+        <p className="text-sm text-gray-700/80 dark:text-gray-400/80">
+          Detailed insights into views, engagement, and audience retention
+        </p>
+      </div>
+
+      <div className="bg-gradient-to-br from-pink-50 to-pink-100/50 dark:from-pink-500/10 dark:to-pink-500/5 rounded-xl border border-pink-200 dark:border-pink-500/20 p-6">
+        <div className="w-12 h-12 rounded-lg bg-pink-500/10 flex items-center justify-center mb-4">
+          <svg className="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h4 className="font-semibold text-pink-800 dark:text-pink-300 mb-2">Trend Analysis</h4>
+        <p className="text-sm text-pink-700/80 dark:text-pink-400/80">
+          Identify trending content patterns and audience preferences
+        </p>
+      </div>
+
+      <div className="bg-gradient-to-br from-rose-50 to-rose-100/50 dark:from-rose-500/10 dark:to-rose-500/5 rounded-xl border border-rose-200 dark:border-rose-500/20 p-6">
+        <div className="w-12 h-12 rounded-lg bg-rose-500/10 flex items-center justify-center mb-4">
+          <svg className="w-6 h-6 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h4 className="font-semibold text-rose-800 dark:text-rose-300 mb-2">Secure Processing</h4>
+        <p className="text-sm text-rose-700/80 dark:text-rose-400/80">
+          Your data is processed securely and never stored permanently
+        </p>
       </div>
     </div>
   </div>
@@ -533,38 +614,207 @@ formatOptionLabel={(option: any) => (
                     
                     {/* 1. REPORTING PERIOD */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="panel bg-gradient-to-r from-gray-900 to-gray-800 text-white flex flex-col justify-center">
-                            <h4 className="font-semibold opacity-80 mb-1">Reporting Period</h4>
-                            <div className="text-xl font-bold mb-4">
-                                {reportData?.period?.start || 'N/A'} — {reportData?.period?.end || 'N/A'}
-                            </div>
-                            <div className="flex justify-between items-end border-t border-white/20 pt-4">
-                                <div>
-                                    <div className="text-4xl font-extrabold">{reportData?.total_content || 0}</div>
-                                    <div className="text-sm opacity-80">Total Videos</div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-sm opacity-80">Duration</div>
-                                    <div className="font-bold">{reportData?.period?.duration || '-'}</div>
-                                </div>
-                            </div>
-                        </div>
+<div className="panel bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 text-white p-6 rounded-xl shadow-lg">
+  {/* Header with subtle decoration */}
+  <div className="mb-8 border-b border-white/10 pb-4">
+    <div className="flex items-center gap-3 mb-2">
+      <div className="w-1 h-10 lg:h-14 bg-gradient-to-b from-cyan-400 to-cyan-600 "></div>
+      <div>
+        <h4 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Reporting Period</h4>
+        <div className="lg:text-2xl text-sm font-bold mt-1">
+          {reportData?.period?.start || 'N/A'} — {reportData?.period?.end || 'N/A'}
+        </div>
+      </div>
+    </div>
+  
+  </div>
+
+  {/* Metrics Grid */}
+  <div className="grid grid-cols-1 gap-4">
+    {/* Total Videos Card */}
+    <div className="bg-white/5 dark:bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="text-3xl font-bold mb-1">
+            {reportData?.total_content || 0}
+          </div>
+          <div className="text-sm text-gray-300">Total Videos</div>
+        </div>
+        {/* Icon/Decoration */}
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-600/20 flex items-center justify-center">
+          <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    {/* Duration Card */}
+    <div className="bg-white/5 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/10">
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="text-3xl font-bold mb-1">
+            {reportData?.period?.duration || '-'}
+          </div>
+          <div className="text-sm text-gray-300">Duration</div>
+        </div>
+        {/* Icon/Decoration */}
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 flex items-center justify-center">
+          <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Footer Stats */}
+  <div className="mt-6 pt-5 border-t border-white/10">
+    <div className="flex justify-between text-sm">
+      <div className="text-center">
+        <div className="text-lg font-semibold text-[#FE2C55]">{reportData?.kpi?.likes ||'0' }</div>
+        <div className="text-gray-400">Total Likes</div>
+      </div>
+      <div className="text-center">
+        <div className="text-lg font-semibold text-[#25F4EE]">{reportData?.kpi?.comments ||'0' }</div>
+        <div className="text-gray-400">Total Comments</div>
+      </div>
+      <div className="text-center">
+        <div className="text-lg font-semibold text-[#FCA5A5]">{reportData?.kpi?.saves ||'0' }</div>
+        <div className="text-gray-400">Total Saves</div>
+      </div>
+    </div>
+  </div>
+</div>
 
                         {/* Chart */}
-                        <div className="panel lg:col-span-2 flex items-center justify-between">
-                            <div>
-                                <h5 className="font-bold text-lg mb-1">Engagement Split</h5>
-                                <div className="flex flex-wrap gap-4 mt-2">
-                                    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#FE2C55]"></span><span className="font-bold">{fmt(reportData?.kpi?.likes)}</span> Likes</div>
-                                    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#25F4EE]"></span><span className="font-bold">{fmt(reportData?.kpi?.comments)}</span> Comments</div>
-                                    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#FCA5A5]"></span><span className="font-bold">{fmt(reportData?.kpi?.saves)}</span> Saves</div>
-                                </div>
-                            </div>
-                            <div className="w-[200px]">
-                                {/* @ts-ignore */}
-                                <ReactApexChart options={getEngagementChart().options} series={getEngagementChart().series} type="donut" height={160} />
-                            </div>
-                        </div>
+<div className="panel lg:col-span-2 p-5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Engagement Split</h3>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Distribution of user interactions</p>
+    </div>
+    
+    <div className="flex items-center gap-4">
+      {/* Legend */}
+      <div className="flex flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-[#FE2C55]"></div>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Likes</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-[#25F4EE]"></div>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Comments</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-[#FCA5A5]"></div>
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Saves</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Bar Chart Container */}
+  <div className="relative h-64 w-full">
+    {/* @ts-ignore */}
+    <ReactApexChart 
+      options={{
+        chart: {
+          type: 'bar',
+          height: '100%',
+          toolbar: { show: false },
+          background: 'transparent',
+          fontFamily: 'Inter, sans-serif',
+        },
+        plotOptions: {
+          bar: {
+            horizontal: false,
+            columnWidth: '60%',
+            borderRadius: 6,
+            borderRadiusApplication: 'end',
+            borderRadiusWhenStacked: 'last',
+          },
+        },
+        dataLabels: { enabled: false },
+        stroke: {
+          show: true,
+          width: 2,
+          colors: ['transparent'],
+        },
+        colors: ['#FE2C55', '#25F4EE', '#FCA5A5'],
+        grid: {
+          borderColor: '#e5e7eb',
+          strokeDashArray: 4,
+          xaxis: { lines: { show: false } },
+          yaxis: { lines: { show: true } },
+        },
+        xaxis: {
+          categories: ['Likes', 'Comments', 'Saves'],
+          labels: {
+            style: {
+              colors: '#6b7280',
+              fontSize: '12px',
+              fontWeight: 500,
+              cssClass: 'dark:text-gray-400',
+            },
+          },
+          axisBorder: { show: false },
+          axisTicks: { show: false },
+        },
+        yaxis: {
+          labels: {
+            style: {
+              colors: '#6b7280',
+              fontSize: '11px',
+              cssClass: 'dark:text-gray-400',
+            },
+            formatter: (value) => {
+              if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+              return value;
+            },
+          },
+        },
+        tooltip: {
+          theme: 'dark',
+          y: {
+            formatter: (val) => val.toLocaleString(),
+          },
+        },
+        responsive: [{
+          breakpoint: 640,
+          options: {
+            plotOptions: {
+              bar: { columnWidth: '70%' }
+            },
+            xaxis: {
+              labels: { fontSize: '10px' }
+            }
+          }
+        }]
+      }}
+      series={[{
+        name: 'Engagement',
+        data: [
+          reportData?.kpi?.likes || 0,
+          reportData?.kpi?.comments || 0,
+          reportData?.kpi?.saves || 0
+        ]
+      }]}
+      type="bar"
+      height="100%"
+    />
+  </div>
+
+  {/* Total Engagement */}
+  <div className="mt-6 pt-5 border-t border-gray-100 dark:border-gray-700">
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Engagement</span>
+      <span className="text-lg font-bold text-gray-900 dark:text-white">
+        {fmt((reportData?.kpi?.likes || 0) + (reportData?.kpi?.comments || 0) + (reportData?.kpi?.saves || 0))}
+      </span>
+    </div>
+  </div>
+</div>
                     </div>
 
                     {/* 2. KPI GRID */}

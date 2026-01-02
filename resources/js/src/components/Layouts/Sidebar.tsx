@@ -49,7 +49,6 @@ useEffect(() => {
 
 const isAdmin = useMemo(() => {
     if (!user || !user.roles) return false;
-    // Check if the forced 'admin' string exists in the array
     return user.roles.includes('admin');
 }, [user]);
 

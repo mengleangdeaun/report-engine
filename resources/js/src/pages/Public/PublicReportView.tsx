@@ -94,7 +94,7 @@ const PublicReportView = () => {
         }
     }
 `}</style>
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 
                 {/* --- SHARED HEADER (Same for both) --- */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">

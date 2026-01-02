@@ -461,7 +461,6 @@ public function resetShareHistory(Page $page)
     $share->update([
         'last_accessed_at' => null,
         'view_count' => 0,
-        'last_device' => null,
         'last_location' => null,
         'lat' => null,
         'lng' => null,
@@ -472,7 +471,6 @@ public function resetShareHistory(Page $page)
         'message' => 'Access history and activity logs cleared successfully',
         'last_accessed_at' => null,
         'view_count' => 0,
-        'last_device' => null,
         'last_location' => null,
         'lat' => null,
         'lng' => null,

@@ -6,6 +6,7 @@ import PublicLayout from '../PublicLayout';
 import TikTokReportView from './TikTokReportView';
 import FacebookReportView from './FacebookReportView';
 import { motion, AnimatePresence } from 'framer-motion';
+import PerfectScrollbar from 'react-perfect-scrollbar';
 import { 
     IconCalendar, 
     IconChevronRight, 
@@ -15,8 +16,10 @@ import {
     IconInfoCircle,
     IconHelpCircle,
     IconShare,
-    IconCopy
+    IconCopy,
+    IconBrandTiktok
 } from '@tabler/icons-react';
+
 
 const PublicPageDashboard = () => {
     const { token } = useParams();
@@ -197,17 +200,17 @@ const PublicPageDashboard = () => {
 
     // Report selector item
     const ReportSelectorItem = ({ report, isActive, onClick }: any) => {
-        const platformColor = report.platform === 'facebook' ? 'bg-blue-500' : 'bg-emerald-500';
-        const platformIcon = report.platform === 'facebook' ? 'FB' : 'TT';
+        const platformColor = report.platform === 'facebook' ? 'bg-blue-500' : 'bg-pink-500';
+        const platformIcon = report.platform === 'facebook' ? 'FB' : <IconBrandTiktok size={16} className="text-white" />;
         
         return (
             <motion.button
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onClick}
-                className={`w-full text-left p-4 rounded-2xl border transition-all duration-300 group ${
+                className={`w-full text-left p-3 rounded-lg border transition-all duration-300 group ${
                     isActive 
-                    ? 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 border-blue-300 dark:border-blue-700 shadow-lg shadow-blue-500/10 scale-[1.02]' 
+                    ? 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 border-blue-300 dark:border-blue-700 shadow-lg shadow-blue-500/10' 
                     : 'bg-gray-50/50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
                 }`}
             >
@@ -240,19 +243,6 @@ const PublicPageDashboard = () => {
                         </span>
                     </div>
                 </div>
-                
-                {isActive && (
-                    <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800"
-                    >
-                        <div className="text-[10px] font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                            <IconInfoCircle size={10} />
-                            Currently viewing
-                        </div>
-                    </motion.div>
-                )}
             </motion.button>
         );
     };
@@ -274,16 +264,20 @@ const PublicPageDashboard = () => {
                         </p>
                     </div>
                 </div>
+
                 <button
                     onClick={copyShareLink}
-                    className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    className="p-2 text-emerald-600 dark:text-emerald-400 bg-emerald-100/50 dark:bg-emerald-900/50 rounded-lg"
                     title="Share dashboard"
                 >
                     <IconShare size={18} />
                 </button>
             </div>
             
-            <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <PerfectScrollbar className='max-h-[400px] p-0'
+                            options={{ suppressScrollX: true, wheelPropagation: false }} 
+            >
+            <div className="space-y-3 flex-1 overflow-y-auto p-2.5">
                 {reportList.map((report: any) => (
                     <ReportSelectorItem
                         key={report.id}
@@ -296,6 +290,7 @@ const PublicPageDashboard = () => {
                     />
                 ))}
             </div>
+            </PerfectScrollbar>
             
             {/* Help text for single report */}
             {reportList.length === 1 && (
@@ -319,9 +314,6 @@ const PublicPageDashboard = () => {
             <div className="flex flex-col items-center justify-center min-h-[70vh]">
                 <div className="relative">
                     <IconLoader2 className="animate-spin text-blue-500" size={48} />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full animate-pulse"></div>
-                    </div>
                 </div>
                 <p className="mt-6 text-gray-600 dark:text-gray-300 font-medium">Loading your analytics dashboard...</p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Preparing {data?.page_name || 'your'} reports</p>
@@ -392,47 +384,15 @@ const PublicPageDashboard = () => {
             <div className="flex flex-col lg:flex-row gap-8 items-start relative min-h-[70vh]">
                 
                 {/* LEFT SIDE: DYNAMIC DASHBOARD */}
-                <div className="flex-1 w-full">
+                <div className="flex-1 w-full min-w-0">
                     {/* Instructions Panel */}
                     {showInstructions && <InstructionsPanel />}
-                    
-                    {/* Report Header */}
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-                                {data?.page_name || 'Analytics Dashboard'}
-                            </h1>
-                            <div className="flex items-center gap-2 mt-2">
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                    activeReport?.platform === 'facebook' 
-                                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                                        : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-                                }`}>
-                                    {activeReport?.platform === 'facebook' ? 'Facebook' : 'TikTok'} Analytics
-                                </span>
-                                <span className="text-sm text-gray-500 dark:text-gray-400">
-                                    {formatDate(activeReport?.start_date)} – {formatDate(activeReport?.end_date)}
-                                </span>
-                            </div>
-                        </div>
-                        
-                        {/* Mobile History Toggle */}
-                        {showHistory && (
-                            <button 
-                                onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-                                className="lg:hidden p-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl shadow-lg shadow-blue-500/20"
-                            >
-                                <IconCalendar className="w-5 h-5" />
-                            </button>
-                        )}
-                    </div>
-                    
                     {/* Report View */}
                     <div className="animate-fade-in">
-                        {activeReport?.platform === 'tiktok' ? (
-                            <TikTokReportView report={activeReport} pageName={data.page_name} />
-                        ) : (
+                        {activeReport?.platform === 'facebook' ? (
                             <FacebookReportView report={activeReport} pageName={data.page_name} />
+                        ) : (
+                            <TikTokReportView report={activeReport} pageName={data.page_name} />
                         )}
                     </div>
                 </div>
@@ -440,14 +400,14 @@ const PublicPageDashboard = () => {
                 {/* HISTORY SECTION - Desktop */}
                 {showHistory && (
                     <>
-                        {/* DESKTOP VIEW: Sticky Sidebar */}
+                        
                         <div className="hidden lg:block w-80 shrink-0 sticky top-24">
-                            <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-xl shadow-gray-200/50 dark:shadow-gray-900/50">
+                            <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl shadow-gray-200/50 dark:shadow-gray-900/50">
                                 <HistoryContent />
                             </div>
                         </div>
 
-                        {/* MOBILE VIEW: Floating Popup */}
+                      
                         <div className="lg:hidden fixed bottom-6 right-6 z-[60]">
                             <AnimatePresence>
                                 {isHistoryOpen && (
@@ -455,7 +415,7 @@ const PublicPageDashboard = () => {
                                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                                        className="absolute bottom-20 right-0 w-[320px] max-h-[70vh] overflow-hidden shadow-2xl rounded-3xl"
+                                        className="absolute bottom-20 right-0 w-[320px] max-h-[70vh] overflow-hidden shadow-2xl rounded-2xl"
                                     >
                                         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-5 h-full">
                                             <HistoryContent />
@@ -464,9 +424,9 @@ const PublicPageDashboard = () => {
                                 )}
                             </AnimatePresence>
 
-                            {/* Floating Action Button */}
+                            
                             <motion.button 
-                                whileHover={{ scale: 1.1 }}
+                                whileHover={{ scale: 1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => setIsHistoryOpen(!isHistoryOpen)}
                                 className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${
@@ -487,7 +447,7 @@ const PublicPageDashboard = () => {
             </div>
             
             {/* Footer Instructions */}
-            <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+            {/* <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
                 <div className="max-w-4xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="flex items-start gap-3">
@@ -527,7 +487,7 @@ const PublicPageDashboard = () => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> */}
         </PublicLayout>
     );
 };

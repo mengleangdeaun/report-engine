@@ -48,7 +48,7 @@ public function getPublicPageHistory(Request $request, $token)
 
     // 4. Rate Limiting Logic
     $rateKey = 'share-access:' . $ip;
-    if (RateLimiter::tooManyAttempts($rateKey, 10)) {
+    if (RateLimiter::tooManyAttempts($rateKey, 30)) {
         return response()->json(['error' => 'Too many requests.'], 429);
     }
     RateLimiter::hit($rateKey, 60);

@@ -221,14 +221,27 @@ public function handleGoogleCallback(Request $request)
                 $user->token_balance = $initialTokens;
                 $user->team_id = $team->id;
                 $user->save();
+
+                // FIXED: Immediately set context and assign Admin role for their own workspace
+                setPermissionsTeamId($team->id);
+                $user->assignRole('admin');
             }
 
             // 6. Ensure Spatie Role is assigned (Super Admin check included)
-            $roleName = ($user->email === 'mengleangdeaun@gmail.com') ? 'admin' : 'member';
+        
             
             // Set context for the current active team
             if ($user->team_id) {
                 setPermissionsTeamId($user->team_id);
+                
+                // Determine what role they SHOULD have if none is present
+                $roleName = ($user->email === 'mengleangdeaun@gmail.com') ? 'admin' : 'admin'; 
+                // Usually, the person who owns the workspace is an 'admin' in Spatie terms 
+                // even if their team-pivot role is 'owner'.
+
+                if (!$user->hasRole($roleName)) {
+                    $user->assignRole($roleName);
+                }
             }
 
             // Create role if it doesn't exist for the current team context
@@ -237,9 +250,6 @@ public function handleGoogleCallback(Request $request)
                 'guard_name' => 'web'
             ]);
             
-            if (!$user->hasRole($roleName)) {
-                $user->assignRole($roleName);
-            }
 
             // 7. Issue API Token and redirect back to frontend
             $token = $user->createToken('auth_token')->plainTextToken;

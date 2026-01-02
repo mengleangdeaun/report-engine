@@ -13,11 +13,12 @@ import 'tippy.js/dist/tippy.css';
 import 'tippy.js/animations/shift-away.css';
 import { 
     IconBrandFacebook, IconBrandTiktok, IconEdit, IconTrash, IconWorld, IconFilterOff, IconX,
-    IconUsers, IconSearch, IconLayoutGrid, IconList,
+    IconUsers, IconSearch, IconLayoutGrid, IconList, IconInfoCircle,
     IconChevronLeft, IconChevronRight, IconChevronUp, IconCheck,
     IconFileAnalytics, IconStar, IconCamera, IconUpload, IconUser, IconNotes, IconLock, IconDeviceFloppy, IconChevronsRight, IconChevronsLeft, IconPower, IconFilter, IconChevronDown
 } from '@tabler/icons-react';
 import ReportHistoryDrawer from '../../pages/Apps/Report/ReportHistoryDrawer'; // Import it
+import ReportLogDrawer from '../../pages/Apps/Report/ReportLogDrawer';
 import DeleteModal from '../../components/DeleteModal';
 
 
@@ -88,7 +89,9 @@ const PageManager = () => {
 
     // ✅ NEW: Report List Drawer State
     const [isReportListOpen, setIsReportListOpen] = useState(false);
+    const [isReportLogOpen, setIsReportLogOpen] = useState(false);
     const [selectedPageForReports, setSelectedPageForReports] = useState<any>(null);
+    const [selectedPageForReportsLog, setSelectedPageForReportsLog] = useState<any>(null);
     const [pageReports, setPageReports] = useState<any[]>([]);
     const [loadingReports, setLoadingReports] = useState(false);
 
@@ -192,7 +195,9 @@ useEffect(() => {
     // --- API: FETCH REPORTS FOR PAGE ---
 const fetchReportsForPage = async (page: any) => {
         setSelectedPageForReports(page);
+        setSelectedPageForReportsLog(page);
         setIsReportListOpen(true);
+        setIsReportLogOpen(true);
         setLoadingReports(true);
         setPageReports([]); 
 
@@ -1036,14 +1041,57 @@ const filteredPages = useMemo(() => {
                                 )}
 
                         {/* View Reports Button */}
-                        <button 
-                            onClick={() => { setSelectedPageForReports(page); setIsReportListOpen(true); }}
-                            className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40 group/btn"
-                        >
-                            <IconFileAnalytics size={18} className="group-hover/btn:rotate-12 transition-transform" /> 
-                            <span>{tSpan('view_report')}</span>
-                            <IconChevronRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
-                        </button>
+<div className="flex items-center gap-3">
+    {/* Info / Secondary Action */}
+    <button
+        onClick={() => {
+            setSelectedPageForReportsLog(page);
+            setIsReportLogOpen(true);
+        }}
+        type="button"
+        className="flex items-center justify-center w-12 h-12 rounded-xl
+                   bg-white dark:bg-[#0e1726]
+                   border border-gray-200 dark:border-gray-700
+                   text-primary
+                   shadow-sm hover:shadow-md
+                   transition-all duration-200
+                   focus:outline-none focus:ring-2 focus:ring-primary/40"
+        aria-label="View information"
+    >
+        <IconInfoCircle size={18} />
+    </button>
+
+    {/* Primary Action */}
+    <button
+        onClick={() => {
+            setSelectedPageForReports(page);
+            setIsReportListOpen(true);
+        }}
+        className="flex-1 flex items-center justify-between gap-3
+                   px-5 py-3 rounded-xl
+                   bg-gradient-to-r from-primary to-primary/80
+                   hover:from-primary/90 hover:to-primary
+                   text-white font-semibold text-sm
+                   shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/40
+                   transition-all duration-300
+                   focus:outline-none focus:ring-2 focus:ring-primary/40
+                   group"
+    >
+        <div className="flex items-center gap-2">
+            <IconFileAnalytics
+                size={18}
+                className="transition-transform duration-300 group-hover:rotate-6"
+            />
+            <span>{tSpan('view_report')}</span>
+        </div>
+
+        <IconChevronRight
+            size={16}
+            className="transition-transform duration-300 group-hover:translate-x-1"
+        />
+    </button>
+</div>
+
                     </div>
 
                     {/* Hover Effect Border Glow */}
@@ -1296,11 +1344,19 @@ const filteredPages = useMemo(() => {
                 </>
             )}
 
-            <ReportHistoryDrawer 
+    <ReportHistoryDrawer 
     isOpen={isReportListOpen}
     onClose={() => setIsReportListOpen(false)}
     pageId={selectedPageForReports?.id} // OR selectedPageForReports?.page_id depending on your object
     pageName={getDisplayName(selectedPageForReports?.page_name)}
+    onSelectReport={handleViewFullReport} // Reuse the navigation function!
+/>
+
+    <ReportLogDrawer 
+    isOpen={isReportLogOpen}
+    onClose={() => setIsReportLogOpen(false)}
+    pageId={selectedPageForReportsLog?.id} // OR selectedPageForReportsLog?.page_id depending on your object
+    pageName={getDisplayName(selectedPageForReportsLog?.page_name)}
     onSelectReport={handleViewFullReport} // Reuse the navigation function!
 />
 

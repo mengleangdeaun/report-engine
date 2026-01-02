@@ -130,6 +130,14 @@
     "coming_soon_cover": "Coming Soon Cover",
     "contact_us_boxed": "Contact Us Boxed",
     "contact_us_cover": "Contact Us Cover",
+    "team_member":"Team Member",
+    "workspace_role":"Workspace Role",
+    "telegram_bot":"Telegram Bot",
+    "settings":"Settings",
+    "users_and_team_setting":"Users and Team Setting",
+    "report_history":"Report History",
+    "permission":"Permission",
+
 
 
 
@@ -146,6 +154,13 @@
     "yesterday": "Yesterday"
   },
 
+    "title":{
+      "share_report":"Share Report",
+      "report_history":"All Report History",
+      "select_a_report_to_view_details":"Select a report to view details",
+      "total_reports":"Total Reports",
+      "last_active":"Last Active"
+  },
 
 
   "report": {
@@ -161,20 +176,27 @@
     "per_page": "per page",
     "show_all": "Show All",
     "impact": "Impacts",
-    "reach": "Organic Reach",
+    "reach": "Total Reach",
     "views": "Video Views",
     "reactions": "Reactions",
     "likes": "Likes",
     "saves": "Saves",
     "shares": "Shares",
     "comments": "Comments",
+    "content": "content",
     "engagement": "Interaction",
     "clicks": "Link Clicks",
     "sort_by": "Sort by",
     "highest_view": "Highest View",
     "highest_engagement": "Highest Interaction",
     "highest_comment": "Highest Comment",
-    "highest_share": "Highest Share"
+    "highest_share": "Highest Share",
+    "show": "Show",
+    "date": "Date",
+    "export_report":"Export Report Data",
+    "engagement_rate":"Engagement Rate",
+    "avg_er":"Avg Engagement"
+
   }
 
 

@@ -11,7 +11,7 @@
     "tables": "Tables",
     "datatables": "Data Tables",
     "forms": "Forms",
-    "users": "Users",
+    "users": "អ្នកប្រើប្រាស់",
     "pages": "Pages",
     "authentication": "Authentication",
     "drag_and_drop": "Drag and Drop",
@@ -136,6 +136,7 @@
     "tiktokreportgenerator":"បង្កើតរបាយការណ៍តីកតុក",
     "report_history":"ប្រវត្តិរបាយការណ៍",
     "pagemanager":"គ្រប់គ្រងទំព័រ",
+    "permission":"សិទ្ធិ",
 
 
 
@@ -213,19 +214,25 @@
     "show_all": "បង្ហាញទាំងអស់",
     "impact": "ផលប៉ះពាល់",
     "reach": "ចំនួនអ្នកមើលសរុប",
-    "views": "ចំនួនអ្នកទស្សនាវីដេអូ",
+    "views": "ចំនួនដងអ្នកទស្សនា",
     "reactions": "ប្រតិកម្ម",
     "likes": "ការចូលចិត្ត",
     "saves": "ការរក្សាទុក",
     "shares": "ការចែករំលែក",
     "comments": "មតិយោបល់",
+    "content": "មាតិកា",
     "engagement": "អន្តរកម្ម",
     "clicks": "ការចុចលើតំណ",
     "sort_by": "តម្រៀបតាម",
     "highest_view": "ការចូលមើលខ្ពស់បំផុត",
     "highest_engagement": "អន្តរកម្មខ្ពស់បំផុត",
     "highest_comment": "មតិយោបល់ខ្ពស់បំផុត",
-    "highest_share": "ការចែករំលែកខ្ពស់បំផុត"
+    "highest_share": "ការចែករំលែកខ្ពស់បំផុត",
+    "show": "បង្ហាញ",
+    "date": "កាលបរិច្ឆេទ",
+    "export_report":"ទាញយកទិន្នន័យរបាយការណ៍",
+    "engagement_rate":"អត្រាអន្តរកម្ម",
+    "avg_er":"អត្រាអន្តរកម្មមធ្យម"
   }
 
 

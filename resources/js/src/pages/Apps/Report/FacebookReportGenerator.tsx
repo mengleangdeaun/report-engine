@@ -178,8 +178,14 @@ const handleSwitchReport = (report: any) => {
             replace: true 
         });
 
-        toast.success(`Switched to report from ${new Date(report.created_at).toLocaleDateString()}`);
+        
+        toast.success(
+  `Switched to report from ${new Date(report.start_date).toLocaleDateString()} 
+   to ${new Date(report.end_date).toLocaleDateString()}`
+);
+
     };
+    
 
 // 2. Updated Generate Function
     const handleGenerate = async () => {
@@ -215,6 +221,7 @@ const handleSwitchReport = (report: any) => {
             },
             error: (err) => err.response?.data?.message || 'Failed to process data.'
         }).finally(() => setLoading(false));
+
     };
 
     const exportCSV = () => {
@@ -357,379 +364,556 @@ const handleCreateNew = () => {
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-3">
-                    {pageId && (
-                        <button 
-                            onClick={() => setIsHistoryOpen(true)}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
-                        >
-                            <IconHistory size={18} />
-                            History
-                        </button>
-                    )}
-                    
-                    {reportData && (
-                        <button 
-                            onClick={handleCreateNew} 
-                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-all shadow-sm hover:shadow-md"
-                        >
-                            <IconPlus size={18} />
-                            Create New
-                        </button>
-                    )}
-                </div>
+<div className="flex items-center gap-2">
+    {pageId && (
+        <button
+            onClick={() => setIsHistoryOpen(true)}
+            className="h-10 px-3 sm:px-4
+                       flex items-center gap-2
+                       rounded-lg
+                       bg-gray-100 dark:bg-[#1c1e21]
+                       border border-gray-200 dark:border-gray-700
+                       text-gray-700 dark:text-gray-300
+                       hover:border-[#1877F2] hover:text-[#1877F2]
+                       hover:bg-[#1877F2]/10
+                       active:scale-95
+                       transition-all duration-200
+                       shadow-sm
+                       group"
+            aria-label="View history"
+        >
+            <IconHistory size={18} />
+            <span className="hidden sm:inline text-sm font-medium">
+                History
+            </span>
+        </button>
+    )}
+
+    {reportData && (
+        <button
+            onClick={handleCreateNew}
+            className="h-10 px-3 sm:px-5
+                       flex items-center gap-2
+                       rounded-lg
+                       bg-[#1877F2]
+                       hover:bg-[#166fe5]
+                       text-white font-semibold text-sm
+                       border border-[#1877F2]
+                       hover:shadow-lg hover:shadow-[#1877F2]/30
+                       active:scale-95
+                       transition-all duration-200
+                       group"
+            aria-label="Create new report"
+        >
+            <IconPlus
+                size={18}
+                className="transition-transform duration-200 group-hover:rotate-90"
+            />
+            <span className="hidden sm:inline">
+                Create New
+            </span>
+        </button>
+    )}
+</div>
+
             </div>
 
-            {/* Info Banner */}
-
-            {!reportData && (
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-500/10 dark:to-blue-500/5 border border-blue-200 dark:border-blue-500/20 rounded-xl p-4 mb-6">
-                <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                        <IconBrandFacebook size={20} className="text-blue-500" />
-                    </div>
-                    <div>
-                        <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-1">Facebook Analytics Report</h3>
-                        <p className="text-blue-700 dark:text-blue-400 text-sm">
-                            Generate comprehensive analytics from your Facebook page exports. Upload your data to analyze Reels, Photos, and engagement metrics.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            )}
+            
         </div>
 
         {/* ================= MAIN CONTENT ================= */}
-        {!reportData && (
-            <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <div className="text-center mb-10">
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
-                        Create Your Facebook Report
-                    </h2>
-                    <p className="text-gray-500 dark:text-gray-400 text-lg">
-                        Select your page and upload your data to generate comprehensive analytics
-                    </p>
-                </div>
+{!reportData && (
+  <div className="max-w-4xl mx-auto">
+    {/* Header */}
+    <div className="text-center mb-12">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+        Facebook Analytics Report
+      </h1>
+      <p className="text-lg text-gray-600 dark:text-gray-400">
+        Generate comprehensive insights from your Facebook page data
+      </p>
+    </div>
 
-                {/* Main Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden">
-                    {/* Card Header */}
-                    <div className="bg-gradient-to-r from-primary to-primary/90 px-8 py-6">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                <IconBrandFacebook size={28} className="text-white" />
-                            </div>
-                            <div>
-                                <h3 className="text-2xl font-bold text-white">
-                                    Facebook Page Analytics Generator
-                                </h3>
-                                <p className="text-white/90 text-sm mt-1">
-                                    Step-by-step guide to create your analytics report
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+    {/* Main Card */}
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {/* Card Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <IconBrandFacebook size={28} className="text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-white">
+              Facebook Analytics Generator
+            </h2>
+            <p className="text-white/90 text-sm mt-1">
+              Two-step process to generate your performance report
+            </p>
+          </div>
+        </div>
+      </div>
 
-                    {/* Card Body */}
-                    <div className="p-8 lg:p-10">
-                        <div className="space-y-10">
-                            {/* Step 1: Select Facebook Page */}
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center font-bold text-primary text-lg border border-primary/20">
-                                        1
-                                    </div>
-                                    <div>
-                                        <h4 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                            Select Facebook Page
-                                        </h4>
-                                        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                                            Choose an existing page or create a new one
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                        Facebook Page
-                                    </label>
-                                    <CreatableSelect
-                                        isClearable
-                                        options={pageOptions}
-                                        value={pageName}
-                                        onChange={setPageName}
-                                        onCreateOption={handleCreatePage}
-                                        placeholder="Select or type to create new page..."
-                                        formatCreateLabel={(inputValue) => `Create new: "${inputValue}"`}
-                                        formatOptionLabel={(option: any) => (
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-gray-900 dark:text-gray-100">{option.label}</span>
-                                                {option.creator && (
-                                                    <span className="text-xs bg-primary/20 dark:bg-gray-700 px-2 py-1 rounded text-primary dark:text-gray-400">
-                                                        Added by {option.creator}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
-                                        menuPlacement="auto"
-                                        classNames={{
-                                            control: ({ isFocused }) => `
-                                                !min-h-12 !rounded-lg !border !border-gray-300 dark:!border-gray-600
-                                                !bg-white dark:!bg-gray-800 !px-3 !py-2 !shadow-sm
-                                                ${isFocused 
-                                                    ? '!border-primary !ring-2 !ring-primary/20' 
-                                                    : 'hover:!border-gray-400 dark:hover:!border-gray-500'
-                                                }
-                                            `,
-                                            input: () => '!text-gray-900 dark:!text-gray-100',
-                                            singleValue: () => '!text-gray-900 dark:!text-gray-100',
-                                            placeholder: () => '!text-gray-500 dark:!text-gray-400',
-                                            menu: () => '!mt-2 !rounded-lg !border !border-gray-200 dark:!border-gray-700 !shadow-xl !bg-white dark:!bg-gray-800',
-                                            menuList: () => '!py-2 !max-h-64',
-                                            option: ({ isFocused, isSelected }) => `
-                                                !px-4 !py-3 !text-sm !transition-colors
-                                                ${isSelected 
-                                                    ? '!bg-primary !text-white' 
-                                                    : isFocused 
-                                                    ? '!bg-gray-100 dark:!bg-gray-700 !text-gray-900 dark:!text-gray-100' 
-                                                    : '!text-gray-900 dark:!text-gray-200'
-                                                }
-                                            `,
-                                            dropdownIndicator: () => '!text-gray-500 hover:!text-gray-700',
-                                            clearIndicator: () => '!text-gray-500 hover:!text-red-600',
-                                        }}
-
-                                                      styles={{
-                input: (base) => ({ ...base, color: 'inherit' }),
-                menuList: (base) => ({
-                  ...base,
-                  '::-webkit-scrollbar': {
-                    width: '4px',
-                  },
-                  '::-webkit-scrollbar-track': {
-                    background: 'transparent',
-                    borderRadius: '4px',
-                  },
-                  '::-webkit-scrollbar-thumb': {
-                    background: '#516def',
-                    borderRadius: '4px',
-                  },
-                  '::-webkit-scrollbar-thumb:hover': {
-                    background: '#333333',
-                  },
-                }),
-              }}
-                                    />
-
-                                    {/* Selected Page Indicator */}
-                                    {pageName && (
-                                        <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg border border-emerald-200 dark:border-emerald-500/20">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
-                                                    <svg className="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                    </svg>
-                                                </div>
-                                                <div>
-                                                    <span className="text-sm text-emerald-800 dark:text-emerald-300 font-medium">
-                                                        Selected page: <span className="font-semibold text-emerald-900 dark:text-emerald-200">{pageName.label}</span>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Divider */}
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
-                                </div>
-                                <div className="relative flex justify-center">
-                                    <span className="px-4 bg-white dark:bg-gray-800 text-sm text-gray-500 dark:text-gray-400">
-                                        Next step
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Step 2: Upload Data */}
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-4">
-                                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl flex items-center justify-center font-bold text-primary text-lg border border-primary/20">
-                                        2
-                                    </div>
-                                    <div>
-                                        <h4 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                            Upload Your Data
-                                        </h4>
-                                        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                                            Upload CSV, XLSX, or XLS files from Facebook
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Upload Area */}
-                                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center transition-colors hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/5">
-                                    <div className="max-w-md mx-auto space-y-6" key={resetKey}>
-                                        {/* File Upload Button */}
-                                        <div className="relative group">
-                                            <input
-                                                type="file"
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                onChange={handleFileChange}
-                                                accept=".csv,.xlsx,.xls"
-                                                id="file-upload"
-                                            />
-                                            <label
-                                                htmlFor="file-upload"
-                                                className="block w-full p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-lg border-2 border-gray-300 dark:border-gray-600 border-dashed cursor-pointer group-hover:border-primary transition-colors"
-                                            >
-                                                <div className="flex flex-col items-center justify-center space-y-3">
-                                                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                                                        <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5.5 5.5 0 1117.9 6h.1a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                        </svg>
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-medium text-gray-900 dark:text-white">
-                                                            Click to upload or drag & drop
-                                                        </p>
-                                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                            CSV, XLSX, XLS files up to 10MB
-                                                        </p>
-                                                    </div>
-                                                    {file && (
-                                                        <div className="mt-4 p-3 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg border border-emerald-200 dark:border-emerald-500/20">
-                                                            <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
-                                                                ✓ Selected: <span className="font-semibold">{file.name}</span>
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </label>
-                                        </div>
-
-                                        {/* Generate Report Button */}
-                                        <button
-                                            onClick={handleGenerate}
-                                            disabled={loading || !pageName || !file}
-                                            className="w-full inline-flex items-center justify-center gap-3 px-6 py-4 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed 
-                                                text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
-                                        >
-                                            {loading ? (
-                                                <>
-                                                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                                    </svg>
-                                                    Processing...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                                    </svg>
-                                                    Generate Report
-                                                </>
-                                            )}
-                                        </button>
-
-                                        {/* Requirements */}
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                                            <p>Make sure your file contains the required Facebook export columns</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Features Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-500/10 dark:to-blue-500/5 rounded-xl border border-blue-200 dark:border-blue-500/20 p-6">
-                        <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4">
-                            <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                            </svg>
-                        </div>
-                        <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">Comprehensive Analytics</h4>
-                        <p className="text-sm text-blue-700 dark:text-blue-400">
-                            Detailed insights into Reels, Photos, and engagement metrics
-                        </p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-500/10 dark:to-purple-500/5 rounded-xl border border-purple-200 dark:border-purple-500/20 p-6">
-                        <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-4">
-                            <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <h4 className="font-semibold text-purple-800 dark:text-purple-300 mb-2">Export Ready</h4>
-                        <p className="text-sm text-purple-700 dark:text-purple-400">
-                            Download reports in multiple formats for presentations
-                        </p>
-                    </div>
-
-                    <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-500/10 dark:to-emerald-500/5 rounded-xl border border-emerald-200 dark:border-emerald-500/20 p-6">
-                        <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
-                            <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
-                        </div>
-                        <h4 className="font-semibold text-emerald-800 dark:text-emerald-300 mb-2">Data Security</h4>
-                        <p className="text-sm text-emerald-700 dark:text-emerald-400">
-                            Your data is processed securely and never stored permanently
-                        </p>
-                    </div>
-                </div>
+      {/* Card Content */}
+      <div className="p-8 lg:p-10">
+        <div className="space-y-12">
+          {/* Step 1 */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center font-bold text-blue-600 dark:text-blue-400 text-lg border border-blue-100 dark:border-blue-800">
+                1
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Select Facebook Page
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                  Choose an existing page or create a new one for analysis
+                </p>
+              </div>
             </div>
-        )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Facebook Page Selection
+              </label>
+              <CreatableSelect
+                isClearable
+                options={pageOptions}
+                value={pageName}
+                onChange={setPageName}
+                onCreateOption={handleCreatePage}
+                placeholder="Select page or create new..."
+                formatCreateLabel={(inputValue) => `Create: "${inputValue}"`}
+                formatOptionLabel={(option: any) => (
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-900 dark:text-gray-100">{option.label}</span>
+                    {option.creator && (
+                      <span className="text-xs bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded text-blue-700 dark:text-blue-400">
+                        Added by {option.creator}
+                      </span>
+                    )}
+                  </div>
+                )}
+                menuPlacement="auto"
+                classNames={{
+                  control: ({ isFocused }) => `
+                    !min-h-12 !rounded-lg !border !bg-white dark:!bg-gray-800
+                    !px-3 !py-2 !shadow-sm !border-gray-300 dark:!border-gray-600
+                    ${isFocused 
+                      ? '!border-blue-500 !ring-2 !ring-blue-500/20' 
+                      : 'hover:!border-gray-400 dark:hover:!border-gray-500'
+                    }
+                  `,
+                  input: () => '!text-gray-900 dark:!text-gray-100 !text-sm',
+                  singleValue: () => '!text-gray-900 dark:!text-gray-100 !font-medium',
+                  placeholder: () => '!text-gray-500 dark:!text-gray-400',
+                  menu: () => '!mt-2 !rounded-lg !border !border-gray-200 dark:!border-gray-700 !shadow-xl !bg-white dark:!bg-gray-800',
+                  menuList: () => '!py-2 !max-h-64',
+                  option: ({ isFocused, isSelected }) => `
+                    !px-4 !py-3 !text-sm !transition-colors
+                    ${isSelected 
+                      ? '!bg-blue-500 !text-white' 
+                      : isFocused 
+                      ? '!bg-gray-100 dark:!bg-gray-700 !text-gray-900 dark:!text-gray-100' 
+                      : '!text-gray-900 dark:!text-gray-200'
+                    }
+                  `,
+                  dropdownIndicator: () => '!text-gray-500 hover:!text-gray-700',
+                  clearIndicator: () => '!text-gray-500 hover:!text-red-600',
+                }}
+                styles={{
+                  menuList: (base) => ({
+                    ...base,
+                    '::-webkit-scrollbar': { width: '6px' },
+                    '::-webkit-scrollbar-track': { background: 'transparent' },
+                    '::-webkit-scrollbar-thumb': { 
+                      background: '#3b82f6', 
+                      borderRadius: '4px' 
+                    },
+                  }),
+                }}
+              />
+
+              {/* Selection Confirmation */}
+              {pageName && (
+                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                        Selected: <span className="font-semibold">{pageName.label}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center font-bold text-blue-600 dark:text-blue-400 text-lg border border-blue-100 dark:border-blue-800">
+                2
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Upload Data Files
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                  Upload exported data from Facebook Analytics
+                </p>
+              </div>
+            </div>
+
+            {/* Upload Area */}
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-900/5 transition-colors">
+              <div className="max-w-md mx-auto space-y-6" key={resetKey}>
+                <div className="relative">
+                  <input
+                    type="file"
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    onChange={handleFileChange}
+                    accept=".csv,.xlsx,.xls"
+                    id="facebook-file-upload"
+                  />
+                  <label
+                    htmlFor="facebook-file-upload"
+                    className="block w-full p-6 bg-gray-50 dark:bg-gray-900/50 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 cursor-pointer hover:border-blue-500 transition-colors"
+                  >
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <svg className="w-7 h-7 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5.5 5.5 0 1117.9 6h.1a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          Click to upload or drag & drop
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          CSV, XLSX, XLS (Max 10MB)
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {file && (
+                  <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <p className="text-sm font-medium text-green-800 dark:text-green-300">
+                      ✓ File selected: <span className="font-semibold">{file.name}</span>
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleGenerate}
+                  disabled={loading || !pageName || !file}
+                  className="w-full inline-flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Processing Data...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      Generate Analytics Report
+                    </>
+                  )}
+                </button>
+
+
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <p>Ensure your file contains standard Facebook export columns</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Features Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-500/10 dark:to-blue-500/5 rounded-xl border border-blue-200 dark:border-blue-500/20 p-6">
+        <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center mb-4">
+          <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        </div>
+        <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">Performance Analytics</h4>
+        <p className="text-sm text-blue-700/80 dark:text-blue-400/80">
+          Detailed insights into engagement, reach, and audience behavior
+        </p>
+      </div>
+
+      <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-500/10 dark:to-purple-500/5 rounded-xl border border-purple-200 dark:border-purple-500/20 p-6">
+        <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-4">
+          <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h4 className="font-semibold text-purple-800 dark:text-purple-300 mb-2">Export Ready Reports</h4>
+        <p className="text-sm text-purple-700/80 dark:text-purple-400/80">
+          Professional reports in multiple formats for presentations and analysis
+        </p>
+      </div>
+
+      <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-500/10 dark:to-emerald-500/5 rounded-xl border border-emerald-200 dark:border-emerald-500/20 p-6">
+        <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center mb-4">
+          <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h4 className="font-semibold text-emerald-800 dark:text-emerald-300 mb-2">Secure Processing</h4>
+        <p className="text-sm text-emerald-700/80 dark:text-emerald-400/80">
+          Your data is processed securely and never stored permanently
+        </p>
+      </div>
+    </div>
+  </div>
+)}
     </div>
             {/* --- REPORT CONTAINER (ID used for printing) --- */}
             {reportData && (
                 <div id="report-content" className="animate-fade-in-up space-y-6">
                     
                     {/* 1. REPORTING PERIOD */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="panel bg-gradient-to-r from-blue-600 to-blue-500 text-white flex flex-col justify-center">
-                            <h4 className="font-semibold opacity-80 mb-1">Reporting Period</h4>
-                            <div className="text-xl font-bold mb-4">
-                                {reportData?.period?.start || 'N/A'} — {reportData?.period?.end || 'N/A'}
-                            </div>
-                            <div className="flex justify-between items-end border-t border-white/20 pt-4">
-                                <div>
-                                    <div className="text-4xl font-extrabold">{reportData?.total_content || 0}</div>
-                                    <div className="text-sm opacity-80">Total Posts</div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-sm opacity-80">Duration</div>
-                                    <div className="font-bold">{reportData?.period?.duration || '-'}</div>
-                                </div>
-                            </div>
-                        </div>
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  {/* Left Panel - Facebook Blue Theme */}
+  <div className="panel bg-gradient-to-r from-blue-600 to-blue-500 dark:from-blue-700 dark:to-blue-600 text-white p-6 rounded-lg shadow-lg">
+    {/* Header with subtle decoration */}
+    <div className="mb-8 border-b border-white/10 pb-4">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-1 h-10 lg:h-14 bg-gradient-to-b from-blue-300 to-white rounded-full"></div>
+        <div>
+          <h4 className="text-sm font-semibold text-blue-100 uppercase tracking-wider">Reporting Period</h4>
+          <div className="lg:text-2xl text-lg font-bold mt-1">
+            {reportData?.period?.start || 'N/A'} — {reportData?.period?.end || 'N/A'}
+          </div>
+        </div>
+      </div>
+    </div>
 
-                        
+    {/* Metrics Grid */}
+    <div className="grid grid-cols-1 gap-4">
+      {/* Total Posts Card */}
+      <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="text-3xl font-bold mb-1">
+              {reportData?.total_content || 0}
+            </div>
+            <div className="text-sm text-blue-100">Total Posts</div>
+          </div>
+          {/* Icon/Decoration */}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-white/20 to-white/10 flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+        </div>
+      </div>
 
-                        {/* Chart */}
-                        <div className="panel lg:col-span-2 flex items-center justify-between">
-                            <div>
-                                
-                                <h5 className="font-bold text-lg mb-1">Content Strategy</h5>
-                                <div className="flex gap-4">
-                                    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#FE2C55]"></span><span className="font-bold">{reportData?.breakdown?.reels || 0}</span> Reels</div>
-                                    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#1877F2]"></span><span className="font-bold">{reportData?.breakdown?.photos || 0}</span> Photos</div>
-                                    <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-black"></span><span className="font-bold">{reportData?.breakdown?.videos || 0}</span> Videos</div>
-                                </div>
-                            </div>
-                            <div className="w-[200px]">
-                                {/* @ts-ignore */}
-                                <ReactApexChart options={getBreakdownChart().options} series={getBreakdownChart().series} type="donut" height={160} />
-                            </div>
-                        </div>
-                    </div>
+      {/* Duration Card */}
+      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+        <div className="flex items-start justify-between">
+          <div>
+            <div className="text-3xl font-bold mb-1">
+              {reportData?.period?.duration || '-'}
+            </div>
+            <div className="text-sm text-blue-100">Duration</div>
+          </div>
+          {/* Icon/Decoration */}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-white/20 to-white/10 flex items-center justify-center">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Footer Stats - Facebook Platform Metrics */}
+    <div className="mt-6 pt-5 border-t border-white/10">
+      <div className="flex justify-between text-sm">
+        <div className="text-center">
+          <div className="text-lg font-semibold text-white">{reportData?.kpi?.reactions || '0'}</div>
+          <div className="text-blue-100">Reactions</div>
+        </div>
+        <div className="text-center">
+          <div className="text-lg font-semibold text-white">{reportData?.kpi?.comments || '0'}</div>
+          <div className="text-blue-100">Comments</div>
+        </div>
+        <div className="text-center">
+          <div className="text-lg font-semibold text-white">{reportData?.kpi?.shares || '0'}</div>
+          <div className="text-blue-100">Shares</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Right Panel - Content Strategy */}
+  <div className="panel lg:col-span-2 p-5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Content Strategy</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Breakdown of post types</p>
+      </div>
+      
+      <div className="flex items-center gap-4">
+        {/* Legend */}
+        <div className="flex flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#FE2C55]"></div>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Reels</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-[#1877F2]"></div>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Photos</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-black dark:bg-gray-600"></div>
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-300">Videos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Bar Chart Container */}
+    <div className="relative h-64 w-full">
+      {/* @ts-ignore */}
+      <ReactApexChart 
+        options={{
+          chart: {
+            type: 'bar',
+            height: '100%',
+            toolbar: { show: false },
+            background: 'transparent',
+            fontFamily: 'Inter, sans-serif',
+          },
+          plotOptions: {
+            bar: {
+              horizontal: false,
+              columnWidth: '60%',
+              borderRadius: 6,
+              borderRadiusApplication: 'end',
+              borderRadiusWhenStacked: 'last',
+            },
+          },
+          dataLabels: { enabled: false },
+          stroke: {
+            show: true,
+            width: 2,
+            colors: ['transparent'],
+          },
+          colors: ['#FE2C55', '#1877F2', '#000000'],
+          grid: {
+            borderColor: '#e5e7eb',
+            strokeDashArray: 4,
+            xaxis: { lines: { show: false } },
+            yaxis: { lines: { show: true } },
+          },
+          xaxis: {
+            categories: ['Reels', 'Photos', 'Videos'],
+            labels: {
+              style: {
+                colors: '#6b7280',
+                fontSize: '12px',
+                fontWeight: 500,
+                cssClass: 'dark:text-gray-400',
+              },
+            },
+            axisBorder: { show: false },
+            axisTicks: { show: false },
+          },
+          yaxis: {
+            labels: {
+              style: {
+                colors: '#6b7280',
+                fontSize: '11px',
+                cssClass: 'dark:text-gray-400',
+              },
+              formatter: (value) => {
+                if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+                return value;
+              },
+            },
+          },
+          tooltip: {
+            theme: 'dark',
+            y: {
+              formatter: (val) => val.toLocaleString(),
+            },
+          },
+          responsive: [{
+            breakpoint: 640,
+            options: {
+              plotOptions: {
+                bar: { columnWidth: '70%' }
+              },
+              xaxis: {
+                labels: { fontSize: '10px' }
+              }
+            }
+          }]
+        }}
+        series={[{
+          name: 'Content Types',
+          data: [
+            reportData?.breakdown?.reels || 0,
+            reportData?.breakdown?.photos || 0,
+            reportData?.breakdown?.videos || 0
+          ]
+        }]}
+        type="bar"
+        height="100%"
+      />
+    </div>
+
+    {/* Total Content */}
+    <div className="mt-6 pt-5 border-t border-gray-100 dark:border-gray-700">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Content</span>
+        <span className="text-lg font-bold text-gray-900 dark:text-white">
+          {fmt((reportData?.breakdown?.reels || 0) + (reportData?.breakdown?.photos || 0) + (reportData?.breakdown?.videos || 0))}
+        </span>
+      </div>
+      {/* Distribution Percentage */}
+      <div className="flex items-center gap-4 mt-3">
+        {['Reels', 'Photos', 'Videos'].map((type, index) => {
+          const value = [
+            reportData?.breakdown?.reels || 0,
+            reportData?.breakdown?.photos || 0,
+            reportData?.breakdown?.videos || 0
+          ][index];
+          const total = (reportData?.breakdown?.reels || 0) + (reportData?.breakdown?.photos || 0) + (reportData?.breakdown?.videos || 0);
+          const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+          
+          return (
+            <div key={type} className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#FE2C55]"
+                   style={{ backgroundColor: index === 0 ? '#FE2C55' : index === 1 ? '#1877F2' : '#000000' }}></div>
+              <span className="text-xs text-gray-600 dark:text-gray-400">{percentage}% {type}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+</div>
 
                     {/* 2. KPI GRID */}
                     <div>

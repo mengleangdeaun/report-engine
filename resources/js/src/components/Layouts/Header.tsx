@@ -673,6 +673,10 @@ useEffect(() => {
                                             Profile
                                         </Link>
                                     </li>
+
+                                    <li>
+ 
+                                    </li>
                                     
                                     <li className="border-t border-white-light dark:border-white-light/10">
                                         <button onClick={handleLogout} className="text-danger !py-3 w-full flex items-center px-4 hover:bg-gray-100 dark:hover:bg-[#1b2e4b]">
