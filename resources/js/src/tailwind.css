@@ -1,53 +1,20 @@
 /* Animate css */
 @import './assets/css/animate.css';
+/* @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,300..700;1,300..700&display=swap'); */
 
-/* tippy css */
-@import './assets/css/tippy.css';
-
-/* @import './assets/css/publicreport.css'; */
-
-/* swiper css */
-@import './assets/css/swiper.css';
-
-/* Elements - Progressbar */
-@import './assets/css/progressbar.css';
-
-/* Data tables css */
-@import './assets/css/datatables.css';
-
-/* scrumboard */
-@import './assets/css/scrumboard.css';
-
-/* calendar css */
-@import './assets/css/fullcalendar.css';
-
-/* sweetalert css */
-@import './assets/css/sweetalert.css';
-
-/* flatpickr css */
-@import './assets/css/flatpickr.css';
-
-/* quill-editor css */
-@import './assets/css/quill-editor.css';
-
-/* markdown-editor css */
-@import './assets/css/markdown-editor.css';
-
-/* file upload with preview */
-@import './assets/css/file-upload-preview.css';
-
-/* dragndrop*/
-@import './assets/css/dragndrop.css';
-
-/* form element*/
-@import './assets/css/form-elements.css';
-
-/* Select2*/
-@import './assets/css/select2.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-nunito; 
+  }
+}
 
 @layer components {
     html {
@@ -66,7 +33,6 @@
     .panel {
         @apply relative rounded-md bg-white p-5 shadow dark:bg-black;
     }
-
     /* Navbar */
     .navbar-sticky header,
     .navbar-floating header {
@@ -75,14 +41,8 @@
     .navbar-floating header {
         @apply bg-[#fafafa]/90 px-6 pt-4 dark:bg-[#060818]/90;
     }
-    .navbar-floating header > div > div:first-child {
-        @apply rounded-md;
-    }
-    .horizontal .navbar-floating header > div > div:first-child {
-        @apply rounded-b-none;
-    }
-    .horizontal .navbar-floating header .horizontal-menu {
-        @apply rounded-b-md;
+    .navbar-floating header > div .horizontal-menu {
+        @apply rounded-b-md shadow;
     }
 
     /* Sidebar */
@@ -92,7 +52,7 @@
 
     .sidebar .nav-item > button,
     .sidebar .nav-item > a {
-        @apply mb-1 flex w-full items-center justify-between overflow-hidden whitespace-nowrap rounded-md p-2.5 text-[#506690] hover:bg-[#000]/[0.08] hover:text-black dark:hover:bg-[#181f32] dark:hover:text-white-dark;
+        @apply mb-1 flex items-center justify-between overflow-hidden whitespace-nowrap rounded-md p-2.5 text-[#506690] hover:bg-[#000]/[0.08] hover:text-black dark:hover:bg-[#181f32] dark:hover:text-white-dark w-full;
     }
     .sidebar .nav-item > button.active,
     .sidebar .nav-item > a.active {
@@ -106,8 +66,8 @@
 
     .sidebar ul.sub-menu li button,
     .sidebar ul.sub-menu li a {
-        @apply flex w-full items-center px-9 py-2.5 before:h-0.5 before:w-2 before:rounded before:bg-gray-300 hover:bg-gray-100
-hover:text-primary hover:before:!bg-primary ltr:before:mr-2 rtl:before:ml-2 dark:before:bg-gray-500 dark:hover:bg-gray-900 dark:hover:text-primary;
+        @apply flex items-center px-9 py-2.5 before:h-0.5 before:w-2 before:rounded before:bg-gray-300 hover:bg-gray-100
+      hover:text-primary hover:before:!bg-primary ltr:before:mr-2 rtl:before:ml-2 dark:before:bg-gray-500 dark:hover:bg-gray-900 dark:hover:text-primary;
     }
     .sidebar ul.sub-menu li button.active,
     .sidebar ul.sub-menu li a.active {
@@ -116,7 +76,7 @@ hover:text-primary hover:before:!bg-primary ltr:before:mr-2 rtl:before:ml-2 dark
 
     .sidebar .nav-item a div:first-child svg,
     .sidebar .nav-item button div:first-child svg {
-        @apply h-5 w-5 text-black/50 dark:text-white/50;
+        @apply w-5 h-5 text-black/50 dark:text-white/50;
     }
 
     .main-container .main-content {
@@ -329,10 +289,6 @@ hover:text-primary hover:before:!bg-primary ltr:before:mr-2 rtl:before:ml-2 dark
         @apply border-dark text-dark shadow-none hover:bg-dark hover:text-white;
     }
 
-    .btn-gradient {
-        @apply bg-gradient-to-r from-[#EF1262] to-[#4361EE] hover:to-[#EF1262] hover:from-[#4361EE] text-white;
-    }
-
     /* Badge */
     .badge {
         @apply relative my-1 rounded border border-transparent px-2 py-0.5 text-xs font-semibold text-white;
@@ -391,7 +347,7 @@ hover:text-primary hover:before:!bg-primary ltr:before:mr-2 rtl:before:ml-2 dark
     .has-error .form-select,
     .has-error .form-multiselect,
     .has-error .multiselect__tags {
-        @apply border-danger bg-danger/[0.08] text-danger placeholder-danger/70 focus:border-danger;
+        @apply border-danger text-danger bg-danger/[0.08] placeholder-danger/70 focus:border-danger;
     }
     .has-error .form-label,
     .has-error .form-help,
@@ -412,7 +368,7 @@ hover:text-primary hover:before:!bg-primary ltr:before:mr-2 rtl:before:ml-2 dark
     .has-success .form-select,
     .has-success .form-multiselect,
     .has-success .multiselect__tags {
-        @apply border-success bg-success/[0.08] text-success placeholder-success/70 focus:border-success;
+        @apply border-success text-success bg-success/[0.08] placeholder-success/70 focus:border-success;
     }
     .has-success .form-label,
     .has-success .form-help,
@@ -516,7 +472,7 @@ hover:text-primary hover:before:!bg-primary ltr:before:mr-2 rtl:before:ml-2 dark
     }
     table thead tr,
     table tfoot tr {
-        @apply border-b-0 !bg-[#f6f8fa]  dark:!bg-[#1a2941];
+        @apply border-b-0 bg-white-light/30  dark:!bg-[#1a2941];
     }
     table thead tr th,
     table tfoot tr th,
@@ -539,7 +495,7 @@ hover:text-primary hover:before:!bg-primary ltr:before:mr-2 rtl:before:ml-2 dark
 
     table.dataTable-table tbody tr th,
     table.dataTable-table tbody tr td {
-        @apply border-b border-white-light/40 py-3 px-4 ltr:text-left rtl:text-right dark:border-[#191e3a];
+        @apply border-b border-[#e5e7eb] py-3 px-4 ltr:text-left rtl:text-right dark:border-[#191e3a];
     }
     table.dataTable-table tbody tr:last-child td {
         @apply border-b-0;
@@ -710,3 +666,121 @@ hover:text-primary hover:before:!bg-primary ltr:before:mr-2 rtl:before:ml-2 dark
 pre.hljs {
     @apply p-6 rounded-md overflow-x-auto !bg-[#191e3a];
 }
+
+@layer base {
+  :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+        --primary: 140 60% 35%;
+        --primary-foreground: 210 40% 98%;
+        --secondary: 210 40% 96.1%;
+        --secondary-foreground: 222.2 47.4% 11.2%;
+        --muted: 210 40% 96.1%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96.1%;
+        --accent-foreground: 222.2 47.4% 11.2%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 222.2 84% 4.9%;
+        --chart-1: 12 76% 61%;
+        --chart-2: 173 58% 39%;
+        --chart-3: 197 37% 24%;
+        --chart-4: 43 74% 66%;
+        --chart-5: 27 87% 67%;
+        --radius: 0.5rem;
+    }
+  .dark {
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222.2 84% 4.9%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 140 55% 45%;
+        --primary-foreground: 222.2 47.4% 11.2%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --ring: 212.7 26.8% 83.9%;
+        --chart-1: 220 70% 50%;
+        --chart-2: 160 60% 45%;
+        --chart-3: 30 80% 55%;
+        --chart-4: 280 65% 60%;
+        --chart-5: 340 75% 55%;
+    }
+
+/* Add this to your tailwind.css or global CSS file */
+    .font-sans {
+        font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    .font-inter {
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .font-roboto {
+        font-family: 'Roboto', system-ui, sans-serif;
+    }
+
+    .font-opensans {
+        font-family: 'Open Sans', system-ui, sans-serif;
+    }
+
+    .font-montserrat {
+        font-family: 'Montserrat', system-ui, sans-serif;
+    }
+
+    .font-poppins {
+        font-family: 'Poppins', system-ui, sans-serif;
+    }
+
+    .font-serif {
+        font-family: Georgia, serif;
+    }
+
+    .font-times {
+        font-family: 'Times New Roman', serif;
+    }
+
+    .font-georgia {
+        font-family: 'Georgia', serif;
+    }
+
+    .font-playfair {
+        font-family: 'Playfair Display', serif;
+    }
+
+    .font-mono {
+        font-family: monospace;
+    }
+
+    .font-robotomono {
+        font-family: 'Roboto Mono', monospace;
+    }
+
+    .font-kantumruy {
+        font-family: 'Kantumruy Pro', sans-serif;
+    }
+
+    .font-moul {
+        font-family: 'Moul', serif;
+    }
+    .font-dangrek{
+        font-family: 'Dangrek', sans-serif;
+    }
+}
+
+

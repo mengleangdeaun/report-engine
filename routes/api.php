@@ -19,6 +19,8 @@ use App\Http\Controllers\{
 Route::post('/register', [AuthController::class, 'register']);
 // ->middleware('throttle:5,1');
 
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/plans', [PlanController::class, 'index']);
 Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);

@@ -22,7 +22,9 @@ Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'
 
 Route::get('/{any}', [AppController::class, 'index'])->where('any', '.*');
 
-
+Route::get('/auth/reset-password/{token}', function () {
+    return view('app'); // Change 'app' to whatever your main blade file is named
+})->name('password.reset');
 /*
 |--------------------------------------------------------------------------
 | API Routes

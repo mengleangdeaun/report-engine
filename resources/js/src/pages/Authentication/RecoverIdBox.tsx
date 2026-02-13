@@ -16,21 +16,25 @@ const RecoverIdBoxed = () => {
         dispatch(setPageTitle('Recover Id Boxed'));
     }, [dispatch]);
 
-    const submitForm = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!email) { toast.error("Email is required"); return; }
-        
-        setLoading(true);
-        try {
-            // Call Laravel API
-            await api.post('/forgot-password', { email });
-            toast.success("Reset link sent! Check your email.");
-        } catch (error: any) {
-            toast.error(error.response?.data?.email || "Failed to send link.");
-        } finally {
-            setLoading(false);
-        }
-    };
+const submitForm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) { toast.error("Email is required"); return; }
+    
+    setLoading(true);
+    try {
+        const response = await api.post('/forgot-password', { email });
+        toast.success(response.data.message || "Reset link sent! Check your email.");
+        setEmail(''); // Clear the input on success
+    } catch (error: any) {
+        // Laravel validation errors usually look like: error.response.data.errors.email[0]
+        const message = error.response?.data?.errors?.email?.[0] 
+                     || error.response?.data?.message 
+                     || "Failed to send link.";
+        toast.error(message);
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div>
@@ -42,8 +46,8 @@ const RecoverIdBoxed = () => {
                     <div className="relative flex flex-col justify-center rounded-md bg-white/60 backdrop-blur-lg dark:bg-black/50 px-6 lg:min-h-[758px] py-20">
                         <div className="mx-auto w-full max-w-[440px]">
                             <div className="mb-7">
-                                <h1 className="mb-3 text-2xl font-bold !leading-snug dark:text-white">Password Reset</h1>
-                                <p>Enter your email to recover your ID</p>
+                                <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">Password Reset</h1>
+                                <p className="text-base font-bold leading-normal text-white-dark">Enter your email to recover your ID</p>
                             </div>
                             <form className="space-y-5" onSubmit={submitForm}>
                                 <div>
@@ -59,7 +63,7 @@ const RecoverIdBoxed = () => {
                                     {loading ? 'Sending...' : 'Recover'}
                                 </button>
                             </form>
-                            <div className="text-center dark:text-white mt-4">
+                            <div className="text-center dark:text-white mt-10">
                                 Remembered?&nbsp;
                                 <Link to="/auth/boxed-signin" className="uppercase text-primary underline transition hover:text-black dark:hover:text-white">Sign In</Link>
                             </div>

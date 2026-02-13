@@ -167,7 +167,7 @@ const handleGoogleLogin = async () => {
                                         </span>
                                     </div>
                                 </div>
-                                <div>
+                                <div className='flex justify-between items-center'>
                                     <label className="flex cursor-pointer items-center">
                                         <input 
                                             type="checkbox" 
@@ -177,18 +177,14 @@ const handleGoogleLogin = async () => {
                                         />
                                         <span className="text-white-dark">Remember me</span>
                                     </label>
+                                    <Link to="/auth/boxed-password-reset" className=" text-primary underline transition hover:text-black dark:hover:text-white">
+                                        Forget Password
+                                    </Link>
                                 </div>
                                 <button type="submit" disabled={loading} className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
                                     {loading ? 'Signing in...' : 'Sign in'}
                                 </button>
                             </form>
-                            
-                            {/* ... Rest of JSX remains same (Forget Password, Google Login, Signup) ... */}
-                            <div className='mt-6' >
-                                <Link to="/auth/boxed-password-reset" className=" text-primary underline transition hover:text-black dark:hover:text-white">
-                                    Forget Password
-                                </Link>
-                            </div>
                             <div className="relative my-7 text-center md:mb-9">
                                 <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-white-light dark:bg-white-dark"></span>
                                 <span className="relative bg-white px-2 font-bold uppercase text-white-dark dark:bg-dark dark:text-white-light">or</span>

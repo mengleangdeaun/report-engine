@@ -16,6 +16,9 @@ use App\Rules\NotDisposableEmail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str; 
 use App\Models\Invitation;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ForgotPasswordMail;
+use Illuminate\Support\Facades\Password;
 
 
 
@@ -142,14 +145,6 @@ private function getEffectivePermissions($user)
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out successfully']);
     }
-    // ... (Logout remains same)
-
-// app/Http/Controllers/AuthController.php
-
-// app/Http/Controllers/AuthController.php
-
-
-// app/Http/Controllers/AuthController.php
 
 public function handleGoogleCallback(Request $request)
 {
@@ -395,6 +390,50 @@ public function redirectToGoogle(Request $request) {
             ->redirect()
             ->getTargetUrl()
     ]);
+}
+
+public function forgotPassword(Request $request)
+{
+    $request->validate(['email' => 'required|email|exists:users,email']);
+
+    $user = User::where('email', $request->email)->first();
+
+    // Generate the token
+    $token = Password::createToken($user);
+
+    // Send the custom mail using the URL from ServiceProvider
+    // Note: We use the ResetPassword::createUrlUsing logic indirectly here
+    Mail::to($user->email)->send(new ForgotPasswordMail($token, $user->email));
+
+    return response()->json(['message' => 'Password reset link sent!']);
+}
+
+public function resetPassword(Request $request)
+{
+    $request->validate([
+        'token' => 'required',
+        'email' => 'required|email|exists:users,email',
+        'password' => 'required|min:8|confirmed',
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    // 1. Use the Password Broker to verify the token
+    // This handles the hashing and expiration checks automatically
+    $tokenIsValid = Password::broker()->tokenExists($user, $request->token);
+
+    if (!$tokenIsValid) {
+        return response()->json(['message' => 'This password reset token is invalid.'], 400);
+    }
+
+    // 2. Update the user's password
+    $user->password = Hash::make($request->password);
+    $user->save();
+
+    // 3. Delete the token so it cannot be used again
+    Password::broker()->deleteToken($user);
+
+    return response()->json(['message' => 'Password has been reset successfully.']);
 }
 
 }

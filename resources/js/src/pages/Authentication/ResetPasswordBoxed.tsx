@@ -2,8 +2,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../utils/api';
 import toast from 'react-hot-toast';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 const ResetPasswordBoxed = () => {
     const dispatch = useDispatch();
@@ -12,8 +13,9 @@ const ResetPasswordBoxed = () => {
 
     // Get Token & Email from URL
     const params = new URLSearchParams(location.search);
-    const token = params.get('token');
-    const emailParam = params.get('email');
+    const { token } = useParams();
+    const [searchParams] = useSearchParams();
+    const emailParam = searchParams.get('email');
 
     const [password, setPassword] = useState('');
     const [passwordConfirmation, setPasswordConfirmation] = useState('');
@@ -41,7 +43,7 @@ const ResetPasswordBoxed = () => {
 
         setLoading(true);
         try {
-            await axios.post('http://localhost:8000/api/reset-password', {
+            await api.post('/reset-password', {
                 token,
                 email: emailParam,
                 password,
@@ -66,8 +68,8 @@ const ResetPasswordBoxed = () => {
                     <div className="relative flex flex-col justify-center rounded-md bg-white/60 backdrop-blur-lg dark:bg-black/50 px-6 lg:min-h-[758px] py-20">
                         <div className="mx-auto w-full max-w-[440px]">
                             <div className="mb-7">
-                                <h1 className="mb-3 text-2xl font-bold !leading-snug dark:text-white">New Password</h1>
-                                <p>Set your new password</p>
+                                 <h1 className="text-3xl font-extrabold uppercase !leading-snug text-primary md:text-4xl">New Password</h1>
+                                <p className="text-base font-bold leading-normal text-white-dark">Set your new password</p>
                             </div>
                             <form className="space-y-5" onSubmit={submitForm}>
                                 <div>
