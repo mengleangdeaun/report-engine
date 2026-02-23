@@ -3,15 +3,20 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import api from '../../utils/api';
 import { toast } from 'react-hot-toast';
-import { Dialog, Transition } from '@headlessui/react';
-import { 
-    IconUser, 
-    IconMail, 
-    IconCamera, 
-    IconLoader, 
-    IconLock, 
-    IconTrash, 
-    IconAlertTriangle, 
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { Input } from '../../components/ui/Input';
+import { Button } from '../../components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Label } from '../../components/ui/label';
+import { Badge } from '../../components/ui/badge';
+import {
+    IconUser,
+    IconMail,
+    IconCamera,
+    IconLoader,
+    IconLock,
+    IconTrash,
+    IconAlertTriangle,
     IconBrandGoogle,
     IconShield,
     IconEye,
@@ -21,13 +26,13 @@ import {
     IconInfoCircle,
     IconKey
 } from '@tabler/icons-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Profile = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const fileInputRef = useRef<HTMLInputElement>(null);
-    
+
     // State
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -36,15 +41,15 @@ const Profile = () => {
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
-    
+
     // User info
     const [isSocialUser, setIsSocialUser] = useState(false);
     const [userRole, setUserRole] = useState('');
     const [joinedDate, setJoinedDate] = useState('');
-    
+
     // Store original values
     const [originalData, setOriginalData] = useState({ name: '', email: '', avatar: '' });
-    
+
     // Password State
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -66,9 +71,9 @@ const Profile = () => {
     }, []);
 
     useEffect(() => {
-        const changed = 
-            name !== originalData.name || 
-            email !== originalData.email || 
+        const changed =
+            name !== originalData.name ||
+            email !== originalData.email ||
             avatarFile !== null;
         setHasChanges(changed);
     }, [name, email, avatarFile, originalData]);
@@ -85,13 +90,13 @@ const Profile = () => {
         const isSocial = !!user.google_id || user.auth_type === 'google';
         setIsSocialUser(isSocial);
 
-        
+
         if (user.created_at) {
             const date = new Date(user.created_at);
-            setJoinedDate(date.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+            setJoinedDate(date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
             }));
         }
 
@@ -106,9 +111,9 @@ const Profile = () => {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            if (file.size > 5 * 1024 * 1024) { 
-                toast.error('Image size must be less than 5MB'); 
-                return; 
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('Image size must be less than 5MB');
+                return;
             }
             setAvatarFile(file);
             setAvatar(URL.createObjectURL(file));
@@ -135,30 +140,46 @@ const Profile = () => {
         if (avatarFile) formData.append('avatar', avatarFile);
 
         try {
-            const response = await api.post('/user/profile', formData, { 
-                headers: { 'Content-Type': 'multipart/form-data' } 
+            const response = await api.post('/user/profile', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
             const updatedUser = response.data.user;
-            
+
             // Update storage
             const isLocalStorage = !!localStorage.getItem('user');
             const currentUserStr = isLocalStorage ? localStorage.getItem('user') : sessionStorage.getItem('user');
             const currentUser = currentUserStr ? JSON.parse(currentUserStr) : {};
             const mergedUser = { ...currentUser, ...updatedUser };
-            
+
             if (isLocalStorage) localStorage.setItem('user', JSON.stringify(mergedUser));
             else sessionStorage.setItem('user', JSON.stringify(mergedUser));
-            
+
             setAvatar(updatedUser.avatar);
             setAvatarFile(null);
-            setOriginalData({ 
-                name: updatedUser.name, 
-                email: updatedUser.email, 
-                avatar: updatedUser.avatar 
+            setOriginalData({
+                name: updatedUser.name,
+                email: updatedUser.email,
+                avatar: updatedUser.avatar
             });
             setHasChanges(false);
-            toast.success('Profile updated successfully');
-            
+            if (response.data.user) {
+                // Assuming updateUser is an action creator from Redux store
+                // dispatch(updateUser(response.data.user)); 
+                // Update local storage immediately to reflect changes
+                const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+                const updatedUserInStorage = { ...storedUser, ...response.data.user };
+                localStorage.setItem('user', JSON.stringify(updatedUserInStorage));
+
+                // Show specific message if email was changed
+                if (response.data.email_changed) {
+                    toast.success('Profile updated. Please check your inbox to verify your new email.', {
+                        duration: 6000,
+                        icon: '📧'
+                    });
+                } else {
+                    toast.success('Profile updated successfully');
+                }
+            }
             // Small delay for better UX
             setTimeout(() => window.location.reload(), 500);
         } catch (err: any) {
@@ -170,15 +191,15 @@ const Profile = () => {
 
     const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (newPassword !== confirmPassword) { 
-            toast.error("New passwords do not match"); 
-            return; 
+        if (newPassword !== confirmPassword) {
+            toast.error("New passwords do not match");
+            return;
         }
         if (newPassword.length < 8) {
             toast.error("Password must be at least 8 characters");
             return;
         }
-        
+
         setPwdLoading(true);
         try {
             await api.put('/user/password', {
@@ -200,8 +221,8 @@ const Profile = () => {
     const handleDeleteAccount = async () => {
         setDeleteLoading(true);
         try {
-            await api.post('/user/delete', { 
-                password: isSocialUser ? null : deletePassword 
+            await api.post('/user/delete', {
+                password: isSocialUser ? null : deletePassword
             });
             toast.success("Account deleted successfully");
             localStorage.clear();
@@ -336,247 +357,256 @@ const Profile = () => {
                 {/* ================= LEFT COLUMN ================= */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Profile Information Card */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-                        <div className="flex flex-col md:flex-row gap-6">
-                            {/* Avatar Section */}
-                            <div className="flex flex-col items-center md:items-start">
-                                <div className="relative group mb-4">
-                                    <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-lg">
-                                        <img 
-                                            src={getAvatarSrc()} 
-                                            alt="profile" 
-                                            className="w-full h-full object-cover"
+                    <Card className="shadow-sm">
+                        <CardContent className="p-6">
+                            <div className="flex flex-col md:flex-row gap-6">
+                                {/* Avatar Section */}
+                                <div className="flex flex-col items-center md:items-start opacity-100">
+                                    <div className="relative group mb-4">
+                                        <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-lg">
+                                            <img
+                                                src={getAvatarSrc()}
+                                                alt="profile"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <Button
+                                            size="icon"
+                                            onClick={triggerFileInput}
+                                            disabled={updating}
+                                            className="absolute bottom-2 right-2 rounded-full shadow-lg transform hover:scale-105"
+                                        >
+                                            <IconCamera size={20} className="text-white" />
+                                        </Button>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            className="hidden"
+                                            accept="image/*"
+                                            onChange={handleImageChange}
+                                            disabled={updating}
                                         />
                                     </div>
-                                    <button
+                                    <Button
+                                        variant="ghost"
+
                                         onClick={triggerFileInput}
-                                        disabled={updating}
-                                        className="absolute bottom-2 right-2 w-10 h-10 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-all shadow-lg transform hover:scale-105"
+                                        className="text-primary hover:text-primary/80"
                                     >
-                                        <IconCamera size={20} className="text-white" />
-                                    </button>
-                                    <input 
-                                        ref={fileInputRef}
-                                        type="file" 
-                                        className="hidden" 
-                                        accept="image/*" 
-                                        onChange={handleImageChange}
-                                        disabled={updating}
-                                    />
+                                        Change Photo
+                                    </Button>
                                 </div>
-                                <button
-                                    onClick={triggerFileInput}
-                                    className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                                >
-                                    Change Photo
-                                </button>
-                            </div>
 
-                            {/* Form Section */}
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-6">
-                                    Personal Information
-                                </h3>
-                                
-                                <form onSubmit={handleSubmit}>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Full Name
-                                            </label>
-                                            <div className="relative">
-                                                <input 
-                                                    type="text" 
-                                                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                                                    value={name}
-                                                    onChange={(e) => setName(e.target.value)}
-                                                    disabled={updating}
-                                                    required
-                                                />
-                                                <IconUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                                {/* Form Section */}
+                                <div className="flex-1">
+                                    <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-6">
+                                        Personal Information
+                                    </h3>
+
+                                    <form onSubmit={handleSubmit}>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <Label htmlFor="fullName" className="mb-2 block">
+                                                    Full Name
+                                                </Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        id="fullName"
+                                                        type="text"
+                                                        className="pl-10"
+                                                        value={name}
+                                                        onChange={(e) => setName(e.target.value)}
+                                                        disabled={updating}
+                                                        required
+                                                    />
+                                                    <IconUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Email Address
-                                            </label>
-                                            <div className="relative">
-                                                <input 
-                                                    type="email" 
-                                                    className={`w-full pl-10 pr-4 py-3 rounded-lg border ${isSocialUser ? 'bg-gray-50 dark:bg-gray-700/50' : 'bg-white dark:bg-gray-800'} border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all`}
-                                                    value={email}
-                                                    onChange={(e) => setEmail(e.target.value)}
-                                                    disabled={updating || isSocialUser}
-                                                    required
-                                                />
-                                                <IconMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                                            <div>
+                                                <Label htmlFor="email" className="mb-2 block">
+                                                    Email Address
+                                                </Label>
+                                                <div className="relative">
+                                                    <Input
+                                                        id="email"
+                                                        type="email"
+                                                        className={`pl-10 ${isSocialUser ? 'bg-gray-50 dark:bg-gray-700/50' : ''}`}
+                                                        value={email}
+                                                        onChange={(e) => setEmail(e.target.value)}
+                                                        disabled={updating || isSocialUser}
+                                                        required
+                                                    />
+                                                    <IconMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                                                </div>
+                                                {isSocialUser && (
+                                                    <p className="text-xs text-muted-foreground mt-2">
+                                                        Email is managed by Google
+                                                    </p>
+                                                )}
                                             </div>
-                                            {isSocialUser && (
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                                    Email is managed by Google
-                                                </p>
-                                            )}
-                                        </div>
 
-                                        {/* Action Buttons */}
-                                        <div className="flex gap-3 pt-4">
-                                            <button
-                                                type="submit"
-                                                disabled={updating || !hasChanges}
-                                                className={`px-5 py-2.5 font-medium rounded-lg transition-all ${
-                                                    hasChanges 
-                                                        ? 'bg-primary hover:bg-primary/90 text-white shadow-sm hover:shadow-md' 
-                                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-                                                }`}
-                                            >
-                                                {updating ? (
-                                                    <span className="flex items-center gap-2">
-                                                        <IconLoader size={18} className="animate-spin" />
-                                                        Saving...
-                                                    </span>
-                                                ) : 'Save Changes'}
-                                            </button>
-                                            {hasChanges && (
-                                                <button
-                                                    type="button"
-                                                    onClick={handleReset}
-                                                    className="px-5 py-2.5 font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                            {/* Action Buttons */}
+                                            <div className="flex gap-3 pt-4">
+                                                <Button
+                                                    type="submit"
+                                                    disabled={updating || !hasChanges}
+                                                    className={!hasChanges ? 'opacity-50 cursor-not-allowed' : ''}
                                                 >
-                                                    Reset
-                                                </button>
-                                            )}
+                                                    {updating ? (
+                                                        <>
+                                                            <IconLoader size={18} className="animate-spin mr-2" />
+                                                            Saving...
+                                                        </>
+                                                    ) : 'Save Changes'}
+                                                </Button>
+                                                {hasChanges && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        onClick={handleReset}
+                                                    >
+                                                        Reset
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                </form>
+                                    </form>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
                     {/* Security Card */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <IconKey size={20} className="text-primary" />
+                    <Card className="shadow-sm">
+                        <CardHeader className="pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <IconKey size={20} className="text-primary" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-lg">Security</CardTitle>
+                                    <CardDescription>
+                                        Change your password to keep your account secure
+                                    </CardDescription>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 dark:text-white text-lg">Security</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Change your password to keep your account secure
-                                </p>
-                            </div>
-                        </div>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handlePasswordSubmit}>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                    {/* Current Password - Only for non-social users */}
+                                    {!isSocialUser && (
+                                        <div>
+                                            <Label htmlFor="currentPassword" className="mb-2 block">
+                                                Current Password
+                                            </Label>
+                                            <div className="relative">
+                                                <Input
+                                                    id="currentPassword"
+                                                    type={showCurrentPassword ? "text" : "password"}
+                                                    className="pr-10"
+                                                    placeholder="Current password"
+                                                    value={currentPassword}
+                                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                                    required
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                                >
+                                                    {showCurrentPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
 
-                        <form onSubmit={handlePasswordSubmit}>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                                {/* Current Password - Only for non-social users */}
-                                {!isSocialUser && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            Current Password
-                                        </label>
+                                        <Label htmlFor="newPassword" className="mb-2 block">
+                                            New Password
+                                        </Label>
                                         <div className="relative">
-                                            <input 
-                                                type={showCurrentPassword ? "text" : "password"}
-                                                className="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                                                placeholder="Current password"
-                                                value={currentPassword}
-                                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                            <Input
+                                                id="newPassword"
+                                                type={showNewPassword ? "text" : "password"}
+                                                className="pr-10"
+                                                placeholder="New password"
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
                                                 required
                                             />
                                             <button
                                                 type="button"
-                                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                                onClick={() => setShowNewPassword(!showNewPassword)}
                                                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                                             >
-                                                {showCurrentPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+                                                {showNewPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
                                             </button>
                                         </div>
                                     </div>
-                                )}
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        New Password
-                                    </label>
-                                    <div className="relative">
-                                        <input 
-                                            type={showNewPassword ? "text" : "password"}
-                                            className="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                                            placeholder="New password"
-                                            value={newPassword}
-                                            onChange={(e) => setNewPassword(e.target.value)}
-                                            required
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowNewPassword(!showNewPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                                        >
-                                            {showNewPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
-                                        </button>
+                                    <div>
+                                        <Label htmlFor="confirmPassword" className="mb-2 block">
+                                            Confirm Password
+                                        </Label>
+                                        <div className="relative">
+                                            <Input
+                                                id="confirmPassword"
+                                                type={showConfirmPassword ? "text" : "password"}
+                                                className="pr-10"
+                                                placeholder="Confirm password"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                            >
+                                                {showConfirmPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Confirm Password
-                                    </label>
-                                    <div className="relative">
-                                        <input 
-                                            type={showConfirmPassword ? "text" : "password"}
-                                            className="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                                            placeholder="Confirm password"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            required
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                                        >
-                                            {showConfirmPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
-                                        </button>
-                                    </div>
+                                <div className="flex justify-end">
+                                    <Button
+                                        type="submit"
+                                        disabled={pwdLoading}
+                                    >
+                                        {pwdLoading ? (
+                                            <>
+                                                <IconLoader size={18} className="animate-spin mr-2" />
+                                                Updating...
+                                            </>
+                                        ) : isSocialUser ? 'Set Password' : 'Change Password'}
+                                    </Button>
                                 </div>
-                            </div>
-
-                            <div className="flex justify-end">
-                                <button
-                                    type="submit"
-                                    disabled={pwdLoading}
-                                    className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
-                                >
-                                    {pwdLoading ? (
-                                        <span className="flex items-center gap-2">
-                                            <IconLoader size={18} className="animate-spin" />
-                                            Updating...
-                                        </span>
-                                    ) : isSocialUser ? 'Set Password' : 'Change Password'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                            </form>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 {/* ================= RIGHT COLUMN ================= */}
                 <div className="space-y-6">
                     {/* User Info Card */}
-                    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <IconInfoCircle size={20} className="text-primary" />
+                    <Card className="shadow-sm">
+                        <CardHeader className="pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <IconInfoCircle size={20} className="text-primary" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-lg">Account Info</CardTitle>
+                                    <CardDescription>
+                                        Your account details
+                                    </CardDescription>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 dark:text-white text-lg">Account Info</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Your account details
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-gray-500 dark:text-gray-400">Role</span>
                                 <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">{userRole}</span>
@@ -595,141 +625,132 @@ const Profile = () => {
                             )}
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-gray-500 dark:text-gray-400">Password Status</span>
-                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                    isSocialUser 
-                                        ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'
-                                        : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                                }`}>
+                                <Badge
+                                    variant="secondary"
+                                    className={`${isSocialUser
+                                        ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20'
+                                        : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20'
+                                        }`}
+                                >
                                     {isSocialUser ? 'Google Managed' : 'Active'}
-                                </span>
+                                </Badge>
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
                     {/* Danger Zone Card */}
-                    <div className="bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-500/10 dark:to-red-500/5 rounded-xl border border-red-200 dark:border-red-500/20 shadow-sm p-6">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
-                                <IconAlertTriangle size={20} className="text-red-500" />
+                    <Card className="border-red-200 dark:border-red-500/20 bg-red-50/50 dark:bg-red-500/5 shadow-sm">
+                        <CardHeader className="pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
+                                    <IconAlertTriangle size={20} className="text-red-500" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-lg text-red-700 dark:text-red-400">Danger Zone</CardTitle>
+                                    <CardDescription className="text-red-600/70 dark:text-red-400/70">
+                                        Irreversible account actions
+                                    </CardDescription>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-red-700 dark:text-red-400 text-lg">Danger Zone</h3>
-                                <p className="text-sm text-red-600/70 dark:text-red-400/70">
-                                    Irreversible account actions
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
+                        </CardHeader>
+                        <CardContent>
                             <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
                                 <h4 className="font-medium text-gray-900 dark:text-white mb-2">Delete Account</h4>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                                     Once you delete your account, all your data will be permanently removed.
                                     This action cannot be undone.
                                 </p>
-                                <button
+                                <Button
+                                    variant="destructive"
+                                    className="w-full"
                                     onClick={() => setIsDeleteModalOpen(true)}
-                                    className="w-full py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
                                 >
                                     Delete Account
-                                </button>
+                                </Button>
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
 
             {/* ================= DELETE MODAL ================= */}
-            <Transition appear show={isDeleteModalOpen} as={Fragment}>
-                <Dialog as="div" className="relative z-50" onClose={() => !deleteLoading && setIsDeleteModalOpen(false)}>
-                    <Transition.Child
-                        as={Fragment}
-                        enter="ease-out duration-300"
-                        enterFrom="opacity-0"
-                        enterTo="opacity-100"
-                        leave="ease-in duration-200"
-                        leaveFrom="opacity-100"
-                        leaveTo="opacity-0"
-                    >
-                        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
-                    </Transition.Child>
-
-                    <div className="fixed inset-0 overflow-y-auto">
-                        <div className="flex min-h-full items-center justify-center p-4">
-                            <Transition.Child
-                                as={Fragment}
-                                enter="ease-out duration-300"
-                                enterFrom="opacity-0 scale-95"
-                                enterTo="opacity-100 scale-100"
-                                leave="ease-in duration-200"
-                                leaveFrom="opacity-100 scale-100"
-                                leaveTo="opacity-0 scale-95"
-                            >
-                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-xl transition-all border border-red-200 dark:border-red-500/20">
-                                    <div className="p-6">
-                                        <div className="flex items-center gap-4 mb-6">
-                                            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center flex-shrink-0">
-                                                <IconTrash className="text-red-600 dark:text-red-400" size={24} />
-                                            </div>
-                                            <div>
-                                                <Dialog.Title className="text-lg font-bold text-gray-900 dark:text-white">
-                                                    Delete Account
-                                                </Dialog.Title>
-                                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                    This action is permanent and cannot be undone.
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Password Input - Only for non-social users */}
-                                        {!isSocialUser && (
-                                            <div className="mb-6">
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    Confirm your password to continue
-                                                </label>
-                                                <div className="relative">
-                                                    <input 
-                                                        type={showDeletePassword ? "text" : "password"}
-                                                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
-                                                        placeholder="Enter your password"
-                                                        value={deletePassword}
-                                                        onChange={(e) => setDeletePassword(e.target.value)}
-                                                        autoFocus
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowDeletePassword(!showDeletePassword)}
-                                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                                                    >
-                                                        {showDeletePassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="flex justify-end gap-3">
-
-<button
-    onClick={handleDeleteAccount}
-    className="px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
-    // UPDATE THIS LINE:
-    disabled={deleteLoading || (!isSocialUser && !deletePassword)}
->
-    {deleteLoading ? (
-        <span className="flex items-center gap-2">
-            <IconLoader size={16} className="animate-spin" />
-            Deleting...
-        </span>
-    ) : 'Delete Account'}
-</button>
-                                        </div>
-                                    </div>
-                                </Dialog.Panel>
-                            </Transition.Child>
+            <Dialog open={isDeleteModalOpen} onOpenChange={(open) => !deleteLoading && setIsDeleteModalOpen(open)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                                <IconTrash className="text-red-600 dark:text-red-400" size={24} />
+                            </div>
+                            <div>
+                                <DialogTitle>Delete Account</DialogTitle>
+                                <DialogDescription>
+                                    This action is permanent and cannot be undone.
+                                </DialogDescription>
+                            </div>
                         </div>
+                    </DialogHeader>
+
+                    <div className="py-4">
+                        {/* Password Input - Only for non-social users */}
+                        {!isSocialUser && (
+                            <div className="mb-4">
+                                <Label htmlFor="deletePassword" className="mb-2 block">
+                                    Confirm your password to continue
+                                </Label>
+                                <div className="relative">
+                                    <Input
+                                        id="deletePassword"
+                                        type={showDeletePassword ? "text" : "password"}
+                                        className="pr-10 focus-visible:ring-red-500"
+                                        placeholder="Enter your password"
+                                        value={deletePassword}
+                                        onChange={(e) => setDeletePassword(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDeletePassword(!showDeletePassword)}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                    >
+                                        {showDeletePassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+                                    </button>
+                                </div>
+                                <div className="mt-2 text-right">
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate('/auth/boxed-password-reset')}
+                                        className="text-xs text-primary hover:underline hover:text-primary/80 transition-colors bg-transparent border-none p-0 cursor-pointer"
+                                    >
+                                        Forgot Password?
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                </Dialog>
-            </Transition>
+
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            disabled={deleteLoading}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeleteAccount}
+                            disabled={deleteLoading || (!isSocialUser && !deletePassword)}
+                        >
+                            {deleteLoading ? (
+                                <>
+                                    <IconLoader size={16} className="animate-spin mr-2" />
+                                    Deleting...
+                                </>
+                            ) : 'Delete Account'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

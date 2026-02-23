@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
 import { setPageTitle } from '../store/themeConfigSlice';
 import { IRootState } from '../store';
+import { Button } from './../components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const Error404 = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     useEffect(() => {
         dispatch(setPageTitle('Error 404'));
     });
@@ -20,10 +22,12 @@ const Error404 = () => {
                         alt="404"
                         className="mx-auto -mt-10 w-full max-w-xs object-cover md:-mt-14 md:max-w-xl"
                     />
-                    <p className="mt-5 text-base dark:text-white">The page you requested was not found!</p>
-                    <Link to="/" className="btn btn-primary mx-auto !mt-7 w-max border-0 uppercase shadow-none">
+                    <p className="mb-5 mt-5 text-base dark:text-white">The page you requested was not found!</p>
+                    <Button 
+                        variant="default"
+                        onClick={() => navigate('/')}>
                         Home
-                    </Link>
+                    </Button>
                 </div>
             </div>
         </div>

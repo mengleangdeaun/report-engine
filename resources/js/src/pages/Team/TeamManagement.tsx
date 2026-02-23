@@ -826,7 +826,7 @@ const TeamManagement = () => {
                                             <input
                                                 type="email"
                                                 className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                                                placeholder="colleague@company.com"
+                                                placeholder="soksan@gmail.com"
                                                 value={inviteEmail}
                                                 onChange={(e) => setInviteEmail(e.target.value)}
                                                 autoFocus

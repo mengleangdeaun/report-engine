@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class ProfileController extends Controller
 {
     // 1. Update Profile (Name, Email, Avatar)
- public function update(Request $request)
+    public function update(Request $request)
     {
         $user = Auth::user();
 
@@ -24,7 +24,7 @@ class ProfileController extends Controller
 
         if ($request->hasFile('avatar')) {
             // ✅ FIX: Get the RAW value from DB (ignore the Model Accessor)
-            $oldAvatar = $user->getRawOriginal('avatar'); 
+            $oldAvatar = $user->getRawOriginal('avatar');
 
             // Only delete if it exists AND is not a URL (Google)
             if ($oldAvatar && !str_starts_with($oldAvatar, 'http')) {
@@ -36,24 +36,36 @@ class ProfileController extends Controller
             $user->avatar = $path;
         }
 
+        $emailChanged = $user->email !== $request->email;
         $user->name = $request->name;
-        // Note: Updating email usually requires re-verification, but for now we'll allow it
-        $user->email = $request->email; 
+        $user->email = $request->email;
+
+        if ($emailChanged) {
+            $user->email_verified_at = null;
+        }
+
         $user->save();
 
+        if ($emailChanged) {
+            $user->sendEmailVerificationNotification();
+        }
+
         return response()->json([
-            'message' => 'Profile updated successfully',
-            'user' => $user, // This now includes the full URL thanks to Step 1
+            'message' => $emailChanged
+                ? 'Profile updated. Please verify your new email address.'
+                : 'Profile updated successfully',
+            'user' => $user,
+            'email_changed' => $emailChanged,
         ]);
     }
 
-// 2. ✅ FIXED: Smart Password Update
+    // 2. ✅ FIXED: Smart Password Update
     public function updatePassword(Request $request)
     {
         $user = Auth::user();
 
         $rules = [
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:6|confirmed',
         ];
 
         // LOGIC: Only require 'current_password' if:
@@ -72,44 +84,44 @@ class ProfileController extends Controller
     }
 
     // 3. ✅ FIXED: Smart Account Deletion
-public function destroy(Request $request)
-{
-    /** @var \App\Models\User $user */
-    $user = Auth::user();
+    public function destroy(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-    // 1. Safety check to ensure user is authenticated
-    if (!$user) {
-        return response()->json(['message' => 'Unauthorized'], 401);
-    }
-
-    // 2. LOGIC: Only force password check for standard email users
-    // If the user has a google_id, we skip password validation
-    $isSocialUser = !empty($user->google_id);
-
-    if (!$isSocialUser) {
-        $request->validate([
-            'password' => 'required|current_password',
-        ], [
-            'password.current_password' => 'The provided password does not match your current password.'
-        ]);
-    }
-
-    return DB::transaction(function () use ($user) {
-        // 3. Delete Avatar (Cleanup)
-        $oldAvatar = $user->getRawOriginal('avatar');
-        if ($oldAvatar && !str_starts_with($oldAvatar, 'http')) {
-            \Illuminate\Support\Facades\Storage::disk('public')->delete($oldAvatar);
+        // 1. Safety check to ensure user is authenticated
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        // 4. Revoke all tokens to prevent further API access
-        $user->tokens()->delete();
+        // 2. LOGIC: Only force password check for standard email users
+        // If the user has a google_id, we skip password validation
+        $isSocialUser = !empty($user->google_id);
 
-        // 5. Delete the user record
-        $user->delete();
+        if (!$isSocialUser) {
+            $request->validate([
+                'password' => 'required|current_password',
+            ], [
+                'password.current_password' => 'The provided password does not match your current password.'
+            ]);
+        }
 
-        return response()->json(['message' => 'Account deleted successfully']);
-    });
-}
+        return DB::transaction(function () use ($user) {
+            // 3. Delete Avatar (Cleanup)
+            $oldAvatar = $user->getRawOriginal('avatar');
+            if ($oldAvatar && !str_starts_with($oldAvatar, 'http')) {
+                Storage::disk('public')->delete($oldAvatar);
+            }
+
+            // 4. Revoke all tokens to prevent further API access
+            $user->tokens()->delete();
+
+            // 5. Delete the user record
+            $user->delete();
+
+            return response()->json(['message' => 'Account deleted successfully']);
+        });
+    }
 
 
 

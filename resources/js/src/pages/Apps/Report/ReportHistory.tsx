@@ -63,7 +63,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '../../../components/ui/
 import { Checkbox } from '../../../components/ui/checkbox';
 import { Separator } from '../../../components/ui/separator';
 import { Label } from '../../../components/ui/label';
+import { Tabs, TabsList, TabsTrigger } from '../../../components/ui/tabs';
 import { Search, X, SlidersHorizontal } from 'lucide-react';
+import { Skeleton } from '../../../components/ui/skeleton';
 
 type CanProps = {
   when: boolean;
@@ -90,7 +92,7 @@ const ReportHistory = () => {
 
   // --- SERVER SIDE STATE ---
   const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [rowCount, setRowCount] = useState(0);
   const [search, setSearch] = useState('');
 
@@ -624,9 +626,9 @@ const ReportHistory = () => {
             {/* Top Performers Toggle */}
             <div className="flex items-center gap-2">
 
-              <button
+              <Button
                 onClick={() => setIsFilterPanelVisible(!isFilterPanelVisible)}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${isFilterPanelVisible
+                className={`inline-flex items-center gap-2 px-3 py-2 transition-all ${isFilterPanelVisible
                   ? 'bg-primary/10 text-primary hover:bg-primary/20'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
@@ -643,40 +645,40 @@ const ReportHistory = () => {
                     <span className="text-sm font-medium hidden sm:inline">Show Filters</span>
                   </>
                 )}
-              </button>
+              </Button>
 
-              <button
+              <Button
                 onClick={() => setShowTopPerformers(!showTopPerformers)}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${showTopPerformers
+                className={`transition-all gap-2 ${showTopPerformers
                   ? 'bg-primary/10 text-primary hover:bg-primary/20'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                   }`}
-                title={showTopPerformers ? "Hide filters" : "Show filters"}
+                title={showTopPerformers ? "Hide Top Performers" : "Show Top Performers"}
               >
                 {showTopPerformers ? (
                   <>
                     <IconChartBarOff size={18} />
-                    <span className="text-sm font-medium hidden sm:inline">Hide Top Performers</span>
+                    <span className="hidden sm:inline">Hide Top Performers</span>
                   </>
                 ) : (
                   <>
                     <IconChartBarPopular size={18} />
-                    <span className="text-sm font-medium hidden sm:inline">Show Top Perfomers</span>
+                    <span className="hidden sm:inline">Show Top Performers</span>
                   </>
                 )}
-              </button>
+              </Button>
 
 
             </div>
 
             {/* Export Button */}
-            <button
+            <Button
               onClick={handleExport}
-              className="inline-flex items-center gap-2 px-3 py-2 bg-primary hover:bg-primary/90 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+              className="inline-flex items-center gap-2 px-3 py-2 hover:bg-primary/90 text-white text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md"
             >
               <IconDownload size={18} />
               {tButton('export_csv')}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -713,8 +715,36 @@ const ReportHistory = () => {
               </div>
 
               {/* Filter Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 p-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 items-end gap-4 px-5 py-4">
 
+                {/* Platform Filter */}
+                {can('generate facebook report') && can('generate tiktok report') && (
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                      <IconWorld size={13} />
+                      Platform
+                    </Label>
+                    <Tabs
+                      value={platformFilter}
+                      onValueChange={(value) => { setPlatformFilter(value); setPagination(p => ({ ...p, pageIndex: 0 })); }}
+                    >
+                      <TabsList className="w-full h-10 border bg-background">
+                        <TabsTrigger value="all" className="flex-1 gap-1.5 text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                          <IconWorld size={13} />
+                          All
+                        </TabsTrigger>
+                        <TabsTrigger value="facebook" className="flex-1 gap-1.5 text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                          <IconBrandFacebook size={13} />
+                          FB
+                        </TabsTrigger>
+                        <TabsTrigger value="tiktok" className="flex-1 gap-1.5 text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                          <IconBrandTiktok size={13} />
+                          TT
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                  </div>
+                )}
                 <Can when={isAdminOrOwner || can('view all team reports')}>
                   {/* Skeleton */}
                   {isTeamMembersLoading && (
@@ -790,55 +820,6 @@ const ReportHistory = () => {
                     </div>
                   )}
                 </Can>
-
-
-                {/* Platform Filter */}
-                {can('generate facebook report') && can('generate tiktok report') && (
-                  <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                      <IconWorld size={13} />
-                      Platform
-                    </Label>
-                    <div className="inline-flex w-full rounded-lg border bg-muted/40 p-1">
-                      <Button
-                        variant={platformFilter === 'all' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className={`flex-1 h-8 gap-1.5 text-xs font-medium transition-all ${platformFilter === 'all'
-                            ? 'shadow-sm bg-background text-primary hover:bg-background'
-                            : 'text-muted-foreground hover:text-foreground'
-                          }`}
-                        onClick={() => { setPlatformFilter('all'); setPagination(p => ({ ...p, pageIndex: 0 })); }}
-                      >
-                        <IconWorld size={13} />
-                        All
-                      </Button>
-                      <Button
-                        variant={platformFilter === 'facebook' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className={`flex-1 h-8 gap-1.5 text-xs font-medium transition-all ${platformFilter === 'facebook'
-                            ? 'shadow-sm bg-background text-[#1877F2] hover:bg-background'
-                            : 'text-muted-foreground hover:text-[#1877F2]'
-                          }`}
-                        onClick={() => { setPlatformFilter('facebook'); setPagination(p => ({ ...p, pageIndex: 0 })); }}
-                      >
-                        <IconBrandFacebook size={13} />
-                        FB
-                      </Button>
-                      <Button
-                        variant={platformFilter === 'tiktok' ? 'secondary' : 'ghost'}
-                        size="sm"
-                        className={`flex-1 h-8 gap-1.5 text-xs font-medium transition-all ${platformFilter === 'tiktok'
-                            ? 'shadow-sm bg-background text-foreground hover:bg-background'
-                            : 'text-muted-foreground hover:text-foreground'
-                          }`}
-                        onClick={() => { setPlatformFilter('tiktok'); setPagination(p => ({ ...p, pageIndex: 0 })); }}
-                      >
-                        <IconBrandTiktok size={13} />
-                        TT
-                      </Button>
-                    </div>
-                  </div>
-                )}
 
                 {/* Date Range */}
                 <div className="space-y-2">
@@ -952,7 +933,7 @@ const ReportHistory = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <IconUser size={14} className="text-gray-400" />
-                        <span className="text-xs text-gray-500">{report.created_by?.name || 'Unknown'}</span>
+                        <span className="text-xs text-gray-500">{report.user?.name || 'Unknown'}</span>
                       </div>
                       <div className="text-xs font-medium text-gray-500">
                         Benchmark: {parseFloat(report.historical_avg).toFixed(2)}%
@@ -1003,21 +984,53 @@ const ReportHistory = () => {
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {loading ? (
-                <tr>
-                  <td colSpan={columns.length} className="p-20 text-center">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <span className="animate-spin border-4 border-primary border-l-transparent rounded-full w-10 h-10"></span>
-                      <span className="text-gray-500 font-medium">Loading records...</span>
-                    </div>
-                  </td>
-                </tr>
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={index} className="animate-pulse">
+                    <td className="p-4">
+                      <Skeleton className="h-4 w-4" />
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-2">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-4 w-20 rounded" />
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <Skeleton className="h-6 w-16 rounded-md" />
+                    </td>
+                    <td className="p-4">
+                      <Skeleton className="h-5 w-20" />
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1">
+                        <Skeleton className="h-5 w-16 rounded" />
+                        <Skeleton className="h-3 w-12" />
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex flex-col gap-1">
+                        <Skeleton className="h-3 w-16" />
+                        <Skeleton className="h-4 w-12" />
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex justify-center gap-2">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
               ) : table.getRowModel().rows.length === 0 ? (
                 (() => {
                   // ✅ LOGIC FIX: Check if ANY filter is active
                   const isAnyFilterActive =
                     globalFilter ||
-                    (dateRange && dateRange.length > 0) ||
-                    platformFilter !== 'all';
+                    (dateRange && dateRange.from) ||
+                    platformFilter !== 'all' ||
+                    selectedUsers.length > 0;
 
                   return isAnyFilterActive ? (
                     // CASE 2: FILTERED RESULT IS EMPTY (Date, Search, or Platform found nothing)
@@ -1030,12 +1043,13 @@ const ReportHistory = () => {
                           <h5 className="font-bold text-xl text-gray-800 dark:text-gray-200 mb-2">No Results Found</h5>
                           <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
                             We couldn't find any reports matching your current filters.
-                            <br />Try adjusting the date range or platform.
+                            <br />Try adjusting the date range, platform, or team member.
                           </p>
                           <button
                             onClick={() => {
+                              setSelectedUsers([]);
                               setPlatformFilter('all');
-                              setDateRange(null);
+                              setDateRange(undefined);
                               setGlobalFilter('');
                               setPagination(p => ({ ...p, pageIndex: 0 }));
                             }}

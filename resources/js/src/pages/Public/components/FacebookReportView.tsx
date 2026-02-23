@@ -178,7 +178,7 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [sortBy, setSortBy] = useState('date');
-    const [showPostTypes, setShowPostTypes] = useState<string[]>(['Photos', 'Videos']);
+    const [showPostTypes, setShowPostTypes] = useState<string[]>(['Photos', 'Videos','Reels']);
 
     const kpi = report?.report_data?.kpi;
     const champions = report?.report_data?.champions;
@@ -665,7 +665,7 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                         </p>
                         <button
                             onClick={() => {
-                                setShowPostTypes(['Photos', 'Videos']);
+                                setShowPostTypes(['Photos', 'Videos','Reels']);
                                 setSortBy('date');
                             }}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"

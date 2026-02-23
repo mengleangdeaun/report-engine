@@ -19,12 +19,12 @@ class UserController extends Controller
     {
         $query = User::with(['roles', 'team']);
 
-     
+
         // Search
         if ($request->search) {
-            $query->where(function($q) use ($request) {
+            $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('email', 'like', "%{$request->search}%");
+                    ->orWhere('email', 'like', "%{$request->search}%");
             });
         }
 
@@ -45,8 +45,8 @@ class UserController extends Controller
 
         $request->validate([
             'name' => 'required|string',
-            'email' => 'required|email|unique:users,email,'.$id,
-            'password' => 'nullable|min:8',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'password' => 'nullable|min:6',
             'roles' => 'array' // Expecting ['admin', 'user']
         ]);
 
@@ -73,8 +73,9 @@ class UserController extends Controller
     public function adjustTokens(Request $request, $id)
     {
         $request->validate([
-            'amount' => 'required|integer', 
-            'description' => 'required|string'
+            'amount' => 'required|integer',
+            'description' => 'required|string',
+            'type' => 'nullable|string' // Allow optional type
         ]);
 
         $user = User::findOrFail($id);
@@ -88,7 +89,7 @@ class UserController extends Controller
 
             $user->transactions()->create([
                 'amount' => $request->amount,
-                'type' => 'admin_adjustment',
+                'type' => $request->input('type', 'admin_adjustment'), // Use provided type or default
                 'description' => $request->description . ' (By Admin)'
             ]);
         });
@@ -99,19 +100,19 @@ class UserController extends Controller
     /**
      * 4. GET PERMISSIONS & SETTINGS (Moved from AdminController)
      */
-public function getUserDetails($id)
-{
-    // Fetch user with Spatie relationships
-    $user = User::findOrFail($id);
-    
-    return response()->json([
-        // This gets names of all permissions inherited from roles + direct
-        'user_permissions' => $user->getPermissionNames(), 
-        'user_settings' => $user->settings ?? ['member_limit' => 0],
-        'all_permissions' => Permission::pluck('name'),
-        'all_roles' => Role::pluck('name')
-    ]);
-}
+    public function getUserDetails($id)
+    {
+        // Fetch user with Spatie relationships
+        $user = User::findOrFail($id);
+
+        return response()->json([
+            // This gets names of all permissions inherited from roles + direct
+            'user_permissions' => $user->getPermissionNames(),
+            'user_settings' => $user->settings ?? ['member_limit' => 0],
+            'all_permissions' => Permission::pluck('name'),
+            'all_roles' => Role::pluck('name')
+        ]);
+    }
 
     /**
      * 5. UPDATE PERMISSIONS (Moved from AdminController)
@@ -119,12 +120,12 @@ public function getUserDetails($id)
     public function updatePermissions(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        
+
         if ($request->has('permissions')) {
             $user->syncPermissions($request->permissions);
         }
 
-        $currentSettings = $user->settings ?: []; 
+        $currentSettings = $user->settings ?: [];
         $user->settings = array_merge($currentSettings, [
             'member_limit' => (int) $request->input('member_limit', 0)
         ]);
@@ -139,12 +140,48 @@ public function getUserDetails($id)
     public function destroy($id)
     {
         $user = User::findOrFail($id);
-        
+
         if ($user->hasRole('admin') && $user->id === auth()->id()) {
             return response()->json(['message' => 'You cannot delete yourself.'], 403);
         }
 
         $user->delete();
         return response()->json(['message' => 'User deleted successfully']);
+    }
+
+    /**
+     * 7. BAN USER
+     */
+    public function ban($id)
+    {
+        $user = User::findOrFail($id);
+        $currentUser = auth()->user();
+
+        // 1. Prevent banning yourself
+        if ($user->id === $currentUser->id) {
+            return response()->json(['message' => 'You cannot ban yourself.'], 403);
+        }
+
+        // 2. Prevent banning admins or super admins
+        if ($user->hasRole('admin') || $user->isSuperAdmin()) {
+            return response()->json(['message' => 'You cannot ban an admin.'], 403);
+        }
+
+        $user->banned_at = now();
+        $user->save();
+
+        return response()->json(['message' => 'User has been banned successfully']);
+    }
+
+    /**
+     * 8. UNBAN USER
+     */
+    public function unban($id)
+    {
+        $user = User::findOrFail($id);
+        $user->banned_at = null;
+        $user->save();
+
+        return response()->json(['message' => 'User has been unbanned successfully']);
     }
 }

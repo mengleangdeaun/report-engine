@@ -102,7 +102,8 @@ export function DateRangePicker({
     }
   }, [value]);
 
-  const handlePresetSelect = (preset: DateRangePreset) => {
+  // Helper to compute the actual date range for a preset
+  const getPresetRange = React.useCallback((preset: DateRangePreset): DateRange | undefined => {
     const today = new Date();
     let from: Date;
     let to: Date = endOfDay(today);
@@ -132,20 +133,36 @@ export function DateRangePicker({
         from = startOfDay(new Date(today.getFullYear(), 0, 1));
         break;
       default:
-        // Handle number values
-        from = startOfDay(new Date(today.getTime() + preset.value * 24 * 60 * 60 * 1000));
+        if (typeof preset.value === 'number') {
+          from = startOfDay(new Date(today.getTime() + preset.value * 24 * 60 * 60 * 1000));
+        } else {
+          return undefined;
+        }
         break;
     }
+    return { from, to };
+  }, []);
 
-    const newRange = { from, to };
-    setInternalRange(newRange);
-    onChange(newRange);
-    setIsOpen(false);
+  // Check if a preset matches the current value
+  const isPresetActive = React.useCallback((preset: DateRangePreset): boolean => {
+    if (!value?.from) return false;
+    const presetRange = getPresetRange(preset);
+    if (!presetRange?.from) return false;
+    return isSameDay(presetRange.from, value.from) && 
+           (presetRange.to ? isSameDay(presetRange.to, value.to) : true);
+  }, [value, getPresetRange]);
+
+  const handlePresetSelect = (preset: DateRangePreset) => {
+    const newRange = getPresetRange(preset);
+    if (newRange) {
+      setInternalRange(newRange);
+      onChange(newRange);
+      setIsOpen(false);
+    }
   };
 
   const handleCalendarSelect = (range: DateRange | undefined) => {
     setInternalRange(range);
-    // Don't close popover or call onChange yet - wait for Apply
   };
 
   const handleApply = () => {
@@ -154,14 +171,13 @@ export function DateRangePicker({
   };
 
   const handleCancel = () => {
-    setInternalRange(value); // Reset to original value
+    setInternalRange(value);
     setIsOpen(false);
   };
 
   const handleClear = () => {
-    const clearedRange = undefined;
-    setInternalRange(clearedRange);
-    onChange(clearedRange);
+    setInternalRange(undefined);
+    onChange(undefined);
   };
 
   const formatDateDisplay = (date: Date | undefined) => {
@@ -171,10 +187,8 @@ export function DateRangePicker({
 
   const formatRangeDisplay = () => {
     if (!internalRange?.from) return placeholder;
-
     const fromStr = formatDateDisplay(internalRange.from);
     const toStr = internalRange.to ? formatDateDisplay(internalRange.to) : "";
-
     if (!toStr) return fromStr;
     return `${fromStr} - ${toStr}`;
   };
@@ -222,7 +236,6 @@ export function DateRangePicker({
             className="w-auto p-0"
             align={align}
             onInteractOutside={(e) => {
-              // Don't close when interacting with the calendar
               const target = e.target as HTMLElement;
               if (target.closest('.rdp')) {
                 e.preventDefault();
@@ -230,19 +243,21 @@ export function DateRangePicker({
             }}
           >
             <div className="flex flex-col sm:flex-row">
-              {/* Left Side: Presets */}
-              <div className="w-full sm:w-48 p-3 border-r bg-muted/30">
+              {/* Left Side: Presets with active highlighting */}
+              <div className="w-32 p-3 border-r bg-muted/30">
                 <h4 className="text-sm font-medium mb-2">Quick Select</h4>
-                <div className="space-y-1 max-h-[340px] overflow-y-auto pr-1">
+                <div className="max-h-[340px] overflow-y-auto">
                   {presets.map((preset) => (
                     <Button
                       key={`${preset.label}-${preset.value}`}
                       variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-xs h-8"
+                      className={cn(
+                        "w-full justify-start text-xs transition-colors",
+                        isPresetActive(preset) && "bg-primary/10 text-primary hover:bg-primary/20"
+                      )}
                       onClick={() => handlePresetSelect(preset)}
                     >
-                      <div className="text-left truncate">
+                      <div className="text-left">
                         <div className="font-medium truncate">{preset.label}</div>
                         {preset.description && (
                           <div className="text-[10px] text-muted-foreground truncate">

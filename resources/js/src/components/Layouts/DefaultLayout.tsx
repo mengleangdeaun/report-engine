@@ -12,6 +12,8 @@ import { useLocation } from 'react-router-dom';
 import api from '../../utils/api';
 import { PERMISSIONS_UPDATED_EVENT } from '../../hooks/usePermission';
 
+import toast from 'react-hot-toast';
+
 const DefaultLayout = ({ children }: PropsWithChildren) => {
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const dispatch = useDispatch();
@@ -48,28 +50,62 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
         };
     }, []);
 
-useEffect(() => {
-    const refreshUserData = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
+    const [userId, setUserId] = useState<number | null>(null);
 
-        // 🛑 Guard: Only fetch if permissions are missing
-        const existingPerms = localStorage.getItem('permissions');
-        if (existingPerms && JSON.parse(existingPerms).length > 0) return;
+    useEffect(() => {
+        const refreshUserData = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) return;
 
-        try {
-            const response = await api.get('/auth/me');
-            const { user, permissions } = response.data;
+            // Always try to get user data to ensure we have the ID for Echo
+            // Even if permissions exist, we might not have stored ID
+            try {
+                const response = await api.get('/auth/me');
+                const { user, permissions } = response.data;
+                setUserId(user.id); // Set User ID for Echo
 
-            localStorage.setItem('permissions', JSON.stringify(permissions || []));
-            window.dispatchEvent(new Event('permissions-updated')); //
-        } catch (error) {
-            console.error("Refresh failed", error);
+                // Only update permissions if missing? Or always?
+                const existingPerms = localStorage.getItem('permissions');
+                if (!existingPerms || JSON.parse(existingPerms).length === 0) {
+                    localStorage.setItem('permissions', JSON.stringify(permissions || []));
+                    window.dispatchEvent(new Event('permissions-updated'));
+                }
+            } catch (error) {
+                console.error("Refresh failed", error);
+            }
+        };
+
+        refreshUserData();
+    }, [location.pathname]);
+
+    useEffect(() => {
+        // Listen for Real-Time Notifications on Private Channel
+        if (window.Echo && userId) {
+            // Re-configure auth header just in case token changed or wasn't there at init
+            window.Echo.connector.options.auth.headers.Authorization = 'Bearer ' + localStorage.getItem('token');
+
+            const channelName = `App.Models.User.${userId}`;
+            console.log('Listening to channel:', channelName);
+
+            window.Echo.private(channelName)
+                .notification((notification: any) => {
+                    console.log('Notification received:', notification);
+
+                    // Handle different notification types if structure varies
+                    const title = notification.title || notification.action || 'Notification';
+                    const message = notification.message || notification.description || 'You have a new notification.';
+
+                    toast.success(`${title}: ${message}`, {
+                        duration: 5000,
+                        position: 'top-right',
+                    });
+                });
+
+            return () => {
+                window.Echo.leave(channelName);
+            };
         }
-    };
-
-    refreshUserData();
-}, [location.pathname]); // Now it only calls the API if Dara has 0 permissions
+    }, [userId]); // Only run when userId is available
 
     return (
         <App>

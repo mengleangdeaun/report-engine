@@ -3,12 +3,12 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import api from '../../utils/api';
 import { toast } from 'react-hot-toast';
-import { 
-    IconBrandTelegram, 
-    IconDeviceFloppy, 
-    IconSend, 
-    IconHelp, 
-    IconCheck, 
+import {
+    IconBrandTelegram,
+    IconDeviceFloppy,
+    IconSend,
+    IconHelp,
+    IconCheck,
     IconX,
     IconInfoCircle,
     IconRefresh,
@@ -16,16 +16,18 @@ import {
     IconEye,
     IconEyeOff
 } from '@tabler/icons-react';
+import { Switch } from '../../components/ui/switch';
+import { Label } from '../../components/ui/label';
 
 const TelegramSettings = () => {
     const dispatch = useDispatch();
-    
+
     // Form State
     const [botToken, setBotToken] = useState('');
     const [chatId, setChatId] = useState('');
     const [topicId, setTopicId] = useState('');
     const [isActive, setIsActive] = useState(true);
-    
+
     // UI State
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -95,7 +97,7 @@ const TelegramSettings = () => {
         setTesting(true);
         try {
             await api.post('/settings/telegram/test', {
-                bot_token: botToken || null, 
+                bot_token: botToken || null,
                 chat_id: chatId,
                 topic_id: topicId
             });
@@ -159,7 +161,7 @@ const TelegramSettings = () => {
                                     <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
                                     <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-64"></div>
                                 </div>
-                                
+
                                 {/* Chat & Topic Section */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -225,10 +227,9 @@ const TelegramSettings = () => {
 
                     {/* Status Badge */}
                     <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-medium ${getStatusColor()}`}>
-                        <div className={`w-2 h-2 rounded-full ${
-                            connectionStatus === 'connected' ? 'bg-emerald-500' :
+                        <div className={`w-2 h-2 rounded-full ${connectionStatus === 'connected' ? 'bg-emerald-500' :
                             connectionStatus === 'disconnected' ? 'bg-red-500' : 'bg-gray-500'
-                        }`}></div>
+                            }`}></div>
                         {getStatusText()}
                         {botName && connectionStatus === 'connected' && (
                             <span className="ml-2 text-sm font-normal">@{botName}</span>
@@ -251,7 +252,7 @@ const TelegramSettings = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
+
                 {/* LEFT: Configuration Form */}
                 <div className="lg:col-span-2">
                     <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
@@ -271,21 +272,20 @@ const TelegramSettings = () => {
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 <div className="space-y-3">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Bot Token
                                         </label>
                                         <div className="relative">
-                                            <input 
-                                                type={showToken ? "text" : "password"} 
-                                                className={`w-full px-4 py-3 rounded-lg border ${
-                                                    hasToken && !botToken 
-                                                        ? 'border-emerald-300 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-500/10' 
-                                                        : 'border-gray-300 dark:border-gray-600'
-                                                } bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all`}
-                                                placeholder={hasToken ? "••••••••••••••••••••••••" : "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"} 
+                                            <input
+                                                type={showToken ? "text" : "password"}
+                                                className={`w-full px-4 py-3 rounded-lg border ${hasToken && !botToken
+                                                    ? 'border-emerald-300 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-500/10'
+                                                    : 'border-gray-300 dark:border-gray-600'
+                                                    } bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all`}
+                                                placeholder={hasToken ? "••••••••••••••••••••••••" : "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"}
                                                 value={botToken}
                                                 onChange={(e) => setBotToken(e.target.value)}
                                                 autoComplete="new-password"
@@ -301,9 +301,9 @@ const TelegramSettings = () => {
                                         <div className="flex items-center justify-between mt-2">
                                             <p className="text-xs text-gray-500 dark:text-gray-400">
                                                 Create a new bot via{' '}
-                                                <a 
-                                                    href="https://t.me/BotFather" 
-                                                    target="_blank" 
+                                                <a
+                                                    href="https://t.me/BotFather"
+                                                    target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                                                 >
@@ -325,25 +325,25 @@ const TelegramSettings = () => {
                             {/* 2. DESTINATION SECTION */}
                             <div className="pb-6 border-b border-gray-100 dark:border-gray-700">
                                 <h3 className="font-semibold text-gray-900 dark:text-white text-lg mb-4">2. Destination Settings</h3>
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Chat ID (Group or User)
                                         </label>
-                                        <input 
-                                            type="text" 
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
-                                            placeholder="-100123456789" 
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            placeholder="-100123456789"
                                             value={chatId}
                                             onChange={(e) => setChatId(e.target.value)}
                                             required
                                         />
                                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                                             Add the bot to your group, then use{' '}
-                                            <a 
-                                                href="https://t.me/RawDataBot" 
-                                                target="_blank" 
+                                            <a
+                                                href="https://t.me/RawDataBot"
+                                                target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                                             >
@@ -356,10 +356,10 @@ const TelegramSettings = () => {
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             Topic ID <span className="text-gray-400 text-sm font-normal">(Optional)</span>
                                         </label>
-                                        <input 
-                                            type="text" 
-                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
-                                            placeholder="e.g. 42" 
+                                        <input
+                                            type="text"
+                                            className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            placeholder="e.g. 42"
                                             value={topicId}
                                             onChange={(e) => setTopicId(e.target.value)}
                                         />
@@ -379,25 +379,26 @@ const TelegramSettings = () => {
                                             Control when notifications are sent
                                         </p>
                                     </div>
-                                    <label className="relative inline-flex items-center cursor-pointer">
-                                        <input 
-                                            type="checkbox" 
-                                            className="sr-only peer" 
-                                            checked={isActive} 
-                                            onChange={(e) => setIsActive(e.target.checked)} 
+                                    <div className="flex items-center space-x-2">
+                                        <Switch
+                                            id="is_active"
+                                            checked={isActive}
+                                            onCheckedChange={setIsActive}
                                         />
-                                        <div className="w-12 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                        <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                                        <Label
+                                            htmlFor="is_active"
+                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-900 dark:text-gray-300"
+                                        >
                                             {isActive ? 'Enabled' : 'Disabled'}
-                                        </span>
-                                    </label>
+                                        </Label>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* ACTIONS */}
                             <div className="pt-6 border-t border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row gap-3">
-                                <button 
-                                    type="submit" 
+                                <button
+                                    type="submit"
                                     disabled={saving}
                                     className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
                                 >
@@ -414,8 +415,8 @@ const TelegramSettings = () => {
                                     )}
                                 </button>
 
-                                <button 
-                                    type="button" 
+                                <button
+                                    type="button"
                                     onClick={handleTest}
                                     disabled={testing || (!botToken && !hasToken)}
                                     className="inline-flex items-center justify-center gap-2 px-5 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -461,9 +462,9 @@ const TelegramSettings = () => {
                                     <h4 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">Create Bot</h4>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
                                         Open{' '}
-                                        <a 
-                                            href="https://t.me/BotFather" 
-                                            target="_blank" 
+                                        <a
+                                            href="https://t.me/BotFather"
+                                            target="_blank"
                                             rel="noopener noreferrer"
                                             className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                                         >
@@ -496,9 +497,9 @@ const TelegramSettings = () => {
                                         <li className="flex items-start">
                                             <span className="text-blue-500 mr-2">•</span>
                                             The easiest way is to add{' '}
-                                            <a 
-                                                href="https://t.me/RawDataBot" 
-                                                target="_blank" 
+                                            <a
+                                                href="https://t.me/RawDataBot"
+                                                target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                                             >

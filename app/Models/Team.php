@@ -14,9 +14,9 @@ class Team extends Model
      * We only save the 'plan_type' slug now.
      */
     protected $fillable = [
-        'name', 
-        'user_id', 
-        'plan_type', 
+        'name',
+        'user_id',
+        'plan_type',
         'subscription_expires_at'
     ];
 
@@ -40,8 +40,8 @@ class Team extends Model
     public function members()
     {
         return $this->belongsToMany(User::class, 'team_user')
-                    ->withPivot('role', 'token_limit')
-                    ->withTimestamps();
+            ->withPivot('role', 'token_limit')
+            ->withTimestamps();
     }
 
     /**
@@ -75,5 +75,10 @@ class Team extends Model
     public function getMaxTokensAttribute($value)
     {
         return $this->plan ? $this->plan->max_tokens : ($value ?? 0);
+    }
+
+    public function telegramConfig()
+    {
+        return $this->hasOne(TelegramConfig::class);
     }
 }

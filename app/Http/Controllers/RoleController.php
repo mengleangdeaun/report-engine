@@ -13,69 +13,69 @@ class RoleController extends Controller
      * 1. List Workspace Roles & Plan Permissions
      * This fixes the "Cannot read properties of undefined (reading 'map')" error.
      */
-public function index()
-{
-    $team = Auth::user()->team;
-    setPermissionsTeamId($team->id);
+    public function index()
+    {
+        $team = Auth::user()->team;
+        setPermissionsTeamId($team->id);
 
-    // 1. Get the allowed feature slugs from the current plan
-    $allowedSlugs = $team->plan->features ?? [];
+        // 1. Get the allowed feature slugs from the current plan
+        $allowedSlugs = $team->plan->features ?? [];
 
-    // 2. Fetch only permissions that are BOTH in the Plan AND currently active
-    $availablePermissions = Permission::whereIn('name', $allowedSlugs)
-        ->where('is_active', true)
-        ->select('name', 'label', 'module')
-        ->get();
+        // 2. Fetch only permissions that are BOTH in the Plan AND currently active
+        $availablePermissions = Permission::whereIn('name', $allowedSlugs)
+            ->where('is_active', true)
+            ->select('name', 'label', 'module')
+            ->get();
 
-    $allowedNames = $availablePermissions->pluck('name')->toArray();
+        $allowedNames = $availablePermissions->pluck('name')->toArray();
 
-    // 3. Filter roles to ensure they only show permissions valid for the current plan
-    $roles = Role::where('team_id', $team->id)
-        ->with('permissions')
-        ->get()
-        ->map(function ($role) use ($allowedNames) {
-            // ✅ Only retain permissions that match the workspace's current plan
-            $filteredPermissions = $role->permissions->filter(function ($permission) use ($allowedNames) {
-                return in_array($permission->name, $allowedNames);
+        // 3. Filter roles to ensure they only show permissions valid for the current plan
+        $roles = Role::where('team_id', $team->id)
+            ->with('permissions')
+            ->get()
+            ->map(function ($role) use ($allowedNames) {
+                // ✅ Only retain permissions that match the workspace's current plan
+                $filteredPermissions = $role->permissions->filter(function ($permission) use ($allowedNames) {
+                    return in_array($permission->name, $allowedNames);
+                });
+
+                // Rebind the relationship so the frontend receives the filtered list
+                $role->setRelation('permissions', $filteredPermissions->values());
+                return $role;
             });
 
-            // Rebind the relationship so the frontend receives the filtered list
-            $role->setRelation('permissions', $filteredPermissions->values());
-            return $role;
-        });
-
-    return response()->json([
-        'roles' => $roles,
-        'available_permissions' => $availablePermissions
-    ]);
-}
-
-public function syncRolesToPlan()
-{
-    $team = Auth::user()->team;
-    setPermissionsTeamId($team->id);
-
-    // 1. Get current plan features
-    $allowedSlugs = $team->plan->features ?? [];
-    
-    // 2. Fetch roles for this team
-    $roles = Role::where('team_id', $team->id)->with('permissions')->get();
-    $syncCount = 0;
-
-    foreach ($roles as $role) {
-        // Find permissions the role has that are NOT in the current plan
-        $currentRolePerms = $role->permissions->pluck('name')->toArray();
-        $validPerms = array_intersect($currentRolePerms, $allowedSlugs);
-
-        // ✅ RE-SYNC: This removes unsupported "Ghost Permissions"
-        $role->syncPermissions($validPerms);
-        $syncCount++;
+        return response()->json([
+            'roles' => $roles,
+            'available_permissions' => $availablePermissions
+        ]);
     }
 
-    return response()->json([
-        'message' => "Successfully synchronized $syncCount roles with your current plan features."
-    ]);
-}
+    public function syncRolesToPlan()
+    {
+        $team = Auth::user()->team;
+        setPermissionsTeamId($team->id);
+
+        // 1. Get current plan features
+        $allowedSlugs = $team->plan->features ?? [];
+
+        // 2. Fetch roles for this team
+        $roles = Role::where('team_id', $team->id)->with('permissions')->get();
+        $syncCount = 0;
+
+        foreach ($roles as $role) {
+            // Find permissions the role has that are NOT in the current plan
+            $currentRolePerms = $role->permissions->pluck('name')->toArray();
+            $validPerms = array_intersect($currentRolePerms, $allowedSlugs);
+
+            // ✅ RE-SYNC: This removes unsupported "Ghost Permissions"
+            $role->syncPermissions($validPerms);
+            $syncCount++;
+        }
+
+        return response()->json([
+            'message' => "Successfully synchronized $syncCount roles with your current plan features."
+        ]);
+    }
 
     /**
      * 2. Create a New Custom Role
@@ -84,7 +84,7 @@ public function syncRolesToPlan()
     {
         $request->validate([
             'name' => 'required|string|max:50',
-            'permissions' => 'array' 
+            'permissions' => 'array'
         ]);
 
         $user = Auth::user();
@@ -94,7 +94,7 @@ public function syncRolesToPlan()
         // ✅ PLAN CHECK: Ensure they aren't trying to add features not in their plan
         $planFeatures = collect($team->plan->features ?? []);
         $requested = collect($request->permissions);
-        
+
         $unauthorized = $requested->diff($planFeatures);
         if ($unauthorized->isNotEmpty()) {
             return response()->json([
@@ -102,10 +102,16 @@ public function syncRolesToPlan()
             ], 403);
         }
 
+        // ✅ RESTRICTED NAMES: Prevent spoofing system roles
+        $restrictedNames = ['super_admin'];
+        if (in_array(strtolower($request->name), $restrictedNames)) {
+            return response()->json(['message' => 'This role name is reserved and cannot be used.'], 422);
+        }
+
         // ✅ TEAM SCOPE: Create the role linked to this specific team
         $role = Role::create([
-            'name' => $request->name, 
-            'team_id' => $team->id, 
+            'name' => $request->name,
+            'team_id' => $team->id,
             'guard_name' => 'web'
         ]);
 
@@ -140,6 +146,12 @@ public function syncRolesToPlan()
             return response()->json(['message' => 'Unsupported permissions for your plan'], 403);
         }
 
+        // ✅ RESTRICTED NAMES: Prevent spoofing system roles
+        $restrictedNames = ['super_admin', 'admin'];
+        if (in_array(strtolower($request->name), $restrictedNames)) {
+            return response()->json(['message' => 'This role name is reserved and cannot be used.'], 422);
+        }
+
         $role->name = $request->name;
         $role->save();
         $role->syncPermissions($request->permissions);
@@ -157,7 +169,7 @@ public function syncRolesToPlan()
         setPermissionsTeamId($team->id);
 
         $role = Role::where('id', $id)->where('team_id', $team->id)->firstOrFail();
-        
+
         // Prevent deleting the system-generated Admin role
         if ($role->name === 'admin') {
             return response()->json(['message' => 'Cannot delete the workspace admin role.'], 403);

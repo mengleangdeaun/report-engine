@@ -10,6 +10,9 @@ import './tailwind.css';
 // i18n (needs to be bundled)
 import './i18n';
 
+// Echo / Pusher
+import './bootstrap';
+
 // Router
 import { RouterProvider } from 'react-router-dom';
 import router from './router/index';

@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import { logout } from '../../store/authSlice';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { IRootState } from '../../store';
+import { Button } from '../../components/ui/button';
 
 const VerifyEmail = () => {
     const dispatch = useDispatch();
@@ -86,14 +87,14 @@ const VerifyEmail = () => {
 
                             {/* Action Buttons */}
                             <div className="space-y-4">
-                                <button 
+                                <Button 
                                     type="button"
                                     onClick={checkVerificationStatus} 
                                     className="btn btn-gradient w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
                                     disabled={verifying}
                                 >
                                     {verifying ? 'Checking...' : 'I have verified my email'}
-                                </button>
+                                </Button>
 
                                 <button 
                                     type="button"

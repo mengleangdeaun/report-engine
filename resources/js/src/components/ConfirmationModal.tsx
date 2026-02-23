@@ -7,18 +7,18 @@ interface Props {
     onClose: () => void;
     onConfirm: () => void;
     title: string;
-    message: string;
+    message: React.ReactNode;
     confirmText?: string;
     loading?: boolean;
     isDanger?: boolean;
 }
 
-export const ConfirmationModal = ({ 
-    isOpen, 
-    onClose, 
-    onConfirm, 
-    title, 
-    message, 
+export const ConfirmationModal = ({
+    isOpen,
+    onClose,
+    onConfirm,
+    title,
+    message,
     confirmText = "Confirm",
     loading = false,
     isDanger = false
@@ -95,12 +95,12 @@ export const ConfirmationModal = ({
                             <Dialog.Panel className="relative w-full max-w-md transition-all">
                                 {/* Liquid Glass Background */}
                                 <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-white/70 via-white/40 to-white/20 backdrop-blur-3xl border border-white/40 shadow-2xl shadow-black/10 dark:from-gray-900/80 dark:via-gray-800/40 dark:to-gray-900/20 dark:border-white/20" />
-                                
+
                                 {/* Shimmer Effect */}
                                 <div className="absolute inset-0 rounded-3xl overflow-hidden">
                                     <div className="absolute -inset-[100%] bg-gradient-to-r from-transparent via-white/5 via-10% to-transparent animate-[shimmer_4s_ease-in-out_infinite] dark:via-white/3" />
                                 </div>
-                                
+
                                 {/* Main Content Container */}
                                 <div className="relative rounded-3xl bg-gradient-to-b from-white/20 to-white/10 p-8 backdrop-blur-xl border border-white/30 shadow-[inset_0_1px_2px_rgba(255,255,255,0.3)] dark:from-gray-800/30 dark:to-gray-900/30 dark:border-white/10 dark:shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)]">
                                     {/* Close Button */}
@@ -112,28 +112,28 @@ export const ConfirmationModal = ({
                                     >
                                         <IconX size={18} />
                                     </button>
-                                    
+
                                     <div className="flex flex-col items-center text-center">
                                         {/* Action Icon */}
                                         <div className="relative mb-6">
-                                            
+
                                             {/* Icon Container */}
                                             <div className={`relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${colors.iconBgFrom} ${colors.iconBgTo} backdrop-blur-lg border-2 ${colors.iconBorder}`}>
-                                                
+
                                                 {/* Icon */}
                                                 {getActionIcon()}
-                                                
+
                                             </div>
                                         </div>
-                                        
+
                                         {/* Title */}
-                                        <Dialog.Title 
-                                            as="h3" 
+                                        <Dialog.Title
+                                            as="h3"
                                             className="text-2xl font-bold text-gray-900 mb-3 leading-tight dark:text-white"
                                         >
                                             {title}
                                         </Dialog.Title>
-                                        
+
                                         {/* Message */}
                                         <div className="mt-4 w-full px-4 py-4 rounded-xl bg-white/30 backdrop-blur-sm border border-white/40 dark:bg-gray-800/30 dark:border-gray-700/50">
                                             <p className="text-sm text-gray-700 leading-relaxed dark:text-gray-300">
@@ -155,7 +155,7 @@ export const ConfirmationModal = ({
                                                     Cancel
                                                 </span>
                                             </button>
-                                            
+
                                             {/* Confirm Button */}
                                             <button
                                                 type="button"
@@ -165,7 +165,7 @@ export const ConfirmationModal = ({
                                             >
                                                 {/* Hover Glow */}
                                                 <div className={`absolute inset-0 rounded-xl bg-${colors.primary}-400/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-                                                
+
                                                 {/* Button Content */}
                                                 <span className="relative flex items-center justify-center gap-2 font-semibold text-sm">
                                                     {loading ? (
@@ -183,7 +183,7 @@ export const ConfirmationModal = ({
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {/* Outer Glow */}
                                 <div className={`absolute -inset-2 bg-gradient-to-r from-${colors.primary}-400/10 via-transparent to-${colors.primary}-400/10 blur-xl rounded-3xl -z-10`} />
                             </Dialog.Panel>

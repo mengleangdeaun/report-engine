@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import api from '../../utils/api';
 import toast from 'react-hot-toast'; 
+import { Button } from '../../components/ui/button';
 
 const LoginBoxed = () => {
     const location = useLocation();
@@ -181,9 +182,9 @@ const handleGoogleLogin = async () => {
                                         Forget Password
                                     </Link>
                                 </div>
-                                <button type="submit" disabled={loading} className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
+                                <Button type="submit" disabled={loading} className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]">
                                     {loading ? 'Signing in...' : 'Sign in'}
-                                </button>
+                                </Button>
                             </form>
                             <div className="relative my-7 text-center md:mb-9">
                                 <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-white-light dark:bg-white-dark"></span>

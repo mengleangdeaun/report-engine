@@ -2,8 +2,8 @@ import { useEffect, useState, Fragment } from 'react';
 import { Dialog, Transition, Listbox } from '@headlessui/react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
-import { 
-    IconPencil, IconLock, IconCheck, IconX, 
+import {
+    IconPencil, IconLock, IconCheck, IconX,
     IconSearch, IconFilter, IconShield, IconInfoCircle,
     IconRefresh, IconPlus, IconTrash, IconAlertCircle,
     IconChevronDown, IconSettings, IconBuilding,
@@ -16,12 +16,12 @@ const PermissionManagement = () => {
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editForm, setEditForm] = useState({ label: '', module: '' });
-    
+
     // Search and Filter
     const [searchTerm, setSearchTerm] = useState('');
     const [moduleFilter, setModuleFilter] = useState<string>('all');
     const [statusFilter, setStatusFilter] = useState<string>('all');
-    
+
     // Add Permission Modal
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newPermission, setNewPermission] = useState({
@@ -31,18 +31,18 @@ const PermissionManagement = () => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => { 
-        fetchPermissions(); 
+    useEffect(() => {
+        fetchPermissions();
     }, []);
 
     const fetchPermissions = async () => {
         try {
             const res = await api.get('/admin/permissions');
             setPermissions(res.data);
-        } catch (e: any) { 
-            toast.error(e.response?.data?.message || "Failed to load permissions"); 
-        } finally { 
-            setLoading(false); 
+        } catch (e: any) {
+            toast.error(e.response?.data?.message || "Failed to load permissions");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -57,8 +57,8 @@ const PermissionManagement = () => {
             toast.success("Permission updated successfully");
             setEditingId(null);
             fetchPermissions();
-        } catch (e: any) { 
-            toast.error(e.response?.data?.message || "Update failed"); 
+        } catch (e: any) {
+            toast.error(e.response?.data?.message || "Update failed");
         }
     };
 
@@ -77,7 +77,7 @@ const PermissionManagement = () => {
             toast.error("Name and Label are required");
             return;
         }
-        
+
         setIsSubmitting(true);
         try {
             await api.post('/admin/permissions', newPermission);
@@ -97,16 +97,16 @@ const PermissionManagement = () => {
 
     // Filter permissions
     const filteredPermissions = permissions.filter(p => {
-        const matchesSearch = !searchTerm || 
-            p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.module.toLowerCase().includes(searchTerm.toLowerCase());
-        
+        const matchesSearch = !searchTerm ||
+            (p.name ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (p.label ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (p.module ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+
         const matchesModule = moduleFilter === 'all' || p.module === moduleFilter;
-        const matchesStatus = statusFilter === 'all' || 
+        const matchesStatus = statusFilter === 'all' ||
             (statusFilter === 'active' && p.is_active) ||
             (statusFilter === 'inactive' && !p.is_active);
-        
+
         return matchesSearch && matchesModule && matchesStatus;
     });
 
@@ -123,7 +123,7 @@ const PermissionManagement = () => {
                             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64 animate-pulse"></div>
                         </div>
                     </div>
-                    
+
                     <div className="bg-gray-200 dark:bg-gray-700 rounded-xl p-4 mb-6 animate-pulse">
                         <div className="h-5 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
                         <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-full"></div>
@@ -187,7 +187,7 @@ const PermissionManagement = () => {
                             </p>
                         </div>
                     </div>
-                    
+
                     {/* Stats Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 text-primary dark:text-primary-light rounded-full font-medium border border-primary/20 dark:border-primary/30">
                         <IconShield size={16} />
@@ -344,7 +344,7 @@ const PermissionManagement = () => {
                                                 {searchTerm ? 'No Permissions Found' : 'No Permissions Yet'}
                                             </h3>
                                             <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                                                {searchTerm 
+                                                {searchTerm
                                                     ? `No permissions match "${searchTerm}". Try a different search term.`
                                                     : 'Start by adding your first system permission.'
                                                 }
@@ -368,14 +368,14 @@ const PermissionManagement = () => {
                                                 Created {new Date(p.created_at).toLocaleDateString()}
                                             </div>
                                         </td>
-                                        
+
                                         <td className="py-4 px-6">
                                             {editingId === p.id ? (
                                                 <input
                                                     type="text"
                                                     className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                                     value={editForm.label}
-                                                    onChange={e => setEditForm({...editForm, label: e.target.value})}
+                                                    onChange={e => setEditForm({ ...editForm, label: e.target.value })}
                                                     autoFocus
                                                 />
                                             ) : (
@@ -384,38 +384,35 @@ const PermissionManagement = () => {
                                                 </div>
                                             )}
                                         </td>
-                                        
+
                                         <td className="py-4 px-6">
                                             {editingId === p.id ? (
                                                 <input
                                                     type="text"
                                                     className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                                     value={editForm.module}
-                                                    onChange={e => setEditForm({...editForm, module: e.target.value})}
+                                                    onChange={e => setEditForm({ ...editForm, module: e.target.value })}
                                                 />
                                             ) : (
-                                                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                                                    p.module 
+                                                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${p.module
                                                         ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'
                                                         : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600'
-                                                }`}>
+                                                    }`}>
                                                     {p.module || 'Uncategorized'}
                                                 </span>
                                             )}
                                         </td>
-                                        
+
                                         <td className="py-4 px-6">
                                             <button
                                                 onClick={() => handleToggleActive(p.id)}
-                                                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/20 ${
-                                                    p.is_active 
-                                                        ? 'bg-emerald-500 dark:bg-emerald-600' 
+                                                className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/20 ${p.is_active
+                                                        ? 'bg-emerald-500 dark:bg-emerald-600'
                                                         : 'bg-gray-300 dark:bg-gray-600'
-                                                }`}
+                                                    }`}
                                             >
-                                                <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
-                                                    p.is_active ? 'translate-x-6' : 'translate-x-1'
-                                                }`} />
+                                                <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${p.is_active ? 'translate-x-6' : 'translate-x-1'
+                                                    }`} />
                                                 <span className="absolute inset-0 flex items-center justify-between px-1.5">
                                                     {p.is_active ? (
                                                         <IconCheck size={12} className="text-white" />
@@ -428,7 +425,7 @@ const PermissionManagement = () => {
                                                 {p.is_active ? 'Active' : 'Inactive'}
                                             </div>
                                         </td>
-                                        
+
                                         <td className="py-4 px-6">
                                             {editingId === p.id ? (
                                                 <div className="flex items-center gap-2">
@@ -517,7 +514,7 @@ const PermissionManagement = () => {
                                                     className="w-full text-gray-700 dark:text-gray-200 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                                     placeholder="e.g., create_project"
                                                     value={newPermission.name}
-                                                    onChange={e => setNewPermission({...newPermission, name: e.target.value.toLowerCase().replace(/\s+/g, '_')})}
+                                                    onChange={e => setNewPermission({ ...newPermission, name: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
                                                     disabled={isSubmitting}
                                                 />
                                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -534,7 +531,7 @@ const PermissionManagement = () => {
                                                     className="w-full px-4 py-3 text-gray-700 dark:text-gray-200 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                                     placeholder="e.g., Create Project"
                                                     value={newPermission.label}
-                                                    onChange={e => setNewPermission({...newPermission, label: e.target.value})}
+                                                    onChange={e => setNewPermission({ ...newPermission, label: e.target.value })}
                                                     disabled={isSubmitting}
                                                 />
                                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -551,7 +548,7 @@ const PermissionManagement = () => {
                                                     className="w-full px-4 py-3 rounded-lg text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                                     placeholder="e.g., Projects"
                                                     value={newPermission.module}
-                                                    onChange={e => setNewPermission({...newPermission, module: e.target.value})}
+                                                    onChange={e => setNewPermission({ ...newPermission, module: e.target.value })}
                                                     disabled={isSubmitting}
                                                 />
                                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

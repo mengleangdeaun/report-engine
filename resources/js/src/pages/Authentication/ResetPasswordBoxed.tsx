@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 
 const ResetPasswordBoxed = () => {
     const dispatch = useDispatch();
@@ -36,8 +37,8 @@ const ResetPasswordBoxed = () => {
             toast.error("Passwords do not match");
             return;
         }
-        if (password.length < 8) {
-            toast.error("Password must be at least 8 characters");
+        if (password.length < 6) {
+            toast.error("Password must be at least 6 characters");
             return;
         }
 
@@ -92,9 +93,9 @@ const ResetPasswordBoxed = () => {
                                         </span>
                                     </div>
                                 </div>
-                                <button type="submit" className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]" disabled={loading}>
+                                <Button type="submit" className="!mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]" disabled={loading}>
                                     {loading ? 'Resetting...' : 'Reset Password'}
-                                </button>
+                                </Button>
                             </form>
                         </div>
                     </div>

@@ -2,36 +2,37 @@ import { useEffect, useState, useMemo, Fragment } from 'react';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { Dialog, Listbox, Transition } from '@headlessui/react';
-import { 
-    useReactTable, 
-    getCoreRowModel, 
-    flexRender, 
+import {
+    useReactTable,
+    getCoreRowModel,
+    flexRender,
     createColumnHelper,
     SortingState,
     PaginationState
 } from '@tanstack/react-table';
 import { toast, Toaster } from 'react-hot-toast';
 import api from '../../utils/api';
-import { 
-    IconSearch, IconTrash, IconShield, IconCoin, 
+import {
+    IconSearch, IconTrash, IconShield, IconCoin,
     IconSettings, IconLoader, IconLock, IconPencil,
     IconChevronLeft, IconChevronRight, IconChevronDown,
     IconCheck, IconX, IconUsers, IconBuilding,
     IconChartBar, IconInfoCircle, IconCrown, IconUser,
     IconKey, IconAlertCircle, IconPlus, IconRefresh,
-    IconFilter, IconChevronUp, IconChecks
+    IconFilter, IconChevronUp, IconChecks, IconBan, IconLockOpen
 } from '@tabler/icons-react';
 import DeleteModal from '../../components/DeleteModal';
+import { ConfirmationModal } from '../../components/ConfirmationModal';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 
 const UserManagement = () => {
     const dispatch = useDispatch();
-    
+
     // --- DATA STATE ---
     const [data, setData] = useState<any[]>([]);
     const [rowCount, setRowCount] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [availableRoles, setAvailableRoles] = useState<string[]>([]); 
+    const [availableRoles, setAvailableRoles] = useState<string[]>([]);
 
     // --- PERMISSION MODAL STATES ---
     const [isPermModalOpen, setIsPermModalOpen] = useState(false);
@@ -59,6 +60,8 @@ const UserManagement = () => {
     const [tokenAmount, setTokenAmount] = useState<string>('');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<{ type: 'ban' | 'unban', userId: number, userName: string } | null>(null);
 
     useEffect(() => {
         dispatch(setPageTitle('User Management'));
@@ -69,8 +72,8 @@ const UserManagement = () => {
         try {
             const res = await api.get('/roles');
             setAvailableRoles(res.data.map((r: any) => r.name));
-        } catch (e) { 
-            console.error("Failed to fetch roles"); 
+        } catch (e) {
+            console.error("Failed to fetch roles");
         }
     };
 
@@ -107,7 +110,7 @@ const UserManagement = () => {
     }, [pagination.pageIndex, pagination.pageSize, sorting, search, selectedRoleFilter]);
 
     // --- SMART ACTIONS ---
-    
+
     const openEditModal = (user: any) => {
         setSelectedUser(user);
         setEditForm({
@@ -150,8 +153,8 @@ const UserManagement = () => {
         setIsSubmitting(true);
 
         const token = localStorage.getItem('token');
-        const apiCall = api.post(`admin/users/${selectedUser.id}/tokens`, 
-            { amount: parseInt(tokenAmount), description: 'Admin Adjustment' }, 
+        const apiCall = api.post(`admin/users/${selectedUser.id}/tokens`,
+            { amount: parseInt(tokenAmount), description: 'Admin Adjustment' },
             { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -188,34 +191,68 @@ const UserManagement = () => {
         fetchData();
     };
 
-// const openPermissionModal = async (user: any) => {
-//     setSelectedUser(user);
-//     setIsPermModalOpen(true);
-//     setIsLoadingPermissions(true);
-//     try {
-//         const token = localStorage.getItem('token');
-//         const res = await api.get(`admin/users/${user.id}/details`, {
-//             headers: { Authorization: `Bearer ${token}` }
-//         });
+    const handleBan = (user: any) => {
+        setConfirmAction({ type: 'ban', userId: user.id, userName: user.name });
+        setIsConfirmModalOpen(true);
+    };
 
-//         // Use the exact keys from your Laravel response
-//         const userPerms = res.data.user_permissions || [];
-//         const mLimit = res.data.user_settings?.member_limit || 0;
+    const handleUnban = (user: any) => {
+        setConfirmAction({ type: 'unban', userId: user.id, userName: user.name });
+        setIsConfirmModalOpen(true);
+    };
 
-//         setAllPermissions(res.data.all_permissions || []);
-//         setUserPermissions(userPerms);
-//         setMemberLimit(mLimit);
+    const executeBanOrUnban = async () => {
+        if (!confirmAction) return;
 
-//         // Fix: Make sure these match the data variables above
-//         setInitialPermissions(userPerms); 
-//         setInitialMemberLimit(mLimit);
+        setIsSubmitting(true);
+        try {
+            const endpoint = confirmAction.type === 'ban' ? 'ban' : 'unban';
+            const apiCall = api.post(`/admin/users/${confirmAction.userId}/${endpoint}`);
 
-//     } catch (e) {
-//         toast.error("Failed to load permissions");
-//     } finally {
-//         setIsLoadingPermissions(false);
-//     }
-// };
+            await toast.promise(apiCall, {
+                loading: `${confirmAction.type === 'ban' ? 'Banning' : 'Unbanning'} user...`,
+                success: `User ${confirmAction.type === 'ban' ? 'banned' : 'unbanned'} successfully.`,
+                error: `Failed to ${confirmAction.type} user.`
+            });
+
+            fetchData();
+            setIsConfirmModalOpen(false);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsSubmitting(false);
+            setConfirmAction(null);
+        }
+    };
+
+    // const openPermissionModal = async (user: any) => {
+    //     setSelectedUser(user);
+    //     setIsPermModalOpen(true);
+    //     setIsLoadingPermissions(true);
+    //     try {
+    //         const token = localStorage.getItem('token');
+    //         const res = await api.get(`admin/users/${user.id}/details`, {
+    //             headers: { Authorization: `Bearer ${token}` }
+    //         });
+
+    //         // Use the exact keys from your Laravel response
+    //         const userPerms = res.data.user_permissions || [];
+    //         const mLimit = res.data.user_settings?.member_limit || 0;
+
+    //         setAllPermissions(res.data.all_permissions || []);
+    //         setUserPermissions(userPerms);
+    //         setMemberLimit(mLimit);
+
+    //         // Fix: Make sure these match the data variables above
+    //         setInitialPermissions(userPerms); 
+    //         setInitialMemberLimit(mLimit);
+
+    //     } catch (e) {
+    //         toast.error("Failed to load permissions");
+    //     } finally {
+    //         setIsLoadingPermissions(false);
+    //     }
+    // };
 
     const submitPermissions = async () => {
         setIsSubmitting(true);
@@ -225,7 +262,7 @@ const UserManagement = () => {
                 permissions: userPermissions,
                 member_limit: memberLimit
             }, { headers: { Authorization: `Bearer ${token}` } });
-            
+
             toast.success("Permission updated!");
             setIsPermModalOpen(false);
             fetchData();
@@ -258,8 +295,8 @@ const UserManagement = () => {
             header: 'User Profile',
             cell: (info) => (
                 <div className="flex items-center gap-3">
-                    <img 
-                        src={info.row.original.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(info.getValue())}&background=primary&color=fff&bold=true&size=128`} 
+                    <img
+                        src={info.row.original.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(info.getValue())}&background=primary&color=fff&bold=true&size=128`}
                         className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm"
                         alt={info.getValue()}
                     />
@@ -268,6 +305,11 @@ const UserManagement = () => {
                             {info.getValue()}
                             {info.row.original.roles?.some((r: any) => r.name === 'admin') && (
                                 <IconCrown size={14} className="text-amber-500" />
+                            )}
+                            {info.row.original.banned_at && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400 uppercase tracking-wide">
+                                    Banned
+                                </span>
                             )}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -284,11 +326,10 @@ const UserManagement = () => {
                 const isAdmin = info.getValue()?.some((r: any) => r.name === 'admin');
                 const isOwner = info.row.original.is_owner;
                 return (
-                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                        isOwner ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30' :
+                    <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${isOwner ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30' :
                         isAdmin ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30' :
-                        'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'
-                    }`}>
+                            'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'
+                        }`}>
                         {isOwner && <IconCrown size={12} />}
                         {isOwner ? 'Owner' : isAdmin ? 'Admin' : 'User'}
                     </span>
@@ -317,7 +358,7 @@ const UserManagement = () => {
             header: 'Actions',
             cell: (info) => (
                 <div className="flex items-center gap-2">
-                    <button 
+                    <button
                         onClick={() => openTokenModal(info.row.original)}
                         className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary hover:text-primary/80 hover:bg-primary/5 rounded-lg transition-colors"
                         title="Manage Tokens"
@@ -326,7 +367,7 @@ const UserManagement = () => {
                         Tokens
                     </button>
 
-                    <button 
+                    <button
                         onClick={() => openEditModal(info.row.original)}
                         className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors"
                         title="Edit User"
@@ -344,7 +385,7 @@ const UserManagement = () => {
                         Access
                     </button> */}
 
-                    <button 
+                    <button
                         onClick={() => confirmDelete(info.row.original.id)}
                         className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                         title="Delete User"
@@ -352,6 +393,26 @@ const UserManagement = () => {
                         <IconTrash size={16} />
                         Remove
                     </button>
+
+                    {info.row.original.banned_at ? (
+                        <button
+                            onClick={() => handleUnban(info.row.original)}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors"
+                            title="Unban User"
+                        >
+                            <IconLockOpen size={16} />
+                            Unban
+                        </button>
+                    ) : (
+                        <button
+                            onClick={() => handleBan(info.row.original)}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-500/10 rounded-lg transition-colors"
+                            title="Ban User"
+                        >
+                            <IconBan size={16} />
+                            Ban
+                        </button>
+                    )}
                 </div>
             ),
         }),
@@ -392,7 +453,7 @@ const UserManagement = () => {
                             <p className="text-gray-500 dark:text-gray-400 mt-0.5">Manage system users, permissions, and tokens</p>
                         </div>
                     </div>
-                    
+
                     {/* Stats Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-500/10 dark:to-blue-500/5 text-blue-700 dark:text-blue-400 rounded-full font-medium border border-blue-200 dark:border-blue-500/20">
                         <IconUsers size={16} />
@@ -451,8 +512,8 @@ const UserManagement = () => {
                                 {table.getHeaderGroups().map(headerGroup => (
                                     <Fragment key={headerGroup.id}>
                                         {headerGroup.headers.map(header => (
-                                            <th 
-                                                key={header.id} 
+                                            <th
+                                                key={header.id}
                                                 className="py-4 px-6 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
                                                 onClick={header.column.getToggleSortingHandler()}
                                             >
@@ -511,7 +572,7 @@ const UserManagement = () => {
                                                 {search ? 'No Users Found' : 'No Users Yet'}
                                             </h3>
                                             <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                                                {search 
+                                                {search
                                                     ? `No users match "${search}". Try a different search term.`
                                                     : 'Start by adding users to manage permissions and tokens.'
                                                 }
@@ -562,8 +623,7 @@ const UserManagement = () => {
                                                     <Listbox.Option
                                                         key={pageSize}
                                                         className={({ active }) =>
-                                                            `relative cursor-pointer select-none py-2 pl-10 pr-4 ${
-                                                                active ? 'bg-primary/5 text-primary' : 'text-gray-700 dark:text-gray-300'
+                                                            `relative cursor-pointer select-none py-2 pl-10 pr-4 ${active ? 'bg-primary/5 text-primary' : 'text-gray-700 dark:text-gray-300'
                                                             }`
                                                         }
                                                         value={pageSize}
@@ -676,7 +736,7 @@ const UserManagement = () => {
                                                     type="text"
                                                     className="w-full px-4 py-3 rounded-lg border text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                                     value={editForm.name}
-                                                    onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                                                 />
                                             </div>
 
@@ -688,7 +748,7 @@ const UserManagement = () => {
                                                     type="email"
                                                     className="w-full px-4 py-3 text-gray-700 dark:text-gray-200 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                                     value={editForm.email}
-                                                    onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                                                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                                                 />
                                             </div>
 
@@ -701,7 +761,7 @@ const UserManagement = () => {
                                                     placeholder="Leave empty to keep current"
                                                     className="w-full px-4 text-gray-700 dark:text-gray-200 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                                                     value={editForm.password}
-                                                    onChange={(e) => setEditForm({...editForm, password: e.target.value})}
+                                                    onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
                                                 />
                                             </div>
 
@@ -733,6 +793,21 @@ const UserManagement = () => {
                     </div>
                 </Dialog>
             </Transition>
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                onConfirm={executeBanOrUnban}
+                title={confirmAction?.type === 'ban' ? 'Ban User' : 'Unban User'}
+                message={confirmAction?.type === 'ban'
+                    ? `Are you sure you want to ban ${confirmAction?.userName}? They will be logged out immediately and unable to access the system.`
+                    : `Are you sure you want to unban ${confirmAction?.userName}? They will be able to log in again.`
+                }
+                confirmText={confirmAction?.type === 'ban' ? 'Ban User' : 'Unban User'}
+                isDanger={confirmAction?.type === 'ban'}
+                loading={isSubmitting}
+            />
 
             {/* Token Modal */}
             <Transition appear show={isTokenModalOpen} as={Fragment}>

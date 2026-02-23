@@ -9,7 +9,7 @@ import Dropdown from '../Dropdown';
 import TeamSwitcher from '../TeamSwitcher';
 import axios from 'axios';
 import api from '../../utils/api';
-import{ formatNotificationTime } from'../../utils/formatNotificationTime';
+import { formatNotificationTime } from '../../utils/formatNotificationTime';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import { getStoragePath } from '../../utils/config'; // Adjust path as needed
 import { IconBell, IconX, IconCheck } from '@tabler/icons-react';
@@ -17,6 +17,11 @@ import { IconBell, IconX, IconCheck } from '@tabler/icons-react';
 
 
 
+declare global {
+    interface Window {
+        Echo: any;
+    }
+}
 
 const Header = () => {
     const location = useLocation();
@@ -24,13 +29,13 @@ const Header = () => {
     const dispatch = useDispatch();
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
-    const{ i18n } = useTranslation();
+    const { i18n } = useTranslation();
 
     // --- HELPER: CENTRALIZED IMAGE LOGIC ---
     // This handles: 1. Google URLs, 2. Local Uploads, 3. Fallback Initials
     const getProfileImage = (userObj: any) => {
         const name = userObj?.name || 'User';
-        
+
         // 1. No Avatar? Return Initials
         if (!userObj?.avatar || userObj.avatar.trim() === '') {
             return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D8ABC&color=fff`;
@@ -50,17 +55,19 @@ const Header = () => {
     const [userData, setUserData] = useState(() => {
         // Check BOTH storages immediately
         const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
-        
-        let initialData = { 
-            name: 'User', 
-            email: 'user@mail.com', 
-            role: 'user', 
+
+        let initialData: { id: number | null, name: string, email: string, role: string, avatar: string } = {
+            id: null,
+            name: 'User',
+            email: 'user@mail.com',
+            role: 'user',
             avatar: '' // Will be calculated below
         };
 
         if (storedUser) {
             try {
                 const parsed = JSON.parse(storedUser);
+                initialData.id = parsed.id;
                 initialData.name = parsed.name || 'User';
                 initialData.email = parsed.email || 'user@mail.com';
                 initialData.role = parsed.role || 'user';
@@ -73,7 +80,7 @@ const Header = () => {
         } else {
             initialData.avatar = getProfileImage(null);
         }
-        
+
         return initialData;
     });
 
@@ -85,12 +92,13 @@ const Header = () => {
             try {
                 const parsed = JSON.parse(storedUser);
                 setUserData({
+                    id: parsed.id,
                     name: parsed.name || 'User',
                     email: parsed.email || 'user@mail.com',
                     role: parsed.role || 'user',
                     avatar: getProfileImage(parsed) // ✅ Use Helper
                 });
-            } catch(e) {
+            } catch (e) {
                 console.error("Header update error", e);
             }
         }
@@ -140,23 +148,50 @@ const Header = () => {
 
     const [notifications, setNotifications] = useState<any[]>([]);
 
-        const fetchNotifications = async () => {
-            try {
-                const res = await api.get('/notifications');
-                setNotifications(res.data);
-            } catch (e) {
-                console.error("Notify Error", e);
-            }
-        };
+    const fetchNotifications = async () => {
+        try {
+            const res = await api.get('/notifications');
+            setNotifications(res.data);
+        } catch (e) {
+            console.error("Notify Error", e);
+        }
+    };
 
-    // 2. Poll every 60 seconds (Simple "Real-time")
-useEffect(() => {
+    // 2. Poll every 60 seconds (Fallback) AND Listen for Real-Time Events
+    useEffect(() => {
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 60000);
-        return () => clearInterval(interval);
-    }, []);
 
-// Handle "X" Button (Delete Single)
+        // Polling fallback
+        const interval = setInterval(fetchNotifications, 60000);
+
+        // Real-time Listener from Pusher
+        if (window.Echo && userData.id) { // Ensure userData has ID (requires fetch/storage update)
+            // We need the ID. userData state might not have it if it was constructed from scratch without ID.
+            // Let's rely on localStorage 'user' object directly for the ID to be safe, or the one we just parsed.
+            const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+            if (storedUser) {
+                const userObj = JSON.parse(storedUser);
+                if (userObj.id) {
+                    const channelName = `App.Models.User.${userObj.id}`;
+                    console.log('Header: Listening to', channelName);
+                    window.Echo.private(channelName)
+                        .notification((notification: any) => {
+                            console.log('Header: Notification received, refreshing list...');
+                            fetchNotifications(); // Refresh list immediately
+                        });
+
+                    return () => {
+                        clearInterval(interval);
+                        window.Echo.leave(channelName);
+                    }
+                }
+            }
+        }
+
+        return () => clearInterval(interval);
+    }, [userData]); // Re-run if userData changes (login/logout)
+
+    // Handle "X" Button (Delete Single)
     const removeNotification = async (id: string) => {
         // Optimistic UI Update (Remove immediately)
         setNotifications(notifications.filter((n) => n.id !== id));
@@ -167,26 +202,36 @@ useEffect(() => {
         }
     };
 
+    const [isMarkingRead, setIsMarkingRead] = useState(false);
+    const [isDeletingAll, setIsDeletingAll] = useState(false);
+
+
+    // Handle "Read All" Button
+    const markAllRead = async () => {
+        setIsMarkingRead(true);
+        // Optimistic UI Update (Mark all visually read)
+        setNotifications(notifications.map(n => ({ ...n, read_at: new Date() })));
+        try {
+            await api.post('/notifications/read');
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsMarkingRead(false);
+        }
+    };
+
     // Handle "Delete All" Button
     const deleteAll = async () => {
+        setIsDeletingAll(true);
         // Optimistic UI: Clear list immediately
-        setNotifications([]); 
+        setNotifications([]);
         try {
             // Call the existing clear endpoint we made earlier
             await api.post('/notifications/clear');
         } catch (e) {
             console.error(e);
-        }
-    };
-
-    // Handle "Read All" Button
-    const markAllRead = async () => {
-        // Optimistic UI Update (Mark all visually read)
-        setNotifications(notifications.map(n => ({ ...n, read_at: new Date() }))); 
-        try {
-            await api.post('/notifications/read');
-        } catch (e) {
-            console.error(e);
+        } finally {
+            setIsDeletingAll(false);
         }
     };
 
@@ -327,10 +372,9 @@ useEffect(() => {
                         <div>
                             {themeConfig.theme === 'light' ? (
                                 <button
-                                    className={`${
-                                        themeConfig.theme === 'light' &&
+                                    className={`${themeConfig.theme === 'light' &&
                                         'flex items-center p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60'
-                                    }`}
+                                        }`}
                                     onClick={() => {
                                         dispatch(toggleTheme('dark'));
                                     }}
@@ -352,10 +396,9 @@ useEffect(() => {
                             )}
                             {themeConfig.theme === 'dark' && (
                                 <button
-                                    className={`${
-                                        themeConfig.theme === 'dark' &&
+                                    className={`${themeConfig.theme === 'dark' &&
                                         'flex items-center p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60'
-                                    }`}
+                                        }`}
                                     onClick={() => {
                                         dispatch(toggleTheme('system'));
                                     }}
@@ -370,10 +413,9 @@ useEffect(() => {
                             )}
                             {themeConfig.theme === 'system' && (
                                 <button
-                                    className={`${
-                                        themeConfig.theme === 'system' &&
+                                    className={`${themeConfig.theme === 'system' &&
                                         'flex items-center p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60'
-                                    }`}
+                                        }`}
                                     onClick={() => {
                                         dispatch(toggleTheme('light'));
                                     }}
@@ -397,7 +439,7 @@ useEffect(() => {
                                 btnClassName="block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
                                 button={<img className="w-5 h-5 object-cover rounded-full" src={`/assets/images/flags/${flag.toUpperCase()}.svg`} alt="flag" />}
                             >
-                                <ul className="!px-2 text-dark dark:text-white-dark grid grid-cols-2 gap-2 font-semibold dark:text-white-light/90 w-[280px]">
+                                <ul className="!px-2 text-dark dark:text-white-dark grid grid-cols-1 gap-2 font-semibold dark:text-white-light/90 w-[150px]">
                                     {themeConfig.languageList.map((item: any) => {
                                         return (
                                             <li key={item.code}>
@@ -447,181 +489,181 @@ useEffect(() => {
                         </div> */}
 
 
-<div className="dropdown shrink-0">
-    <Dropdown
-        offset={[0, 8]}
-        placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
-        btnClassName="relative block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
-        button={
-            <span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19.0001 9.7041V9C19.0001 5.13401 15.8661 2 12.0001 2C8.13407 2 5.00006 5.13401 5.00006 9V9.7041C5.00006 10.5491 4.74995 11.3752 4.28123 12.0783L3.13263 13.8012C2.08349 15.3749 2.88442 17.5139 4.70913 18.0116C9.48258 19.3134 14.5175 19.3134 19.291 18.0116C21.1157 17.5139 21.9166 15.3749 20.8675 13.8012L19.7189 12.0783C19.2502 11.3752 19.0001 10.5491 19.0001 9.7041Z" stroke="currentColor" strokeWidth="1.5" />
-                    <path d="M7.5 19C8.15503 20.7478 9.92246 22 12 22C14.0775 22 15.845 20.7478 16.5 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    <path d="M12 6V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-                {unreadCount > 0 && (
-                    <span className="flex absolute w-3 h-3 ltr:right-0 rtl:left-0 top-0">
-                        <span className="animate-ping absolute ltr:-left-[3px] rtl:-right-[3px] -top-[3px] inline-flex h-full w-full rounded-full bg-success/50 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full w-[6px] h-[6px] bg-success"></span>
-                    </span>
-                )}
-            </span>
-        }
-    >
-        <ul className="!py-0 text-dark dark:text-white-dark w-[360px] sm:w-[400px] shadow-lg">
-            {/* Header */}
-            <li onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center px-5 py-3.5 justify-between border-b border-gray-100 dark:border-white/10">
-                    <div>
-                        <h4 className="text-base font-semibold text-dark dark:text-white">Notifications</h4>
-                        {unreadCount > 0 && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                {unreadCount} unread message{unreadCount !== 1 ? 's' : ''}
-                            </p>
-                        )}
-                    </div>
-                    {unreadCount > 0 && (
-                        <span className="flex items-center justify-center min-w-[26px] h-6 px-2 rounded-full bg-primary text-white text-xs font-semibold">
-                            {unreadCount}
-                        </span>
-                    )}
-                </div>
-            </li>
-            
-            {/* Notification List */}
-            {notifications.length > 0 ? (
-                <>
-                    <li onClick={(e) => e.stopPropagation()}>
-                        <PerfectScrollbar className="relative max-h-[450px]">
-                            {notifications.map((notification) => {
-                                const isUnread = !notification.read_at;
-                                return (
-                                    <div 
-                                        key={notification.id} 
-                                        className={`group flex items-start gap-3.5 px-5 py-4 border-b border-gray-50 dark:border-white/5 transition-colors cursor-pointer last:border-b-0 ${
-                                            isUnread 
-                                                ? 'bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/15' 
-                                                : 'hover:bg-gray-50 dark:bg-gray-900/90 dark:hover:bg-primary/10'
-                                        }`}
-                                    >
-                                        
-                                        {/* Avatar */}
-                                        <div className="relative flex-shrink-0">
-                                            <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center shadow-sm ${
-                                                !notification.data.user_avatar && (isUnread 
-                                                    ? 'bg-gradient-to-br from-primary to-primary-dark' 
-                                                    : 'bg-gray-400 dark:bg-gray-600')
-                                            }`}>
-                                                {notification.data.user_avatar ? (
-                                                    <img 
-                                                        className="w-full h-full object-cover" 
-                                                        alt={notification.data.user_name || 'User'} 
-                                                        loading="lazy"
-                                                        width="48"
-                                                        height="48"
-                                                        decoding="async"
-                                                        src={getStoragePath(notification.data.user_avatar)} 
-                                                    />
-                                                ) : (
-                                                    <span className="text-sm font-bold text-white uppercase">
-                                                        {notification.data.user_name 
-                                                            ? notification.data.user_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-                                                            : 'US'}
-                                                    </span>
+                        <div className="dropdown shrink-0">
+                            <Dropdown
+                                offset={[0, 8]}
+                                placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
+                                btnClassName="relative block p-2 rounded-full bg-white-light/40 dark:bg-dark/40 hover:text-primary hover:bg-white-light/90 dark:hover:bg-dark/60"
+                                button={
+                                    <span>
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M19.0001 9.7041V9C19.0001 5.13401 15.8661 2 12.0001 2C8.13407 2 5.00006 5.13401 5.00006 9V9.7041C5.00006 10.5491 4.74995 11.3752 4.28123 12.0783L3.13263 13.8012C2.08349 15.3749 2.88442 17.5139 4.70913 18.0116C9.48258 19.3134 14.5175 19.3134 19.291 18.0116C21.1157 17.5139 21.9166 15.3749 20.8675 13.8012L19.7189 12.0783C19.2502 11.3752 19.0001 10.5491 19.0001 9.7041Z" stroke="currentColor" strokeWidth="1.5" />
+                                            <path d="M7.5 19C8.15503 20.7478 9.92246 22 12 22C14.0775 22 15.845 20.7478 16.5 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                            <path d="M12 6V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                        </svg>
+                                        {unreadCount > 0 && (
+                                            <span className="flex absolute w-3 h-3 ltr:right-0 rtl:left-0 top-0">
+                                                <span className="animate-ping absolute ltr:-left-[3px] rtl:-right-[3px] -top-[3px] inline-flex h-full w-full rounded-full bg-success/50 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full w-[6px] h-[6px] bg-success"></span>
+                                            </span>
+                                        )}
+                                    </span>
+                                }
+                            >
+                                <ul className="!py-0 text-dark dark:text-white-dark w-[360px] sm:w-[400px] shadow-lg">
+                                    {/* Header */}
+                                    <li onClick={(e) => e.stopPropagation()}>
+                                        <div className="flex items-center px-5 py-3.5 justify-between border-b border-gray-100 dark:border-white/10">
+                                            <div>
+                                                <h4 className="text-base font-semibold text-dark dark:text-white">Notifications</h4>
+                                                {unreadCount > 0 && (
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                                        {unreadCount} unread message{unreadCount !== 1 ? 's' : ''}
+                                                    </p>
                                                 )}
                                             </div>
-                                            {isUnread && (
-                                                <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-white dark:border-dark"></span>
+                                            {unreadCount > 0 && (
+                                                <span className="flex items-center justify-center min-w-[26px] h-6 px-2 rounded-full bg-primary text-white text-xs font-semibold">
+                                                    {unreadCount}
+                                                </span>
                                             )}
                                         </div>
-                                        
-                                        {/* Content */}
-                                        <div className="flex-1 min-w-0">
-                                            {/* User Name and Time */}
-                                            <div className="flex items-start justify-between gap-2 mb-1.5">
-                                                <h6 className={`font-semibold text-[15px] leading-tight ${
-                                                    isUnread 
-                                                        ? 'text-dark dark:text-white' 
-                                                        : 'text-gray-700 dark:text-gray-300'
-                                                }`}>
-                                                    {notification.data.user_name || 'Unknown User'}
-                                                </h6>
-                                                <span className=
-                                                "text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap font-medium" >
-                                                    {formatNotificationTime(notification.created_at, t, i18n)}
-                                                </span>
+                                    </li>
 
+                                    {/* Notification List */}
+                                    {notifications.length > 0 ? (
+                                        <>
+                                            <li onClick={(e) => e.stopPropagation()}>
+                                                <PerfectScrollbar className="relative max-h-[450px]">
+                                                    {notifications.map((notification) => {
+                                                        const isUnread = !notification.read_at;
+                                                        return (
+                                                            <div
+                                                                key={notification.id}
+                                                                onClick={(e) => markAsRead(notification.id, e)}
+                                                                className={`group flex items-start gap-3.5 px-5 py-4 border-b border-gray-50 dark:border-white/5 transition-colors cursor-pointer last:border-b-0 ${isUnread
+                                                                    ? 'bg-primary/5 dark:bg-primary/10 hover:bg-primary/10 dark:hover:bg-primary/15'
+                                                                    : 'hover:bg-gray-50 dark:bg-gray-900/90 dark:hover:bg-primary/10'
+                                                                    }`}
+                                                            >
+
+                                                                {/* Avatar */}
+                                                                <div className="relative flex-shrink-0">
+                                                                    <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center shadow-sm ${!notification.data?.user_avatar && (isUnread
+                                                                        ? 'bg-gradient-to-br from-primary to-primary-dark'
+                                                                        : 'bg-gray-400 dark:bg-gray-600')
+                                                                        }`}>
+                                                                        {notification.data?.user_avatar ? (
+                                                                            <img
+                                                                                className="w-full h-full object-cover"
+                                                                                alt={notification.data?.user_name || 'User'}
+                                                                                loading="lazy"
+                                                                                width="48"
+                                                                                height="48"
+                                                                                decoding="async"
+                                                                                src={getStoragePath(notification.data.user_avatar)}
+                                                                            />
+                                                                        ) : (
+                                                                            <span className="text-sm font-bold text-white uppercase">
+                                                                                {notification.data?.user_name
+                                                                                    ? notification.data.user_name.split(' ').map((n: any) => n[0]).join('').substring(0, 2).toUpperCase()
+                                                                                    : 'SY'}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    {isUnread && (
+                                                                        <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-white dark:border-dark"></span>
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Content */}
+                                                                <div className="flex-1 min-w-0">
+                                                                    {/* User Name and Time */}
+                                                                    <div className="flex items-start justify-between gap-2 mb-1.5">
+                                                                        <h6 className={`font-semibold text-[15px] leading-tight ${isUnread
+                                                                            ? 'text-dark dark:text-white'
+                                                                            : 'text-gray-700 dark:text-gray-300'
+                                                                            }`}>
+                                                                            {notification.data?.user_name || 'System Notification'}
+                                                                        </h6>
+                                                                        <span className=
+                                                                            "text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap font-medium" >
+                                                                            {formatNotificationTime(notification.created_at, t, i18n)}
+                                                                        </span>
+
+                                                                    </div>
+
+                                                                    {/* Action */}
+                                                                    <p className="text-xs font-medium text-primary mb-1.5">
+                                                                        {notification.data?.action || 'Notification'}
+                                                                    </p>
+
+                                                                    {/* Description */}
+                                                                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-[1.6] line-clamp-2">
+                                                                        {notification.data?.description || 'No description provided.'}
+                                                                    </p>
+                                                                </div>
+
+                                                                {/* Remove Button */}
+                                                                <button
+                                                                    type="button"
+                                                                    className="flex-shrink-0 p-1.5 text-gray-300 hover:text-danger hover:bg-danger/10 dark:hover:bg-danger/20 rounded-md opacity-0 group-hover:opacity-100 transition-all"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        removeNotification(notification.id);
+                                                                    }}
+                                                                    title="Remove"
+                                                                >
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </PerfectScrollbar>
+                                            </li>
+
+                                            {/* Footer */}
+                                            <li onClick={(e) => e.stopPropagation()}>
+                                                <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800/50">
+                                                    <button
+                                                        onClick={markAllRead}
+                                                        disabled={isMarkingRead}
+                                                        className="flex-1 px-4 py-2 text-blue-600 dark:text-blue-400 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20  rounded-md text-sm font-semibold border border-blue-200 dark:border-blue-800/50 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {isMarkingRead ? 'Processing...' : 'Mark All Read'}
+                                                    </button>
+                                                    <button
+                                                        onClick={deleteAll}
+                                                        disabled={isDeletingAll}
+                                                        className="flex-1 px-4 py-2 text-red-600 dark:text-red-400 bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-900/20 border border-red-200 dark:border-red-800/50  text-sm font-semibold rounded-md transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {isDeletingAll ? 'Processing...' : 'Delete All'}
+                                                    </button>
+
+                                                </div>
+                                            </li>
+                                        </>
+                                    ) : (
+                                        /* Empty State */
+                                        <li onClick={(e) => e.stopPropagation()}>
+                                            <div className="flex flex-col items-center justify-center text-center py-16 px-6">
+                                                <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-4">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
+                                                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                                    </svg>
+                                                </div>
+                                                <h5 className="text-base font-semibold text-dark dark:text-white mb-1.5">No notifications</h5>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">You're all caught up!</p>
                                             </div>
-                                            
-                                            {/* Action */}
-                                            <p className="text-xs font-medium text-primary mb-1.5">
-                                                {notification.data.action}
-                                            </p>
-                                            
-                                            {/* Description */}
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 leading-[1.6] line-clamp-2">
-                                                {notification.data.description}
-                                            </p>
-                                        </div>
-                                        
-                                        {/* Remove Button */}
-                                        <button
-                                            type="button"
-                                            className="flex-shrink-0 p-1.5 text-gray-300 hover:text-danger hover:bg-danger/10 dark:hover:bg-danger/20 rounded-md opacity-0 group-hover:opacity-100 transition-all"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                removeNotification(notification.id);
-                                            }}
-                                            title="Remove"
-                                        >
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                        </PerfectScrollbar>
-                    </li>
-                    
-                    {/* Footer */}
-                    <li onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800/50">
-                            <button 
-                                onClick={markAllRead} 
-                                className="flex-1 px-4 py-2 text-blue-600 dark:text-blue-400 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20  rounded-md text-sm font-semibold border border-blue-200 dark:border-blue-800/50 transition-all shadow-sm hover:shadow-md"
-                            >
-                                Mark All Read
-                            </button>
-                            <button 
-                                onClick={deleteAll} 
-                                className="flex-1 px-4 py-2 text-red-600 dark:text-red-400 bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-900/20 border border-red-200 dark:border-red-800/50  text-sm font-semibold rounded-md transition-all shadow-sm hover:shadow-md"
-                            >
-                                Delete All
-                            </button>
-
+                                        </li>
+                                    )}
+                                </ul>
+                            </Dropdown>
                         </div>
-                    </li>
-                </>
-            ) : (
-                /* Empty State */
-                <li onClick={(e) => e.stopPropagation()}>
-                    <div className="flex flex-col items-center justify-center text-center py-16 px-6">
-                        <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                            </svg>
-                        </div>
-                        <h5 className="text-base font-semibold text-dark dark:text-white mb-1.5">No notifications</h5>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">You're all caught up!</p>
-                    </div>
-                </li>
-            )}
-        </ul>
-    </Dropdown>
-</div>
 
                         <TeamSwitcher />
                         <div className="dropdown shrink-0 flex">
@@ -630,10 +672,10 @@ useEffect(() => {
                                 placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
                                 btnClassName="relative group block"
                                 button={
-                                    <img 
-                                        src={userData.avatar} 
-                                        alt="profile" 
-                                        className="h-9 w-9 rounded-full object-cover" 
+                                    <img
+                                        src={userData.avatar}
+                                        alt="profile"
+                                        className="h-9 w-9 rounded-full object-cover"
                                         // Add an onError fallback just in case
                                         onError={(e) => {
                                             e.currentTarget.src = "https://ui-avatars.com/api/?name=User&background=random";
@@ -644,10 +686,10 @@ useEffect(() => {
                                 <ul className="text-dark dark:text-white-dark !py-0 w-[230px] font-semibold dark:text-white-light/90">
                                     <li>
                                         <div className="flex items-center px-4 py-4">
-                                            <img 
-                                                src={userData.avatar} 
-                                                alt="profile" 
-                                                className="h-9 w-9 rounded-full object-cover" 
+                                            <img
+                                                src={userData.avatar}
+                                                alt="profile"
+                                                className="h-9 w-9 rounded-full object-cover"
                                                 // Add an onError fallback just in case
                                                 onError={(e) => {
                                                     e.currentTarget.src = "https://ui-avatars.com/api/?name=User&background=random";
@@ -663,7 +705,7 @@ useEffect(() => {
                                             </div>
                                         </div>
                                     </li>
-                                    
+
                                     <li>
                                         <Link to="/users/profile" className="dark:hover:text-white">
                                             <svg className="ltr:mr-2 rtl:ml-2 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -675,9 +717,9 @@ useEffect(() => {
                                     </li>
 
                                     <li>
- 
+
                                     </li>
-                                    
+
                                     <li className="border-t border-white-light dark:border-white-light/10">
                                         <button onClick={handleLogout} className="text-danger !py-3 w-full flex items-center px-4 hover:bg-gray-100 dark:hover:bg-[#1b2e4b]">
                                             <svg className="ltr:mr-2 rtl:ml-2 rotate-90 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

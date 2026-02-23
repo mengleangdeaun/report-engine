@@ -3,11 +3,27 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
-    AdminController, AuthController, VerificationController, ReportController,
-    PageController, TeamController, InvitationController, SubscriptionController,
-    PlanController, RoleController, UserController, ProfileController,
-    NotificationController, TelegramSettingsController, DashboardController, PublicReportController,
-    ColorController
+    AdminController,
+    AuthController,
+    VerificationController,
+    ReportController,
+    PageController,
+    TeamController,
+    InvitationController,
+    SubscriptionController,
+    PlanController,
+    RoleController,
+    UserController,
+    ProfileController,
+    NotificationController,
+    TelegramSettingsController,
+    DashboardController,
+    PublicReportController,
+    ColorController,
+    QrCodeController,
+    TopUpRequestController,
+    SystemConfigController,
+    FacebookAdReportController
 
 };
 
@@ -21,6 +37,7 @@ Route::post('/register', [AuthController::class, 'register']);
 
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::get('/config', [SystemConfigController::class, 'getPublicConfig']); // Public Config
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/plans', [PlanController::class, 'index']);
 Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);
@@ -31,8 +48,11 @@ Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallbac
 Route::get('/public/reports/{uuid}', [ReportController::class, 'getPublicReport']);
 Route::get('/public/share/{token}', [PublicReportController::class, 'getPublicPageHistory']);
 Route::post('/public/share/{token}/exact-location', [PublicReportController::class, 'updateExactLocation']);
+
+// QR Code public scan tracking
+Route::get('/qr/s/{shortCode}', [QrCodeController::class, 'track']);
 Route::get('api/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])
-->name('verification.verify'); 
+    ->name('verification.verify');
 
 
 
@@ -43,8 +63,8 @@ Route::get('api/email/verify/{id}/{hash}', [VerificationController::class, 'veri
 */
 // Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
 Route::middleware('auth:sanctum')->group(function () {
-    
-    
+
+
     // User Profile & Basics
     Route::get('/user', [AuthController::class, 'me']); // Simplified logic should be in Controller
     Route::get('/auth/me', [AuthController::class, 'me']);
@@ -52,10 +72,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/profile', [ProfileController::class, 'update']);
     Route::put('/user/password', [ProfileController::class, 'updatePassword']);
     Route::post('/user/delete', [ProfileController::class, 'destroy']);
-    
+
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markOneAsRead']);
     Route::post('/notifications/clear', [NotificationController::class, 'clearAll']);
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
@@ -84,10 +105,31 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // --- REPORTING ---
     // Basic Report Generation (Gates by either FB or TT permissions)
-    Route::post('/generate-report', [ReportController::class, 'generate']); 
+    Route::post('/generate-report', [ReportController::class, 'generate']);
     Route::get('/reports/history', [ReportController::class, 'history']);
     Route::get('/reports/export', [ReportController::class, 'exportCsv'])->name('reports.export');
     Route::get('/reports/top-performers', [ReportController::class, 'getTopPerformers']);
+
+    // --- FACEBOOK ADS REPORT (Separate system) ---
+    Route::post('/ad-reports/generate', [FacebookAdReportController::class, 'generate']);
+    Route::get('/ad-reports/history', [FacebookAdReportController::class, 'history']);
+    Route::get('/ad-reports/{id}', [FacebookAdReportController::class, 'show']);
+    Route::get('/ad-reports/{id}/export', [FacebookAdReportController::class, 'exportCsv']);
+    Route::delete('/ad-reports/{id}', [FacebookAdReportController::class, 'destroy']);
+    Route::get('/ad-accounts', [FacebookAdReportController::class, 'adAccounts']);
+
+    // --- MEDIA LIBRARY ---
+    Route::get('/media/storage-info', [App\Http\Controllers\MediaLibraryController::class, 'storageInfo']);
+    Route::get('/media/folders', [App\Http\Controllers\MediaLibraryController::class, 'folders']);
+    Route::post('/media/folders', [App\Http\Controllers\MediaLibraryController::class, 'createFolder']);
+    Route::put('/media/folders/{id}', [App\Http\Controllers\MediaLibraryController::class, 'updateFolder']);
+    Route::delete('/media/folders/{id}', [App\Http\Controllers\MediaLibraryController::class, 'deleteFolder']);
+    Route::get('/media/files', [App\Http\Controllers\MediaLibraryController::class, 'files']);
+    Route::post('/media/files/upload', [App\Http\Controllers\MediaLibraryController::class, 'upload']);
+    Route::put('/media/files/{id}', [App\Http\Controllers\MediaLibraryController::class, 'updateFile']);
+    Route::put('/media/files/{id}/favorite', [App\Http\Controllers\MediaLibraryController::class, 'toggleFavorite']);
+    Route::delete('/media/files/{id}', [App\Http\Controllers\MediaLibraryController::class, 'deleteFile']);
+    Route::get('/media/files/{id}/download', [App\Http\Controllers\MediaLibraryController::class, 'download']);
     Route::post('/pages/{page}/share-all', [ReportController::class, 'shareWholePage']);
     Route::post('/pages/{page}/regenerate-share', [ReportController::class, 'regenerateShareToken']);
     Route::get('/pages/{page}/share-status', [ReportController::class, 'getShareStatus']);
@@ -108,7 +150,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user/page-names', [PageController::class, 'listNames']);
     Route::get('/pages/sync', [PageController::class, 'syncPages']);
     Route::post('/pages/{id}/favorite', [PageController::class, 'toggleFavorite']);
-    
+
     // Modifying Pages (Requires edit permission)
     Route::put('/pages/{id}', [PageController::class, 'update']);// You can add 'page_edit' to your migration if not there
     Route::post('/pages/{id}/active', [PageController::class, 'toggleActive']);
@@ -130,9 +172,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/member/{id}', [TeamController::class, 'removeMember']);
         Route::put('/member/{id}/permissions', [TeamController::class, 'updatePermissions']);
         Route::put('/member/{id}/limit', [TeamController::class, 'updateLimit']);
-        
+
         // ✅ Move these here
-        Route::put('/member/{id}/role', [TeamController::class, 'updateMemberRole']); 
+        Route::put('/member/{id}/role', [TeamController::class, 'updateMemberRole']);
         Route::post('/invitations', [InvitationController::class, 'store']);
         Route::get('/invitations', [InvitationController::class, 'index']);
         Route::delete('/invitations/{id}', [InvitationController::class, 'destroy']);
@@ -145,6 +187,22 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::delete('/{id}', [RoleController::class, 'destroy']);
         Route::post('/sync-plan', [RoleController::class, 'syncRolesToPlan']);
     });
+
+    // --- QR CODE MANAGEMENT ---
+    Route::prefix('qr-codes')->group(function () {
+        Route::get('/', [QrCodeController::class, 'index']);
+        Route::post('/', [QrCodeController::class, 'store']);
+        Route::get('/{id}', [QrCodeController::class, 'show']);
+        Route::put('/{id}', [QrCodeController::class, 'update']);
+        Route::delete('/{id}', [QrCodeController::class, 'destroy']);
+    });
+    // --- Top Up Requests ---
+    Route::post('/top-up-requests', [TopUpRequestController::class, 'store']);
+    Route::get('/admin/top-up-requests', [TopUpRequestController::class, 'index']);
+    Route::post('/admin/top-up-requests/{id}/approve', [TopUpRequestController::class, 'approve']); // Add this
+    Route::put('/admin/top-up-requests/{id}', [TopUpRequestController::class, 'update']);
+    Route::post('/admin/top-up-requests/batch-delete', [TopUpRequestController::class, 'destroyMultiple']);
+    Route::delete('/admin/top-up-requests/{id}', [TopUpRequestController::class, 'destroy']);
 });
 
 /*
@@ -157,9 +215,10 @@ Route::middleware(['auth:sanctum', 'superadmin'])->prefix('admin')->group(functi
     Route::get('/dashboard', [AdminController::class, 'dashboard']);
     Route::get('/teams', [SubscriptionController::class, 'index']);
     Route::put('/teams/{id}/plan', [SubscriptionController::class, 'updatePlan']);
-    
+
     Route::get('/permissions/available', [PlanController::class, 'getAvailableFeatures']);
     Route::get('/permissions', [App\Http\Controllers\Admin\PermissionController::class, 'index']);
+    Route::post('/permissions', [App\Http\Controllers\Admin\PermissionController::class, 'store']);
     Route::put('/permissions/{id}', [App\Http\Controllers\Admin\PermissionController::class, 'update']);
     Route::delete('/permissions/{id}', [App\Http\Controllers\Admin\PermissionController::class, 'destroy']);
     Route::post('/permissions/{id}/toggle', [App\Http\Controllers\Admin\PermissionController::class, 'toggleStatus']);
@@ -183,4 +242,12 @@ Route::middleware(['auth:sanctum', 'superadmin'])->prefix('admin')->group(functi
     Route::delete('/users/{id}', [AdminController::class, 'destroy']);
     Route::get('/users/{id}/details', [UserController::class, 'getUserDetails']);
     Route::post('/users/{id}/tokens', [UserController::class, 'adjustTokens']);
+    Route::post('/users/{id}/ban', [UserController::class, 'ban']);
+    Route::post('/users/{id}/unban', [UserController::class, 'unban']);
+
+    // System Settings
+    Route::get('/settings', [SystemConfigController::class, 'index']);
+    Route::post('/settings', [SystemConfigController::class, 'update']);
+    Route::post('/settings/test-telegram', [SystemConfigController::class, 'testTelegram']); // Route name matches controller method
+
 });

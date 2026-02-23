@@ -13,7 +13,7 @@ interface UserProfile {
     id: number;
     name: string;
     email: string;
-    roles: string[]; 
+    roles: string[];
 }
 
 const Sidebar = () => {
@@ -31,28 +31,28 @@ const Sidebar = () => {
     };
     const { can } = usePermission();
 
-// Inside Sidebar.tsx
-const [user, setUser] = useState<any>(null);
+    // Inside Sidebar.tsx
+    const [user, setUser] = useState<any>(null);
 
-useEffect(() => {
-    const loadUser = () => {
-        const stored = localStorage.getItem('user');
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            setUser(parsed.user || parsed); // Handle nesting
-        }
-    };
-    loadUser();
-    window.addEventListener('permissions-updated', loadUser);
-    return () => window.removeEventListener('permissions-updated', loadUser);
-}, []);
+    useEffect(() => {
+        const loadUser = () => {
+            const stored = localStorage.getItem('user');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                setUser(parsed.user || parsed); // Handle nesting
+            }
+        };
+        loadUser();
+        window.addEventListener('permissions-updated', loadUser);
+        return () => window.removeEventListener('permissions-updated', loadUser);
+    }, []);
 
-const isAdmin = useMemo(() => {
-    if (!user || !user.roles) return false;
-    return user.roles.includes('admin');
-}, [user]);
+    const isAdmin = useMemo(() => {
+        if (!user || !user.roles) return false;
+        return user.roles.includes('admin');
+    }, [user]);
 
-    
+
 
 
     useEffect(() => {
@@ -84,7 +84,7 @@ const isAdmin = useMemo(() => {
                     <div className="flex justify-between items-center px-4 py-3">
                         <NavLink to="/" className="main-logo flex items-center shrink-0">
                             <img className="w-8 ml-[5px] flex-none" src="/assets/images/logo.png" alt="logo" />
-                            <span className="text-2xl ltr:ml-1.5 rtl:mr-1.5 font-semibold align-middle lg:inline dark:text-white-light">{t('Report Maker')}</span>
+                            <span className="text-xl ltr:ml-1.5 rtl:mr-1.5 font-semibold align-middle lg:inline dark:text-white-light">{t('Report Engine')}</span>
                         </NavLink>
 
                         <button
@@ -133,6 +133,35 @@ const isAdmin = useMemo(() => {
                                 </AnimateHeight>
                             </li>
 
+                            {isAdmin && (
+                                <li className="menu nav-item">
+                                    <button type="button" className={`${currentMenu === 'sys-config' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('sys-config')}>
+                                        <div className="flex items-center">
+                                            <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path opacity="0.5" d="M12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22Z" fill="currentColor"></path>
+                                                <path d="M12 17V17.01M12 14C12 12.5 13 12 13.5 11.5C14 11 14.5 10.5 14.5 9.5C14.5 8.11929 13.3807 7 12 7C10.6193 7 9.5 8.11929 9.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"></path>
+                                            </svg>
+                                            <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">System Config</span>
+                                        </div>
+                                        <div className={currentMenu === 'sys-config' ? 'rotate-90' : 'rtl:rotate-180'}>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M9 5L15 12L9 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </div>
+                                    </button>
+                                    <AnimateHeight duration={300} height={currentMenu === 'sys-config' ? 'auto' : 0}>
+                                        <ul className="sub-menu text-gray-500">
+                                            <li>
+                                                <NavLink to="/admin/system-config">Settings</NavLink>
+                                            </li>
+                                            <li>
+                                                <NavLink to="/admin/top-up-requests">Top Up Requests</NavLink>
+                                            </li>
+                                        </ul>
+                                    </AnimateHeight>
+                                </li>
+                            )}
+
                             <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1">
                                 <svg className="w-4 h-5 flex-none hidden" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -141,88 +170,129 @@ const isAdmin = useMemo(() => {
                             </h2>
                             <li className="nav-item">
                                 <ul>
-                                    {can('generate facebook report') &&(
-                                    <li className="nav-item">
-                                        <NavLink to="/apps/report/facebook-report-generator" className="group mt-1">
-                                            <div className="flex items-center">
-                                                <svg className="group-hover:!text-primary shrink-0" width="22" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+                                    {can('generate facebook report') && (
+                                        <li className="nav-item">
+                                            <NavLink to="/apps/report/facebook-report-generator" className="group mt-1">
+                                                <div className="flex items-center">
+                                                    <svg className="group-hover:!text-primary shrink-0" width="22" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 
 
-                                                <path 
-                                                    fillRule="evenodd" 
-                                                    clipRule="evenodd" 
-                                                    d="M13.5 21.8882V12.8882H16.5L17 9.38818H13.5V7.38818C13.5 6.48818 13.75 5.88818 15.05 5.88818H17.1V2.78818C16.8 2.74818 15.75 2.64818 14.55 2.64818C12.05 2.64818 10.3 4.21818 10.3 7.03818V9.38818H7.25V12.8882H10.3V21.8882H13.5Z" 
-                                                    fill="currentColor"
-                                                />
-                                                {/* Secondary layer - 70% opacity */}
-                                                <path 
-                                                    opacity="0.7"
-                                                    fillRule="evenodd" 
-                                                    clipRule="evenodd" 
-                                                    d="M13.5 21.8882V12.8882H16.5L17 9.38818H13.5V7.38818C13.5 6.48818 13.75 5.88818 15.05 5.88818H17.1V2.78818C16.8 2.74818 15.75 2.64818 14.55 2.64818C12.05 2.64818 10.3 4.21818 10.3 7.03818V9.38818H7.25V12.8882H10.3V21.8882H13.5Z" 
-                                                    fill="currentColor"
-                                                    transform="translate(0.3, 0.3)"
-                                                />
+                                                        <path
+                                                            fillRule="evenodd"
+                                                            clipRule="evenodd"
+                                                            d="M13.5 21.8882V12.8882H16.5L17 9.38818H13.5V7.38818C13.5 6.48818 13.75 5.88818 15.05 5.88818H17.1V2.78818C16.8 2.74818 15.75 2.64818 14.55 2.64818C12.05 2.64818 10.3 4.21818 10.3 7.03818V9.38818H7.25V12.8882H10.3V21.8882H13.5Z"
+                                                            fill="currentColor"
+                                                        />
+                                                        {/* Secondary layer - 70% opacity */}
+                                                        <path
+                                                            opacity="0.7"
+                                                            fillRule="evenodd"
+                                                            clipRule="evenodd"
+                                                            d="M13.5 21.8882V12.8882H16.5L17 9.38818H13.5V7.38818C13.5 6.48818 13.75 5.88818 15.05 5.88818H17.1V2.78818C16.8 2.74818 15.75 2.64818 14.55 2.64818C12.05 2.64818 10.3 4.21818 10.3 7.03818V9.38818H7.25V12.8882H10.3V21.8882H13.5Z"
+                                                            fill="currentColor"
+                                                            transform="translate(0.3, 0.3)"
+                                                        />
 
 
-                                                </svg>
-                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('facebookreportgenerator')}</span>
-                                            </div>
-                                        </NavLink>
-                                    </li>
+                                                    </svg>
+                                                    <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('facebookreportgenerator')}</span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
                                     )}
-                                    
-                                    {can('generate tiktok report') &&(
+
+                                    {can('generate tiktok report') && (
+                                        <li className="nav-item">
+                                            <NavLink to="/apps/report/tiktok-report-generator" className="group">
+                                                <div className="flex items-center">
+                                                    <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+
+
+                                                        <path
+                                                            d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"
+                                                            fill="currentColor"
+                                                        />
+                                                        {/* Shadow/accent layer - 70% opacity */}
+                                                        <path
+                                                            opacity="0.7"
+                                                            d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"
+                                                            fill="currentColor"
+                                                            transform="translate(0.5, 0.5)"
+                                                        />
+
+                                                    </svg>
+                                                    <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('tiktokreportgenerator')}</span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
+
+                                    {can('generate_facebook_ads_performance') && (
+                                        <li className="nav-item">
+                                            <NavLink to="/apps/report/facebook-ads-report-generator" className="group mt-1">
+                                                <div className="flex items-center">
+                                                    <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path
+                                                            opacity="0.5"
+                                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2Z"
+                                                            fill="currentColor"
+                                                        />
+                                                        <path
+                                                            d="M13.5 21.89V12.89H16.5L17 9.39H13.5V7.39C13.5 6.49 13.75 5.89 15.05 5.89H17.1V2.79C16.8 2.75 15.75 2.65 14.55 2.65C12.05 2.65 10.3 4.22 10.3 7.04V9.39H7.25V12.89H10.3V21.89H13.5Z"
+                                                            fill="currentColor"
+                                                        />
+                                                        <path
+                                                            d="M7 16.5L9.5 14l2 2 3-3.5"
+                                                            stroke="white"
+                                                            strokeWidth="1.5"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                        />
+                                                    </svg>
+                                                    <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('facebookadsreportgenerator')}</span>
+                                                </div>
+                                            </NavLink>
+                                        </li>
+                                    )}
+
+                                    {/* Media Library */}
                                     <li className="nav-item">
-                                        <NavLink to="/apps/report/tiktok-report-generator" className="group">
+                                        <NavLink to="/apps/media-library" className="group mt-1">
                                             <div className="flex items-center">
                                                 <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-
-
-                                                                <path 
-              d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" 
-              fill="currentColor"
-            />
-            {/* Shadow/accent layer - 70% opacity */}
-            <path 
-              opacity="0.7"
-              d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" 
-              fill="currentColor"
-              transform="translate(0.5, 0.5)"
-            />
-
+                                                    <path opacity="0.4" d="M2 9c0-2.83 0-4.243.879-5.121C3.757 3 5.172 3 8 3h8c2.828 0 4.243 0 5.121.879C22 4.757 22 6.172 22 9v6c0 2.828 0 4.243-.879 5.121C20.243 21 18.828 21 16 21H8c-2.828 0-4.243 0-5.121-.879C2 19.243 2 17.828 2 15V9Z" fill="currentColor" />
+                                                    <path d="M2 14l4.293-4.293a1 1 0 0 1 1.414 0L11 13l2.293-2.293a1 1 0 0 1 1.414 0L22 18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                                                    <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor" />
                                                 </svg>
-                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('tiktokreportgenerator')}</span>
+                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('medialibrary')}</span>
                                             </div>
                                         </NavLink>
                                     </li>
-                                    )}
-                                
 
-                                    
                                     <li className="nav-item">
                                         <NavLink to="/apps/report/history" className="group">
                                             <div className="flex items-center">
                                                 <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path fillRule="evenodd" clipRule="evenodd" d="M5.07868 5.06891C8.87402 1.27893 15.0437 1.31923 18.8622 5.13778C22.6824 8.95797 22.7211 15.1313 18.9262 18.9262C15.1312 22.7211 8.95793 22.6824 5.13774 18.8622C2.87389 16.5984 1.93904 13.5099 2.34047 10.5812C2.39672 10.1708 2.775 9.88377 3.18537 9.94002C3.59575 9.99627 3.88282 10.3745 3.82658 10.7849C3.4866 13.2652 4.27782 15.881 6.1984 17.8016C9.44288 21.0461 14.6664 21.0646 17.8655 17.8655C21.0646 14.6664 21.046 9.44292 17.8015 6.19844C14.5587 2.95561 9.33889 2.93539 6.13935 6.12957L6.88705 6.13333C7.30126 6.13541 7.63535 6.47288 7.63327 6.88709C7.63119 7.3013 7.29372 7.63539 6.87951 7.63331L4.33396 7.62052C3.92269 7.61845 3.58981 7.28556 3.58774 6.8743L3.57495 4.32874C3.57286 3.91454 3.90696 3.57707 4.32117 3.57498C4.73538 3.5729 5.07285 3.907 5.07493 4.32121L5.07868 5.06891Z" fill="currentColor"/>
-                                                    <path opacity="0.5" d="M12 7.25C12.4142 7.25 12.75 7.58579 12.75 8V11.6893L15.0303 13.9697C15.3232 14.2626 15.3232 14.7374 15.0303 15.0303C14.7374 15.3232 14.2626 15.3232 13.9697 15.0303L11.5429 12.6036C11.3554 12.416 11.25 12.1617 11.25 11.8964V8C11.25 7.58579 11.5858 7.25 12 7.25Z" fill="currentColor"/>
+                                                    <path fillRule="evenodd" clipRule="evenodd" d="M5.07868 5.06891C8.87402 1.27893 15.0437 1.31923 18.8622 5.13778C22.6824 8.95797 22.7211 15.1313 18.9262 18.9262C15.1312 22.7211 8.95793 22.6824 5.13774 18.8622C2.87389 16.5984 1.93904 13.5099 2.34047 10.5812C2.39672 10.1708 2.775 9.88377 3.18537 9.94002C3.59575 9.99627 3.88282 10.3745 3.82658 10.7849C3.4866 13.2652 4.27782 15.881 6.1984 17.8016C9.44288 21.0461 14.6664 21.0646 17.8655 17.8655C21.0646 14.6664 21.046 9.44292 17.8015 6.19844C14.5587 2.95561 9.33889 2.93539 6.13935 6.12957L6.88705 6.13333C7.30126 6.13541 7.63535 6.47288 7.63327 6.88709C7.63119 7.3013 7.29372 7.63539 6.87951 7.63331L4.33396 7.62052C3.92269 7.61845 3.58981 7.28556 3.58774 6.8743L3.57495 4.32874C3.57286 3.91454 3.90696 3.57707 4.32117 3.57498C4.73538 3.5729 5.07285 3.907 5.07493 4.32121L5.07868 5.06891Z" fill="currentColor" />
+                                                    <path opacity="0.5" d="M12 7.25C12.4142 7.25 12.75 7.58579 12.75 8V11.6893L15.0303 13.9697C15.3232 14.2626 15.3232 14.7374 15.0303 15.0303C14.7374 15.3232 14.2626 15.3232 13.9697 15.0303L11.5429 12.6036C11.3554 12.416 11.25 12.1617 11.25 11.8964V8C11.25 7.58579 11.5858 7.25 12 7.25Z" fill="currentColor" />
                                                 </svg>
                                                 <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('report_history')}</span>
                                             </div>
                                         </NavLink>
                                     </li>
-                            
-                              
+
+
                                     <li className="nav-item">
                                         <NavLink to="/apps/pagemanager" className="group">
                                             <div className="flex items-center">
                                                 <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 
 
-<circle opacity="0.5" cx="12" cy="10" r="7" fill="currentColor"/>
-<path d="M9.60212 8.21316C9.47104 6.75421 8.34593 5.39474 7.79976 4.89737L7.49805 4.63933C8.71505 3.61626 10.2854 3 11.9998 3C13.5491 3 14.9809 3.50337 16.1405 4.3555C16.3044 4.85287 15.9923 5.89211 15.6646 6.38947C15.5459 6.56963 15.2767 6.79329 14.9817 7.0053C14.3163 7.48334 13.4767 7.71978 13.0498 8.6C12.9277 8.85162 12.9329 9.09758 12.9916 9.31138C13.0338 9.46509 13.0608 9.63217 13.0612 9.79558C13.0626 10.324 12.5282 10.7058 11.9998 10.7C10.6248 10.685 9.72465 9.57688 9.60212 8.21316Z" fill="currentColor"/>
-<path d="M13.0057 14.3935C13.6974 13.0901 16.003 13.0901 16.003 13.0901C18.4053 13.065 18.7299 11.6064 18.9468 10.8691C18.5585 14.0061 16.0948 16.4997 12.9722 16.9335C12.7463 16.4582 12.4788 15.3865 13.0057 14.3935Z" fill="currentColor"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M18.0035 1.49982C18.2797 1.19118 18.7539 1.16491 19.0625 1.44116C21.3246 3.4658 22.75 6.41044 22.75 9.687C22.75 15.4384 18.3612 20.1647 12.75 20.6996V21.25H14C14.4142 21.25 14.75 21.5858 14.75 22C14.75 22.4142 14.4142 22.75 14 22.75H10C9.58579 22.75 9.25001 22.4142 9.25001 22C9.25001 21.5858 9.58579 21.25 10 21.25H11.25V20.7415C8.14923 20.621 5.37537 19.2236 3.44116 17.0625C3.16491 16.7539 3.19118 16.2797 3.49982 16.0035C3.80847 15.7272 4.28261 15.7535 4.55886 16.0622C6.31098 18.0198 8.85483 19.25 11.687 19.25C16.9685 19.25 21.25 14.9685 21.25 9.687C21.25 6.85483 20.0198 4.31098 18.0622 2.55886C17.7535 2.28261 17.7272 1.80847 18.0035 1.49982Z" fill="currentColor"/>
+                                                    <circle opacity="0.5" cx="12" cy="10" r="7" fill="currentColor" />
+                                                    <path d="M9.60212 8.21316C9.47104 6.75421 8.34593 5.39474 7.79976 4.89737L7.49805 4.63933C8.71505 3.61626 10.2854 3 11.9998 3C13.5491 3 14.9809 3.50337 16.1405 4.3555C16.3044 4.85287 15.9923 5.89211 15.6646 6.38947C15.5459 6.56963 15.2767 6.79329 14.9817 7.0053C14.3163 7.48334 13.4767 7.71978 13.0498 8.6C12.9277 8.85162 12.9329 9.09758 12.9916 9.31138C13.0338 9.46509 13.0608 9.63217 13.0612 9.79558C13.0626 10.324 12.5282 10.7058 11.9998 10.7C10.6248 10.685 9.72465 9.57688 9.60212 8.21316Z" fill="currentColor" />
+                                                    <path d="M13.0057 14.3935C13.6974 13.0901 16.003 13.0901 16.003 13.0901C18.4053 13.065 18.7299 11.6064 18.9468 10.8691C18.5585 14.0061 16.0948 16.4997 12.9722 16.9335C12.7463 16.4582 12.4788 15.3865 13.0057 14.3935Z" fill="currentColor" />
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M18.0035 1.49982C18.2797 1.19118 18.7539 1.16491 19.0625 1.44116C21.3246 3.4658 22.75 6.41044 22.75 9.687C22.75 15.4384 18.3612 20.1647 12.75 20.6996V21.25H14C14.4142 21.25 14.75 21.5858 14.75 22C14.75 22.4142 14.4142 22.75 14 22.75H10C9.58579 22.75 9.25001 22.4142 9.25001 22C9.25001 21.5858 9.58579 21.25 10 21.25H11.25V20.7415C8.14923 20.621 5.37537 19.2236 3.44116 17.0625C3.16491 16.7539 3.19118 16.2797 3.49982 16.0035C3.80847 15.7272 4.28261 15.7535 4.55886 16.0622C6.31098 18.0198 8.85483 19.25 11.687 19.25C16.9685 19.25 21.25 14.9685 21.25 9.687C21.25 6.85483 20.0198 4.31098 18.0622 2.55886C17.7535 2.28261 17.7272 1.80847 18.0035 1.49982Z" fill="currentColor" />
 
 
 
@@ -231,7 +301,40 @@ const isAdmin = useMemo(() => {
                                             </div>
                                         </NavLink>
                                     </li>
-                                
+
+                                    <li className="menu nav-item">
+                                        <button type="button" className={`${currentMenu === 'qr-code' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('qr-code')}>
+                                            <div className="flex items-center">
+                                                <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path opacity="0.5" d="M2 6C2 4.11438 2 3.17157 2.58579 2.58579C3.17157 2 4.11438 2 6 2H8C9.88562 2 10.8284 2 11.4142 2.58579C12 3.17157 12 4.11438 12 6V8C12 9.88562 12 10.8284 11.4142 11.4142C10.8284 12 9.88562 12 8 12H6C4.11438 12 3.17157 12 2.58579 11.4142C2 10.8284 2 9.88562 2 8V6Z" fill="currentColor" />
+                                                    <path opacity="0.5" d="M12 16C12 14.1144 12 13.1716 12.5858 12.5858C13.1716 12 14.1144 12 16 12H18C19.8856 12 20.8284 12 21.4142 12.5858C22 13.1716 22 14.1144 22 16V18C22 19.8856 22 20.8284 21.4142 21.4142C20.8284 22 19.8856 22 18 22H16C14.1144 22 13.1716 22 12.5858 21.4142C12 20.8284 12 19.8856 12 18V16Z" fill="currentColor" />
+                                                    <path d="M2 16C2 14.1144 2 13.1716 2.58579 12.5858C3.17157 12 4.11438 12 6 12H8C9.88562 12 10.8284 12 11.4142 12.5858C12 13.1716 12 14.1144 12 16V18C12 19.8856 12 20.8284 11.4142 21.4142C10.8284 22 9.88562 22 8 22H6C4.11438 22 3.17157 22 2.58579 21.4142C2 20.8284 2 19.8856 2 18V16Z" fill="currentColor" />
+                                                    <path d="M12 6C12 4.11438 12 3.17157 12.5858 2.58579C13.1716 2 14.1144 2 16 2H18C19.8856 2 20.8284 2 21.4142 2.58579C22 3.17157 22 4.11438 22 6V8C22 9.88562 22 10.8284 21.4142 11.4142C20.8284 12 19.8856 12 18 12H16C14.1144 12 13.1716 12 12.5858 11.4142C12 10.8284 12 9.88562 12 8V6Z" fill="currentColor" />
+                                                    <path d="M5 4C4.44772 4 4 4.44772 4 5V9C4 9.55228 4.44772 10 5 10H9C9.55228 10 10 9.55228 10 9V5C10 4.44772 9.55228 4 9 4H5Z" fill="currentColor" opacity="0.7" />
+                                                    <path d="M15 14C14.4477 14 14 14.4477 14 15V19C14 19.5523 14.4477 20 15 20H19C19.5523 20 20 19.5523 20 19V15C20 14.4477 19.5523 14 19 14H15Z" fill="currentColor" opacity="0.7" />
+                                                </svg>
+                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('qr_code_generator')}</span>
+                                            </div>
+
+                                            <div className={currentMenu === 'qr-code' ? 'rotate-90' : 'rtl:rotate-180'}>
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M9 5L15 12L9 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                            </div>
+                                        </button>
+
+                                        <AnimateHeight duration={300} height={currentMenu === 'qr-code' ? 'auto' : 0}>
+                                            <ul className="sub-menu text-gray-500">
+                                                <li>
+                                                    <NavLink to="/apps/qr-code/create">{t('create_qr')}</NavLink>
+                                                </li>
+                                                <li>
+                                                    <NavLink to="/apps/qr-code/list">{t('qr_list')}</NavLink>
+                                                </li>
+                                            </ul>
+                                        </AnimateHeight>
+                                    </li>
+
                                     {/* <li className="nav-item">
                                         <NavLink to="/apps/chat" className="group">
                                             <div className="flex items-center">
@@ -937,10 +1040,10 @@ const isAdmin = useMemo(() => {
                                         <li>
                                             <NavLink to="/apps/settings/roles">{t('workspace_role')}</NavLink>
                                         </li>
-                                        {can('bot_telegram') &&(
-                                        <li>
-                                            <NavLink to="/apps/settings/telegram">{t('telegram_bot')}</NavLink>
-                                        </li>
+                                        {can('bot_telegram') && (
+                                            <li>
+                                                <NavLink to="/apps/settings/telegram">{t('telegram_bot')}</NavLink>
+                                            </li>
                                         )}
 
                                     </ul>
@@ -1136,114 +1239,102 @@ const isAdmin = useMemo(() => {
                                     </ul>
                                 </AnimateHeight>
                             </li> */}
-                        {isAdmin && (
-                            <>
-                            <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1">
-                                <svg className="w-4 h-5 flex-none hidden" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                                <span>{t('admin')}</span>
-                            </h2>
-
-                            <li className="menu nav-item">
-                                <NavLink to="/admin/users" className="group mt-1.5">
-                                    <div className="flex items-center">
-                                        <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <circle opacity="0.5" cx="15" cy="6" r="3" fill="currentColor" />
-                                            <ellipse opacity="0.5" cx="16" cy="17" rx="5" ry="3" fill="currentColor" />
-                                            <circle cx="9.00098" cy="6" r="4" fill="currentColor" />
-                                            <ellipse cx="9.00098" cy="17.001" rx="7" ry="4" fill="currentColor" />
+                            {isAdmin && (
+                                <>
+                                    <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1">
+                                        <svg className="w-4 h-5 flex-none hidden" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
                                         </svg>
-                                        <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('users')}</span>
-                                    </div>
-                                </NavLink>
-                            </li>
+                                        <span>{t('admin')}</span>
+                                    </h2>
+
+                                    <li className="menu nav-item">
+                                        <button type="button" className={`${currentMenu === 'admin-users' ? 'active' : ''} nav-link group w-full`} onClick={() => toggleMenu('admin-users')}>
+                                            <div className="flex items-center">
+                                                <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <circle opacity="0.5" cx="15" cy="6" r="3" fill="currentColor" />
+                                                    <ellipse opacity="0.5" cx="16" cy="17" rx="5" ry="3" fill="currentColor" />
+                                                    <circle cx="9.00098" cy="6" r="4" fill="currentColor" />
+                                                    <ellipse cx="9.00098" cy="17.001" rx="7" ry="4" fill="currentColor" />
+                                                </svg>
+                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('users')}</span>
+                                            </div>
+                                            <div className={currentMenu === 'admin-users' ? 'rotate-90' : 'rtl:rotate-180'}>
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M9 5L15 12L9 19" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                            </div>
+                                        </button>
+
+                                        <AnimateHeight duration={300} height={currentMenu === 'admin-users' ? 'auto' : 0}>
+                                            <ul className="sub-menu text-gray-500">
+                                                <li>
+                                                    <NavLink to="/admin/users">{t('list')}</NavLink>
+                                                </li>
+                                                <li>
+                                                    <NavLink to="/admin/top-up-requests">{t('Top Up Requests')}</NavLink>
+                                                </li>
+                                            </ul>
+                                        </AnimateHeight>
+                                    </li>
 
 
-                            <li className="menu nav-item">
-                                <NavLink to="/admin/permissions" className="group">
-                                    <div className="flex items-center">
-                                        <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <circle opacity="0.5" cx="15" cy="6" r="3" fill="currentColor" />
-                                            <ellipse opacity="0.5" cx="16" cy="17" rx="5" ry="3" fill="currentColor" />
-                                            <circle cx="9.00098" cy="6" r="4" fill="currentColor" />
-                                            <ellipse cx="9.00098" cy="17.001" rx="7" ry="4" fill="currentColor" />
-                                        </svg>
-                                        <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('permission')}</span>
-                                    </div>
-                                </NavLink>
-                            </li>
+                                    <li className="menu nav-item">
+                                        <NavLink to="/admin/permissions" className="group">
+                                            <div className="flex items-center">
+                                                <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <circle opacity="0.5" cx="15" cy="6" r="3" fill="currentColor" />
+                                                    <ellipse opacity="0.5" cx="16" cy="17" rx="5" ry="3" fill="currentColor" />
+                                                    <circle cx="9.00098" cy="6" r="4" fill="currentColor" />
+                                                    <ellipse cx="9.00098" cy="17.001" rx="7" ry="4" fill="currentColor" />
+                                                </svg>
+                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('permission')}</span>
+                                            </div>
+                                        </NavLink>
+                                    </li>
 
-                            <li className="menu nav-item">
-                                <NavLink to="/admin/subscriptions" className="group">
-                                    <div className="flex items-center">
-                                        <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <li className="menu nav-item">
+                                        <NavLink to="/admin/subscriptions" className="group">
+                                            <div className="flex items-center">
+                                                <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-                                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 16C15.866 16 19 12.866 19 9C19 5.13401 15.866 2 12 2C8.13401 2 5 5.13401 5 9C5 12.866 8.13401 16 12 16ZM12 6C11.7159 6 11.5259 6.34084 11.1459 7.02251L11.0476 7.19887C10.9397 7.39258 10.8857 7.48944 10.8015 7.55334C10.7173 7.61725 10.6125 7.64097 10.4028 7.68841L10.2119 7.73161C9.47396 7.89857 9.10501 7.98205 9.01723 8.26432C8.92945 8.54659 9.18097 8.84072 9.68403 9.42898L9.81418 9.58117C9.95713 9.74833 10.0286 9.83191 10.0608 9.93531C10.0929 10.0387 10.0821 10.1502 10.0605 10.3733L10.0408 10.5763C9.96476 11.3612 9.92674 11.7536 10.1565 11.9281C10.3864 12.1025 10.7318 11.9435 11.4227 11.6254L11.6014 11.5431C11.7978 11.4527 11.8959 11.4075 12 11.4075C12.1041 11.4075 12.2022 11.4527 12.3986 11.5431L12.5773 11.6254C13.2682 11.9435 13.6136 12.1025 13.8435 11.9281C14.0733 11.7536 14.0352 11.3612 13.9592 10.5763L13.9395 10.3733C13.9179 10.1502 13.9071 10.0387 13.9392 9.93531C13.9714 9.83191 14.0429 9.74833 14.1858 9.58118L14.316 9.42898C14.819 8.84072 15.0706 8.54659 14.9828 8.26432C14.895 7.98205 14.526 7.89857 13.7881 7.73161L13.5972 7.68841C13.3875 7.64097 13.2827 7.61725 13.1985 7.55334C13.1143 7.48944 13.0603 7.39258 12.9524 7.19887L12.8541 7.02251C12.4741 6.34084 12.2841 6 12 6Z" fill="currentColor"/>
-                                            <path opacity="0.5" d="M6.71424 17.323L7.35111 15L8 13H16L16.6489 15L17.2858 17.323C17.9141 19.6148 18.2283 20.7607 17.809 21.3881C17.6621 21.6079 17.465 21.7844 17.2363 21.9008C16.5837 22.2331 15.576 21.7081 13.5607 20.658C12.8901 20.3086 12.5548 20.1339 12.1986 20.0959C12.0665 20.0818 11.9335 20.0818 11.8014 20.0959C11.4452 20.1339 11.1099 20.3086 10.4393 20.658L10.4393 20.658C8.42401 21.7081 7.41635 22.2331 6.76372 21.9008C6.535 21.7844 6.3379 21.6079 6.19097 21.3881C5.77173 20.7607 6.0859 19.6148 6.71424 17.323Z" fill="currentColor"/>
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12 16C15.866 16 19 12.866 19 9C19 5.13401 15.866 2 12 2C8.13401 2 5 5.13401 5 9C5 12.866 8.13401 16 12 16ZM12 6C11.7159 6 11.5259 6.34084 11.1459 7.02251L11.0476 7.19887C10.9397 7.39258 10.8857 7.48944 10.8015 7.55334C10.7173 7.61725 10.6125 7.64097 10.4028 7.68841L10.2119 7.73161C9.47396 7.89857 9.10501 7.98205 9.01723 8.26432C8.92945 8.54659 9.18097 8.84072 9.68403 9.42898L9.81418 9.58117C9.95713 9.74833 10.0286 9.83191 10.0608 9.93531C10.0929 10.0387 10.0821 10.1502 10.0605 10.3733L10.0408 10.5763C9.96476 11.3612 9.92674 11.7536 10.1565 11.9281C10.3864 12.1025 10.7318 11.9435 11.4227 11.6254L11.6014 11.5431C11.7978 11.4527 11.8959 11.4075 12 11.4075C12.1041 11.4075 12.2022 11.4527 12.3986 11.5431L12.5773 11.6254C13.2682 11.9435 13.6136 12.1025 13.8435 11.9281C14.0733 11.7536 14.0352 11.3612 13.9592 10.5763L13.9395 10.3733C13.9179 10.1502 13.9071 10.0387 13.9392 9.93531C13.9714 9.83191 14.0429 9.74833 14.1858 9.58118L14.316 9.42898C14.819 8.84072 15.0706 8.54659 14.9828 8.26432C14.895 7.98205 14.526 7.89857 13.7881 7.73161L13.5972 7.68841C13.3875 7.64097 13.2827 7.61725 13.1985 7.55334C13.1143 7.48944 13.0603 7.39258 12.9524 7.19887L12.8541 7.02251C12.4741 6.34084 12.2841 6 12 6Z" fill="currentColor" />
+                                                    <path opacity="0.5" d="M6.71424 17.323L7.35111 15L8 13H16L16.6489 15L17.2858 17.323C17.9141 19.6148 18.2283 20.7607 17.809 21.3881C17.6621 21.6079 17.465 21.7844 17.2363 21.9008C16.5837 22.2331 15.576 21.7081 13.5607 20.658C12.8901 20.3086 12.5548 20.1339 12.1986 20.0959C12.0665 20.0818 11.9335 20.0818 11.8014 20.0959C11.4452 20.1339 11.1099 20.3086 10.4393 20.658L10.4393 20.658C8.42401 21.7081 7.41635 22.2331 6.76372 21.9008C6.535 21.7844 6.3379 21.6079 6.19097 21.3881C5.77173 20.7607 6.0859 19.6148 6.71424 17.323Z" fill="currentColor" />
 
 
-                                        </svg>
-                                        <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('subscriptions')}</span>
-                                    </div>
-                                </NavLink>
-                            </li>
+                                                </svg>
+                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('subscriptions')}</span>
+                                            </div>
+                                        </NavLink>
+                                    </li>
 
-                            <li className="menu nav-item">
-                                <NavLink to="/admin/plans" className="group">
-                                    <div className="flex items-center">
-                                        <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path opacity="0.5" d="M17.9665 6.55812L16.1369 4.72848L16.1369 4.72848C14.5913 3.18295 13.8186 2.41018 12.816 2.12264C11.8134 1.83509 10.7485 2.08083 8.61875 2.57231L7.39057 2.85574C5.5988 3.26922 4.70292 3.47597 4.08944 4.08944C3.47597 4.70292 3.26922 5.5988 2.85574 7.39057L2.85574 7.39057L2.57231 8.61875C2.08083 10.7485 1.83509 11.8134 2.12264 12.816C2.41018 13.8186 3.18295 14.5914 4.72848 16.1369L6.55812 17.9665L6.55813 17.9665C9.24711 20.6555 10.5916 22 12.2623 22C13.933 22 15.2775 20.6555 17.9665 17.9665L17.9665 17.9665L17.9665 17.9665C20.6555 15.2775 22 13.933 22 12.2623C22 10.5916 20.6555 9.24711 17.9665 6.55813L17.9665 6.55812Z" fill="currentColor"/>
-                                            <path d="M11.1469 14.3284C10.4739 13.6555 10.4796 12.6899 10.882 11.9247C10.6809 11.6325 10.7103 11.2295 10.9701 10.9697C11.2289 10.7108 11.63 10.6807 11.9219 10.8795C12.2617 10.6988 12.6351 10.6033 13.0073 10.6068C13.4215 10.6107 13.7541 10.9497 13.7502 11.3639C13.7462 11.7781 13.4073 12.1107 12.9931 12.1068C12.8162 12.1051 12.5837 12.1845 12.3843 12.3839C11.9968 12.7714 12.0987 13.1589 12.2075 13.2678C12.3164 13.3766 12.7039 13.4785 13.0914 13.091C13.8754 12.307 15.2291 12.0467 16.0966 12.9142C16.7696 13.5872 16.7639 14.5528 16.3614 15.318C16.5625 15.6102 16.5332 16.0132 16.2734 16.273C16.0145 16.5319 15.6133 16.5619 15.3214 16.3631C14.8645 16.6059 14.3448 16.6969 13.8492 16.595C13.4435 16.5117 13.1822 16.1152 13.2655 15.7094C13.3489 15.3037 13.7454 15.0424 14.1512 15.1257C14.3283 15.1622 14.6139 15.104 14.8592 14.8588C15.2467 14.4712 15.1448 14.0837 15.0359 13.9749C14.9271 13.866 14.5396 13.7641 14.1521 14.1517C13.368 14.9357 12.0143 15.1959 11.1469 14.3284Z" fill="currentColor"/>
-                                            <path d="M10.0211 10.2931C10.8022 9.51207 10.8022 8.24574 10.0211 7.46469C9.2401 6.68364 7.97377 6.68364 7.19272 7.46469C6.41167 8.24574 6.41167 9.51207 7.19272 10.2931C7.97377 11.0742 9.2401 11.0742 10.0211 10.2931Z" fill="currentColor"/>
-                                        </svg>
-                                        <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('plans')}</span>
-                                    </div>
-                                </NavLink>
-                            </li>
+                                    <li className="menu nav-item">
+                                        <NavLink to="/admin/plans" className="group">
+                                            <div className="flex items-center">
+                                                <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path opacity="0.5" d="M17.9665 6.55812L16.1369 4.72848L16.1369 4.72848C14.5913 3.18295 13.8186 2.41018 12.816 2.12264C11.8134 1.83509 10.7485 2.08083 8.61875 2.57231L7.39057 2.85574C5.5988 3.26922 4.70292 3.47597 4.08944 4.08944C3.47597 4.70292 3.26922 5.5988 2.85574 7.39057L2.85574 7.39057L2.57231 8.61875C2.08083 10.7485 1.83509 11.8134 2.12264 12.816C2.41018 13.8186 3.18295 14.5914 4.72848 16.1369L6.55812 17.9665L6.55813 17.9665C9.24711 20.6555 10.5916 22 12.2623 22C13.933 22 15.2775 20.6555 17.9665 17.9665L17.9665 17.9665L17.9665 17.9665C20.6555 15.2775 22 13.933 22 12.2623C22 10.5916 20.6555 9.24711 17.9665 6.55813L17.9665 6.55812Z" fill="currentColor" />
+                                                    <path d="M11.1469 14.3284C10.4739 13.6555 10.4796 12.6899 10.882 11.9247C10.6809 11.6325 10.7103 11.2295 10.9701 10.9697C11.2289 10.7108 11.63 10.6807 11.9219 10.8795C12.2617 10.6988 12.6351 10.6033 13.0073 10.6068C13.4215 10.6107 13.7541 10.9497 13.7502 11.3639C13.7462 11.7781 13.4073 12.1107 12.9931 12.1068C12.8162 12.1051 12.5837 12.1845 12.3843 12.3839C11.9968 12.7714 12.0987 13.1589 12.2075 13.2678C12.3164 13.3766 12.7039 13.4785 13.0914 13.091C13.8754 12.307 15.2291 12.0467 16.0966 12.9142C16.7696 13.5872 16.7639 14.5528 16.3614 15.318C16.5625 15.6102 16.5332 16.0132 16.2734 16.273C16.0145 16.5319 15.6133 16.5619 15.3214 16.3631C14.8645 16.6059 14.3448 16.6969 13.8492 16.595C13.4435 16.5117 13.1822 16.1152 13.2655 15.7094C13.3489 15.3037 13.7454 15.0424 14.1512 15.1257C14.3283 15.1622 14.6139 15.104 14.8592 14.8588C15.2467 14.4712 15.1448 14.0837 15.0359 13.9749C14.9271 13.866 14.5396 13.7641 14.1521 14.1517C13.368 14.9357 12.0143 15.1959 11.1469 14.3284Z" fill="currentColor" />
+                                                    <path d="M10.0211 10.2931C10.8022 9.51207 10.8022 8.24574 10.0211 7.46469C9.2401 6.68364 7.97377 6.68364 7.19272 7.46469C6.41167 8.24574 6.41167 9.51207 7.19272 10.2931C7.97377 11.0742 9.2401 11.0742 10.0211 10.2931Z" fill="currentColor" />
+                                                </svg>
+                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('plans')}</span>
+                                            </div>
+                                        </NavLink>
+                                    </li>
 
-                            <li className="menu nav-item">
-                                <NavLink to="/admin/colors" className="group">
-                                    <div className="flex items-center">
-                                        <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path opacity="0.5" d="M17.9665 6.55812L16.1369 4.72848L16.1369 4.72848C14.5913 3.18295 13.8186 2.41018 12.816 2.12264C11.8134 1.83509 10.7485 2.08083 8.61875 2.57231L7.39057 2.85574C5.5988 3.26922 4.70292 3.47597 4.08944 4.08944C3.47597 4.70292 3.26922 5.5988 2.85574 7.39057L2.85574 7.39057L2.57231 8.61875C2.08083 10.7485 1.83509 11.8134 2.12264 12.816C2.41018 13.8186 3.18295 14.5914 4.72848 16.1369L6.55812 17.9665L6.55813 17.9665C9.24711 20.6555 10.5916 22 12.2623 22C13.933 22 15.2775 20.6555 17.9665 17.9665L17.9665 17.9665L17.9665 17.9665C20.6555 15.2775 22 13.933 22 12.2623C22 10.5916 20.6555 9.24711 17.9665 6.55813L17.9665 6.55812Z" fill="currentColor"/>
-                                            <path d="M11.1469 14.3284C10.4739 13.6555 10.4796 12.6899 10.882 11.9247C10.6809 11.6325 10.7103 11.2295 10.9701 10.9697C11.2289 10.7108 11.63 10.6807 11.9219 10.8795C12.2617 10.6988 12.6351 10.6033 13.0073 10.6068C13.4215 10.6107 13.7541 10.9497 13.7502 11.3639C13.7462 11.7781 13.4073 12.1107 12.9931 12.1068C12.8162 12.1051 12.5837 12.1845 12.3843 12.3839C11.9968 12.7714 12.0987 13.1589 12.2075 13.2678C12.3164 13.3766 12.7039 13.4785 13.0914 13.091C13.8754 12.307 15.2291 12.0467 16.0966 12.9142C16.7696 13.5872 16.7639 14.5528 16.3614 15.318C16.5625 15.6102 16.5332 16.0132 16.2734 16.273C16.0145 16.5319 15.6133 16.5619 15.3214 16.3631C14.8645 16.6059 14.3448 16.6969 13.8492 16.595C13.4435 16.5117 13.1822 16.1152 13.2655 15.7094C13.3489 15.3037 13.7454 15.0424 14.1512 15.1257C14.3283 15.1622 14.6139 15.104 14.8592 14.8588C15.2467 14.4712 15.1448 14.0837 15.0359 13.9749C14.9271 13.866 14.5396 13.7641 14.1521 14.1517C13.368 14.9357 12.0143 15.1959 11.1469 14.3284Z" fill="currentColor"/>
-                                            <path d="M10.0211 10.2931C10.8022 9.51207 10.8022 8.24574 10.0211 7.46469C9.2401 6.68364 7.97377 6.68364 7.19272 7.46469C6.41167 8.24574 6.41167 9.51207 7.19272 10.2931C7.97377 11.0742 9.2401 11.0742 10.0211 10.2931Z" fill="currentColor"/>
-                                        </svg>
-                                        <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('colors')}</span>
-                                    </div>
-                                </NavLink>
-                            </li>
-                            </>
-                             )}
-
-                            {/* <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1">
-                                <svg className="w-4 h-5 flex-none hidden" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                                <span>{t('supports')}</span>
-                            </h2> */}
-{/* 
-                            <li className="menu nav-item">
-                                <NavLink to="https://vristo.sbthemes.com" target="_blank" className="nav-link group">
-                                    <div className="flex items-center">
-                                        <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path
-                                                fillRule="evenodd"
-                                                clipRule="evenodd"
-                                                d="M4 4.69434V18.6943C4 20.3512 5.34315 21.6943 7 21.6943H17C18.6569 21.6943 20 20.3512 20 18.6943V8.69434C20 7.03748 18.6569 5.69434 17 5.69434H5C4.44772 5.69434 4 5.24662 4 4.69434ZM7.25 11.6943C7.25 11.2801 7.58579 10.9443 8 10.9443H16C16.4142 10.9443 16.75 11.2801 16.75 11.6943C16.75 12.1085 16.4142 12.4443 16 12.4443H8C7.58579 12.4443 7.25 12.1085 7.25 11.6943ZM7.25 15.1943C7.25 14.7801 7.58579 14.4443 8 14.4443H13.5C13.9142 14.4443 14.25 14.7801 14.25 15.1943C14.25 15.6085 13.9142 15.9443 13.5 15.9443H8C7.58579 15.9443 7.25 15.6085 7.25 15.1943Z"
-                                                fill="currentColor"
-                                            />
-                                            <path
-                                                opacity="0.5"
-                                                d="M18 4.00038V5.86504C17.6872 5.75449 17.3506 5.69434 17 5.69434H5C4.44772 5.69434 4 5.24662 4 4.69434V4.62329C4 4.09027 4.39193 3.63837 4.91959 3.56299L15.7172 2.02048C16.922 1.84835 18 2.78328 18 4.00038Z"
-                                                fill="currentColor"
-                                            />
-                                        </svg>
-                                        <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('documentation')}</span>
-                                    </div>
-                                </NavLink>
-                            </li> */}
+                                    <li className="menu nav-item">
+                                        <NavLink to="/admin/colors" className="group">
+                                            <div className="flex items-center">
+                                                <svg className="group-hover:!text-primary shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path opacity="0.5" d="M17.9665 6.55812L16.1369 4.72848L16.1369 4.72848C14.5913 3.18295 13.8186 2.41018 12.816 2.12264C11.8134 1.83509 10.7485 2.08083 8.61875 2.57231L7.39057 2.85574C5.5988 3.26922 4.70292 3.47597 4.08944 4.08944C3.47597 4.70292 3.26922 5.5988 2.85574 7.39057L2.85574 7.39057L2.57231 8.61875C2.08083 10.7485 1.83509 11.8134 2.12264 12.816C2.41018 13.8186 3.18295 14.5914 4.72848 16.1369L6.55812 17.9665L6.55813 17.9665C9.24711 20.6555 10.5916 22 12.2623 22C13.933 22 15.2775 20.6555 17.9665 17.9665L17.9665 17.9665L17.9665 17.9665C20.6555 15.2775 22 13.933 22 12.2623C22 10.5916 20.6555 9.24711 17.9665 6.55813L17.9665 6.55812Z" fill="currentColor" />
+                                                    <path d="M11.1469 14.3284C10.4739 13.6555 10.4796 12.6899 10.882 11.9247C10.6809 11.6325 10.7103 11.2295 10.9701 10.9697C11.2289 10.7108 11.63 10.6807 11.9219 10.8795C12.2617 10.6988 12.6351 10.6033 13.0073 10.6068C13.4215 10.6107 13.7541 10.9497 13.7502 11.3639C13.7462 11.7781 13.4073 12.1107 12.9931 12.1068C12.8162 12.1051 12.5837 12.1845 12.3843 12.3839C11.9968 12.7714 12.0987 13.1589 12.2075 13.2678C12.3164 13.3766 12.7039 13.4785 13.0914 13.091C13.8754 12.307 15.2291 12.0467 16.0966 12.9142C16.7696 13.5872 16.7639 14.5528 16.3614 15.318C16.5625 15.6102 16.5332 16.0132 16.2734 16.273C16.0145 16.5319 15.6133 16.5619 15.3214 16.3631C14.8645 16.6059 14.3448 16.6969 13.8492 16.595C13.4435 16.5117 13.1822 16.1152 13.2655 15.7094C13.3489 15.3037 13.7454 15.0424 14.1512 15.1257C14.3283 15.1622 14.6139 15.104 14.8592 14.8588C15.2467 14.4712 15.1448 14.0837 15.0359 13.9749C14.9271 13.866 14.5396 13.7641 14.1521 14.1517C13.368 14.9357 12.0143 15.1959 11.1469 14.3284Z" fill="currentColor" />
+                                                    <path d="M10.0211 10.2931C10.8022 9.51207 10.8022 8.24574 10.0211 7.46469C9.2401 6.68364 7.97377 6.68364 7.19272 7.46469C6.41167 8.24574 6.41167 9.51207 7.19272 10.2931C7.97377 11.0742 9.2401 11.0742 10.0211 10.2931Z" fill="currentColor" />
+                                                </svg>
+                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('colors')}</span>
+                                            </div>
+                                        </NavLink>
+                                    </li>
+                                </>
+                            )}
                         </ul>
                     </PerfectScrollbar>
                 </div>

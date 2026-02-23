@@ -12,6 +12,9 @@ import api from '../../utils/api';
 import { toast } from 'react-hot-toast';
 import DeleteModal from '../../components/DeleteModal';
 import PerfectScrollbar from 'react-perfect-scrollbar';
+import { Input } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
+import { Card } from '../../components/ui/card';
 
 const ColorManager = () => {
     const [colors, setColors] = useState<any[]>([]);
@@ -133,7 +136,7 @@ const ColorManager = () => {
     // Loading skeleton
     if (loading) {
         return (
-            <div className="p-6">
+            <div>
                 {/* Header Skeleton */}
                 <div className="mb-8">
                     <div className="flex items-center gap-3 mb-6">
@@ -182,7 +185,7 @@ const ColorManager = () => {
     }
 
     return (
-        <div className="p-6">
+        <div>
             {/* ================= HEADER ================= */}
             <div className="mb-8">
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
@@ -220,15 +223,15 @@ const ColorManager = () => {
             </div>
 
             {/* ================= FILTER BAR ================= */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-5 mb-6">
+            <Card className="p-5 mb-6">
                 <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                     <div className="flex flex-col sm:flex-row gap-3 w-full">
                         {/* Search */}
                         <div className="relative flex-1">
-                            <input
+                            <Input
                                 type="text"
                                 placeholder="Search colors by name or description..."
-                                className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                className="w-full pl-10 transition-all"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -239,7 +242,7 @@ const ColorManager = () => {
                         <div className="w-full sm:w-48">
                             <Listbox value={typeFilter} onChange={setTypeFilter}>
                                 <div className="relative">
-                                    <Listbox.Button className="relative w-full cursor-pointer rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2.5 pl-4 pr-10 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
+                                    <Listbox.Button className="relative w-full cursor-pointer border rounded-md py-2.5 pl-4 pr-10 text-left text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all">
                                         <span className="flex items-center gap-2 truncate">
                                             <IconFilter size={16} className="text-gray-400" />
                                             <span className="text-gray-700 dark:text-gray-300">
@@ -281,23 +284,24 @@ const ColorManager = () => {
 
                     {/* Action Buttons */}
                     <div className="flex items-center gap-3">
-                        <button
+                        <Button
+                            variant="outline"
                             onClick={fetchColors}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap"
+                            className="inline-flex items-center gap-2 transition-all"
                         >
                             <IconRefresh size={18} />
                             Refresh
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             onClick={handleOpenCreate}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-all shadow-sm hover:shadow-md whitespace-nowrap"
+                            className="inline-flex items-center gap-2 transition-all"
                         >
                             <IconPlus size={18} />
                             New Color Theme
-                        </button>
+                        </Button>
                     </div>
                 </div>
-            </div>
+            </Card>
 
             {/* ================= COLOR GRID ================= */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

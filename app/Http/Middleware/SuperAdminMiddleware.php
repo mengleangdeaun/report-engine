@@ -17,8 +17,8 @@ class SuperAdminMiddleware
             return $next($request);
         }
 
-        // Otherwise, check if they have the admin role normally
-        if ($user && $user->hasRole('admin')) {
+        // Otherwise, check if they have the SUPER admin role
+        if ($user && $user->hasRole('super_admin')) {
             return $next($request);
         }
 

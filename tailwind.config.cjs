@@ -118,10 +118,15 @@ module.exports = {
                     from: { height: 'var(--radix-accordion-content-height)' },
                     to: { height: '0' },
                 },
+                checkIn: {
+                    from: { transform: 'scale(0) rotate(-10deg)', opacity: 0 },
+                    to: { transform: 'scale(1) rotate(0deg)', opacity: 1 },
+                },
             },
             animation: {
                 'accordion-down': 'accordion-down 0.2s ease-out',
                 'accordion-up': 'accordion-up 0.2s ease-out',
+                'check-in': 'checkIn 0.2s ease-out',
             },
             typography: ({ theme }) => ({
                 DEFAULT: {

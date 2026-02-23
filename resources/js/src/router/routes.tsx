@@ -9,7 +9,11 @@ const Todolist = lazy(() => import('../pages/Apps/Todolist'));
 const ReportGenerator = lazy(() => import('../pages/Apps/Report/ReportGenerator'));
 const FacebookReportGenerator = lazy(() => import('../pages/Apps/Report/FacebookReportGenerator'));
 const TikTokReportGenerator = lazy(() => import('../pages/Apps/Report/TiktokReportGenerator'));
+const FacebookAdsReportGenerator = lazy(() => import('../pages/Apps/Report/FacebookAdsReportGenerator'));
 const PageManager = lazy(() => import('../pages/Apps/PageManager'));
+const QRCodeGenerator = lazy(() => import('../pages/Apps/QRCodeGenerator'));
+const QRCodeList = lazy(() => import('../pages/Apps/QRCodeList'));
+const MediaLibrary = lazy(() => import('../pages/Apps/MediaLibrary/MediaLibrary'));
 
 const PublicReportView = lazy(() => import('../pages/Public/PublicReportView'));
 const PublicReportDashboard = lazy(() => import('../pages/Public/PublicLayout'));
@@ -42,7 +46,6 @@ const DragAndDrop = lazy(() => import('../pages/DragAndDrop'));
 const Tables = lazy(() => import('../pages/Tables'));
 
 const Profile = lazy(() => import('../pages/Users/ProfileSetting'));
-const AccountSetting = lazy(() => import('../pages/Users/AccountSetting'));
 const KnowledgeBase = lazy(() => import('../pages/Pages/KnowledgeBase'));
 const ContactUsBoxed = lazy(() => import('../pages/Pages/ContactUsBoxed'));
 const ContactUsCover = lazy(() => import('../pages/Pages/ContactUsCover'));
@@ -64,14 +67,17 @@ const RegisterCover = lazy(() => import('../pages/Authentication/RegisterCover')
 const RecoverIdCover = lazy(() => import('../pages/Authentication/RecoverIdCover'));
 const UnlockCover = lazy(() => import('../pages/Authentication/UnlockCover'));
 const ResetPasswordBoxed = lazy(() => import('../pages/Authentication/ResetPasswordBoxed'));
+const Banned = lazy(() => import('../pages/Authentication/Banned'));
 
 
 const UserManagement = lazy(() => import('../pages/Admin/UserManagement'));
 const AdminDashboard = lazy(() => import('../pages/Admin/AdminDashboard'));
 const SubscriptionManager = lazy(() => import('../pages/Admin/SubscriptionManager'));
-const PlanManager =  lazy(() => import('../pages/Admin/PlanSettings'));
-const PermissionManagement =  lazy(() => import('../pages/Admin/PermissionManagement'));
+const PlanManager = lazy(() => import('../pages/Admin/PlanSettings'));
+const PermissionManagement = lazy(() => import('../pages/Admin/PermissionManagement'));
 const ColorManager = lazy(() => import('../pages/Admin/ColorManager'));
+const TopUpRequests = lazy(() => import('../pages/Admin/TopUpRequests'));
+const SystemConfig = lazy(() => import('../pages/Admin/SystemConfig'));
 
 
 const Dashboard = lazy(() => import('../pages/Dashboard'));
@@ -89,10 +95,13 @@ const DashboardSplitter = () => {
     const userString = localStorage.getItem('user');
     const user = userString ? JSON.parse(userString) : null;
 
-    // ✅ FIX: Check simple string array
-    const isAdmin = user?.roles?.includes('admin');
+    // Check for super_admin role
+    const isSuperAdmin = user?.roles?.some((r: any) =>
+        (typeof r === 'string' && r === 'super_admin') ||
+        (typeof r === 'object' && r.name === 'super_admin')
+    );
 
-    return isAdmin ? <AdminDashboard /> : <Dashboard />;
+    return isSuperAdmin ? <AdminDashboard /> : <Dashboard />;
 };
 
 const routes = [
@@ -138,14 +147,14 @@ const routes = [
     },
     {
         path: '/share/r/:uuid',
-        element: <PublicReportView/>,
+        element: <PublicReportView />,
         layout: 'blank'
     },
 
     {
-        path: '/share/page/:token', 
+        path: '/share/page/:token',
         element: <PublicPageDashboard />,
-        layout: 'blank' 
+        layout: 'blank'
     },
 
     {
@@ -169,25 +178,28 @@ const routes = [
     },
 
     {
-    path: '/admin/dashboard',
-    element: (
-        <ProtectedRoute roleRequired="admin">
-            <AdminDashboard />
-        </ProtectedRoute>
-    ),
+        path: '/admin/dashboard',
+        element: (
+            <ProtectedRoute roleRequired="super_admin">
+                <AdminDashboard />
+            </ProtectedRoute>
+        ),
     },
     {
         path: '/admin/users',
         element: (
-            <ProtectedRoute roleRequired="admin">
+            <ProtectedRoute roleRequired="super_admin">
                 <UserManagement />
             </ProtectedRoute>
         ),
     },
     {
         path: '/admin/subscriptions',
-        element: <SubscriptionManager/>
-
+        element: (
+            <ProtectedRoute roleRequired="super_admin">
+                <SubscriptionManager />
+            </ProtectedRoute>
+        ),
     },
     {
         path: '/auth/verify-email',
@@ -196,19 +208,47 @@ const routes = [
     },
     {
         path: '/admin/plans',
-        element: <PlanManager/>
+        element: (
+            <ProtectedRoute roleRequired="super_admin">
+                <PlanManager />
+            </ProtectedRoute>
+        ),
     },
-{
+    {
         path: '/admin/permissions',
-        element: <PermissionManagement/>
+        element: (
+            <ProtectedRoute roleRequired="super_admin">
+                <PermissionManagement />
+            </ProtectedRoute>
+        ),
     },
 
-    
+
     {
         path: '/admin/colors',
-        element: <ColorManager/>
+        element: (
+            <ProtectedRoute roleRequired="super_admin">
+                <ColorManager />
+            </ProtectedRoute>
+        ),
     },
-    
+    {
+        path: '/admin/top-up-requests',
+        element: (
+            <ProtectedRoute roleRequired="super_admin">
+                <TopUpRequests />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/admin/system-config',
+        element: (
+            <ProtectedRoute roleRequired="super_admin">
+                <SystemConfig />
+            </ProtectedRoute>
+        ),
+    },
+
     // crypto page
     {
         path: '/crypto',
@@ -226,7 +266,7 @@ const routes = [
         path: '/apps/reportgenerator',
         element: <ReportGenerator />,
     },
-{
+    {
         path: '/apps/report/facebook-report-generator',
         element: (
             // ✅ Change to match your new slugs
@@ -245,8 +285,36 @@ const routes = [
         ),
     },
     {
+        path: '/apps/report/facebook-ads-report-generator',
+        element: (
+            <ProtectedRoute>
+                <FacebookAdsReportGenerator />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/apps/media-library',
+        element: (
+            <ProtectedRoute>
+                <MediaLibrary />
+            </ProtectedRoute>
+        ),
+    },
+    {
         path: '/apps/pagemanager',
-        element: <PageManager/>,
+        element: <PageManager />,
+    },
+    {
+        path: '/apps/qr-code/create',
+        element: <QRCodeGenerator />,
+    },
+    {
+        path: '/apps/qr-code/edit/:id',
+        element: <QRCodeGenerator />,
+    },
+    {
+        path: '/apps/qr-code/list',
+        element: <QRCodeList />,
     },
     {
         path: '/apps/notes',
@@ -321,10 +389,6 @@ const routes = [
     {
         path: '/users/profile',
         element: <Profile />,
-    },
-    {
-        path: '/users/user-account-settings',
-        element: <AccountSetting />,
     },
     // pages
     {
@@ -424,7 +488,12 @@ const routes = [
     },
     {
         path: '/auth/reset-password/:token',
-        element: <ResetPasswordBoxed/>,
+        element: <ResetPasswordBoxed />,
+        layout: 'blank',
+    },
+    {
+        path: '/banned',
+        element: <Banned />,
         layout: 'blank',
     },
     {
