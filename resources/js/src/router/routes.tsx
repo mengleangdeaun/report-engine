@@ -10,6 +10,7 @@ const ReportGenerator = lazy(() => import('../pages/Apps/Report/ReportGenerator'
 const FacebookReportGenerator = lazy(() => import('../pages/Apps/Report/FacebookReportGenerator'));
 const TikTokReportGenerator = lazy(() => import('../pages/Apps/Report/TiktokReportGenerator'));
 const FacebookAdsReportGenerator = lazy(() => import('../pages/Apps/Report/FacebookAdsReportGenerator'));
+const FacebookAdsPerformance = lazy(() => import('../pages/Apps/Report/FacebookAdsPerformance'));
 const PageManager = lazy(() => import('../pages/Apps/PageManager'));
 const QRCodeGenerator = lazy(() => import('../pages/Apps/QRCodeGenerator'));
 const QRCodeList = lazy(() => import('../pages/Apps/QRCodeList'));
@@ -257,6 +258,10 @@ const routes = [
     {
         path: '/apps/report/history',
         element: <ReportHistory />,
+    },
+    {
+        path: '/apps/report/facebook-ads-performance',
+        element: <FacebookAdsPerformance />,
     },
     {
         path: '/apps/todolist',

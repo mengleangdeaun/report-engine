@@ -555,7 +555,7 @@ const FacebookAdsReportGenerator = () => {
                                         </Button>
                                         <Button
                                         variant="outline"
-                                        onClick={() => navigate('/apps/ads/report/history')}
+                                        onClick={() => navigate('/apps/report/facebook-ads-performance')}
                                         className="h-auto items-center justify-center gap-1 border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 group"
                                         >
                                         <IconHistory size={20} className="transition-transform group-hover:rotate-[-10deg]" />

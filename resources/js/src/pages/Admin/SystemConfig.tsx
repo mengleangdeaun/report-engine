@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import api from '../../utils/api';
+import { Button } from '../../components/ui/button';
 import toast from 'react-hot-toast';
 
 const SystemConfig = () => {
@@ -81,10 +82,6 @@ const SystemConfig = () => {
         <div>
             <div className="flex items-center justify-between mb-5">
                 <h1 className="text-xl font-bold flex items-center gap-2">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-6 h-6">
-                        <path opacity="0.5" d="M12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22Z" fill="currentColor"></path>
-                        <path d="M12 17V17.01M12 14C12 12.5 13 12 13.5 11.5C14 11 14.5 10.5 14.5 9.5C14.5 8.11929 13.3807 7 12 7C10.6193 7 9.5 8.11929 9.5 9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"></path>
-                    </svg>
                     System Configuration
                 </h1>
             </div>
@@ -223,13 +220,13 @@ const SystemConfig = () => {
 
                 {/* Save Button */}
                 <div className="lg:col-span-2 flex justify-end">
-                    <button
+                    <Button
                         type="submit"
                         disabled={saving}
-                        className="btn btn-primary px-10"
+                        className="px-10"
                     >
                         {saving ? 'Saving...' : 'Save Configuration'}
-                    </button>
+                    </Button>
                 </div>
             </form>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export const PERMISSIONS_UPDATED_EVENT = 'permissions-updated';
 
@@ -27,7 +27,7 @@ const usePermission = () => {
 
         window.addEventListener(PERMISSIONS_UPDATED_EVENT, handleUpdate);
         window.addEventListener('storage', handleUpdate);
-        
+
         return () => {
             window.removeEventListener(PERMISSIONS_UPDATED_EVENT, handleUpdate);
             window.removeEventListener('storage', handleUpdate);
@@ -35,9 +35,9 @@ const usePermission = () => {
     }, []);
 
     // ✅ can() remains the same, but 'permissions' will now be team-specific
-    const can = (permissionName: string) => {
+    const can = useCallback((permissionName: string) => {
         return Array.isArray(permissions) && permissions.includes(permissionName);
-    };
+    }, [permissions]);
 
     return { can, permissions };
 };

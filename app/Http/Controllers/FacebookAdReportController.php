@@ -144,19 +144,44 @@ class FacebookAdReportController extends Controller
     public function history(Request $request)
     {
         $user = Auth::user();
-        $team = \App\Models\Team::find($user->team_id);
 
-        if (!$team) {
+        if (!$user->team_id) {
             return response()->json(['data' => [], 'total' => 0]);
         }
 
         $perPage = (int) $request->get('per_page', 10);
         $search = $request->get('search', '');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        $userIds = $request->get('user_ids');
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDir = $request->get('sort_dir', 'desc');
+
+        // Whitelist sort fields
+        $allowedSorts = [
+            'created_at',
+            'account_name',
+            'total_spend',
+            'total_impressions',
+            'total_reach',
+            'total_clicks',
+            'total_conversions',
+            'total_roas'
+        ];
+        if (!in_array($sortBy, $allowedSorts)) {
+            $sortBy = 'created_at';
+        }
 
         $query = FacebookAdReport::with(['user:id,name,avatar', 'adAccount:id,name'])
-            ->where('team_id', $team->id)
+            ->where('team_id', $user->team_id)
             ->when($search, fn($q) => $q->where('account_name', 'like', "%{$search}%"))
-            ->latest();
+            ->when($startDate, fn($q) => $q->whereDate('start_date', '>=', $startDate))
+            ->when($endDate, fn($q) => $q->whereDate('end_date', '<=', $endDate))
+            ->when($userIds, function ($q) use ($userIds) {
+                $ids = explode(',', $userIds);
+                return $q->whereIn('user_id', $ids);
+            })
+            ->orderBy($sortBy, $sortDir);
 
         $reports = $query->paginate($perPage);
 
