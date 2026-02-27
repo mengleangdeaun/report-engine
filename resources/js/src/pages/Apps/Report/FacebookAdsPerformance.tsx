@@ -411,7 +411,7 @@ const FacebookAdsPerformance = () => {
             </div>
 
             {isFilterPanelVisible && (
-                <Card className="mb-8 border-none shadow-sm bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+                <Card className="mb-8 shadow-sm backdrop-blur-sm">
                     <CardContent className="p-0">
                         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-700">
                             <div className="flex items-center gap-2">

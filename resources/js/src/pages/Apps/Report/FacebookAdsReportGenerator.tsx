@@ -15,6 +15,15 @@ import { Badge } from '../../../components/ui/badge';
 import { Checkbox } from '../../../components/ui/checkbox';
 import { Button } from '../../../components/ui/button';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ColumnSelector } from '@/components/Report/ColumnSelector';
+import {
     IconUpload, IconChartBar, IconTrophy, IconPrinter,
     IconFileSpreadsheet, IconPlus, IconHistory, IconTargetArrow,
     IconClick, IconEye, IconCurrencyDollar, IconPercentage,
@@ -109,7 +118,7 @@ const FacebookAdsReportGenerator = () => {
     const [loading, setLoading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [page, setPage] = useState(1);
-    const [pageSize] = useState(10);
+    const [pageSize, setPageSize] = useState(10);
     const [sortKey, setSortKey] = useState<string>('impressions');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
     const [showMediaSelector, setShowMediaSelector] = useState(false);
@@ -118,6 +127,43 @@ const FacebookAdsReportGenerator = () => {
     const [accountsLoading, setAccountsLoading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { can } = usePermission();
+
+    const [breakdownLevel, setBreakdownLevel] = useState<'ads' | 'ad_sets' | 'campaigns'>('ads');
+
+    // The active raw data depending on the selected breakdown
+    const activeData = useMemo(() => {
+        if (!reportData) return [];
+        return reportData[breakdownLevel] || [];
+    }, [reportData, breakdownLevel]);
+
+    // The raw available columns detected from the active dataset
+    const availableColumns = useMemo(() => {
+        if (!activeData || activeData.length === 0) return reportData?.available_columns || [];
+        return Object.keys(activeData[0]).filter(k => !['name', 'ad_count'].includes(k));
+    }, [activeData, reportData]);
+
+    // Default columns to show if no customization exists
+    const defaultColumns = useMemo(() => [
+        'campaign', 'ad_set', 'ad', 'impressions', 'reach', 'clicks', 'ctr', 'spend', 'cpc', 'cpm', 'conversions', 'roas'
+    ].filter(c => availableColumns.includes(c)), [availableColumns]);
+
+    // Visible columns state
+    const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
+
+    // Initialize visible columns when report data loads or breakdown changes
+    useEffect(() => {
+        if (availableColumns.length > 0) {
+            // Keep intersecting columns if already manually changed
+            if (visibleColumns.length > 0) {
+                const validVisible = visibleColumns.filter(c => availableColumns.includes(c));
+                if (validVisible.length > 0) {
+                    setVisibleColumns(validVisible);
+                    return;
+                }
+            }
+            setVisibleColumns(defaultColumns);
+        }
+    }, [availableColumns, defaultColumns]);
 
     const hasMediaAccess = can('media_library_access');
 
@@ -185,7 +231,17 @@ const FacebookAdsReportGenerator = () => {
             try {
                 const response = await fetch(selectedMediaFile.url);
                 const blob = await response.blob();
-                const f = new File([blob], selectedMediaFile.name, { type: 'text/csv' });
+
+                // Keep the correct file extension and determine correct MIME type
+                const fileName = selectedMediaFile.name;
+                let mimeType = 'text/csv';
+                if (fileName.toLowerCase().endsWith('.xlsx')) {
+                    mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                } else if (fileName.toLowerCase().endsWith('.xls')) {
+                    mimeType = 'application/vnd.ms-excel';
+                }
+
+                const f = new File([blob], fileName, { type: mimeType });
                 fd.append('file', f);
             } catch (err) {
                 toast.error('Failed to retrieve file from Media Library.');
@@ -216,13 +272,17 @@ const FacebookAdsReportGenerator = () => {
     /* ── CSV export ── */
     const handleExportCSV = () => {
         if (!reportData) return;
-        const ads = reportData.ads || [];
+        const dataToExport = activeData || [];
         const kpi = reportData.kpi || {};
-        const rows: string[][] = [
+
+        const columnLabels = visibleColumns.map(c => c.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '));
+
+        const rows: any[][] = [
             ['Facebook Ads Performance Report'],
             ['Account', accountName?.value || ''],
             ['Period', `${reportData.period?.start || ''} to ${reportData.period?.end || ''}`],
             ['Duration', reportData.period?.duration || ''],
+            ['Breakdown Level', breakdownLevel.charAt(0).toUpperCase() + breakdownLevel.slice(1)],
             [],
             ['--- KPI Summary ---'],
             ['Total Spend', kpi.total_spend?.toString() || ''],
@@ -235,32 +295,29 @@ const FacebookAdsReportGenerator = () => {
             ['Avg CPM', kpi.avg_cpm?.toString() || ''],
             ['Total ROAS', kpi.total_roas?.toString() || ''],
             [],
-            ['Campaign', 'Ad Set', 'Ad', 'Impressions', 'Reach', 'Clicks', 'CTR (%)', 'Spend', 'CPC', 'CPM', 'Conversions', 'ROAS'],
-            ...ads.map((a: any) => [
-                a.campaign, a.ad_set, a.ad,
-                a.impressions, a.reach, a.clicks, a.ctr,
-                a.spend, a.cpc, a.cpm, a.conversions, a.roas,
-            ]),
+            columnLabels,
+            ...dataToExport.map((row: any) => visibleColumns.map(c => row[c] ?? '')),
         ];
+
         const csv = rows.map(r => r.map(String).map(v => `"${v.replace(/"/g, '""')}"`).join(',')).join('\n');
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url; a.download = `fb-ads-report-${Date.now()}.csv`; a.click();
+        a.href = url; a.download = `fb-${breakdownLevel}-report-${Date.now()}.csv`; a.click();
         URL.revokeObjectURL(url);
     };
 
-    /* ── Sorted ads ── */
-    const sortedAds = useMemo(() => {
-        if (!reportData?.ads) return [];
-        return [...reportData.ads].sort((a, b) => {
+    /* ── Sorted Data ── */
+    const sortedData = useMemo(() => {
+        if (!activeData.length) return [];
+        return [...activeData].sort((a, b) => {
             const va = a[sortKey] ?? 0, vb = b[sortKey] ?? 0;
             return sortDir === 'desc' ? vb - va : va - vb;
         });
-    }, [reportData, sortKey, sortDir]);
+    }, [activeData, sortKey, sortDir]);
 
-    const pageCount = Math.ceil(sortedAds.length / pageSize);
-    const paginatedAds = sortedAds.slice((page - 1) * pageSize, page * pageSize);
+    const pageCount = Math.ceil(sortedData.length / pageSize);
+    const paginatedData = sortedData.slice((page - 1) * pageSize, page * pageSize);
 
     const handleSort = (key: string) => {
         if (sortKey === key) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
@@ -543,27 +600,29 @@ const FacebookAdsReportGenerator = () => {
                                             Generate & Store Source File in Media Library
                                         </Label>
                                     </div>
-
-                                    <div className="flex gap-3">
-                                        <Button
-                                            onClick={handleGenerate}
-                                            disabled={loading || !accountName || (!file && !selectedMediaFile)}
-                                            className="flex-1 inline-flex items-center justify-center gap-3 px-6 py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl"
-                                        >
-                                            <IconChartBar size={20} />
-                                            Generate Ads Report
-                                        </Button>
-                                        <Button
+                                </div>
+                            )}
+                            <div className="space-y-4 mt-4" >
+                                <div className="flex gap-3">
+                                    <Button
+                                        onClick={handleGenerate}
+                                        disabled={loading || !accountName || (!file && !selectedMediaFile)}
+                                        className="flex-1 inline-flex items-center justify-center gap-3 px-6 py-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-all shadow-lg hover:shadow-xl"
+                                    >
+                                        <IconChartBar size={20} />
+                                        Generate Ads Report
+                                    </Button>
+                                    <Button
                                         variant="outline"
                                         onClick={() => navigate('/apps/report/facebook-ads-performance')}
                                         className="h-auto items-center justify-center gap-1 border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 group"
-                                        >
+                                    >
                                         <IconHistory size={20} className="transition-transform group-hover:rotate-[-10deg]" />
                                         History
-                                        </Button>
-                                    </div>
+                                    </Button>
                                 </div>
-                            )}
+                            </div>
+
                         </div>
 
                         {/* Footer Hint */}
@@ -586,39 +645,47 @@ const FacebookAdsReportGenerator = () => {
        RENDER — REPORT DASHBOARD
     ───────────────────────────────────────── */
     return (
-        <div className="p-4 md:p-6 space-y-6 print:p-0">
+        <div className="space-y-6 print:p-0">
             <ProcessingOverlay isOpen={loading} />
 
             {/* Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setReportData(null)} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors">
+                    <Button onClick={() => setReportData(null)} variant="outline" className="flex items-center gap-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                         <IconArrowLeft size={16} />
                         <span className="hidden sm:inline">New Report</span>
-                    </button>
+                    </Button>
                     <div className="h-4 w-px bg-gray-300 dark:bg-gray-700" />
                     <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-sm">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-sm">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
                                 <path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96C18.34 21.21 22 17.06 22 12.06C22 6.53 17.5 2.04 12 2.04Z" />
                             </svg>
                         </div>
-                        <div>
+                        <div className='flex flex-col gap-1.5' >
                             <p className="font-bold text-gray-900 dark:text-white text-sm leading-tight">{accountName?.value || 'Facebook Ads Report'}</p>
                             <p className="text-xs text-gray-400">{reportData.period?.start} – {reportData.period?.end} · {reportData.period?.duration}</p>
                         </div>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button onClick={handleExportCSV} className="flex items-center gap-1.5 px-3 py-2 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all border border-emerald-200 dark:border-emerald-800/40">
-                        <IconFileSpreadsheet size={15} /> Export CSV
-                    </button>
-                    <button onClick={() => window.print()} className="flex items-center gap-1.5 px-3 py-2 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
-                        <IconPrinter size={15} /> Print
-                    </button>
-                    <button onClick={() => { setReportData(null); setFile(null); }} className="flex items-center gap-1.5 px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
+                    <Button onClick={handleExportCSV} className="flex items-center gap-1.5 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all border border-emerald-200 dark:border-emerald-800/40">
+                        <IconFileSpreadsheet size={16} /> Export CSV
+                    </Button>
+                    <Button onClick={() => window.print()} className="flex items-center gap-1.5 text-sm border bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+                        <IconPrinter size={16} /> Print
+                    </Button>
+                    {availableColumns.length > 0 && (
+                        <ColumnSelector
+                            availableColumns={availableColumns}
+                            visibleColumns={visibleColumns}
+                            onChange={setVisibleColumns}
+                            defaultColumns={defaultColumns}
+                        />
+                    )}
+                    <Button onClick={() => { setReportData(null); setFile(null); }} className="flex items-center gap-1.5 text-sm  transition-all">
                         <IconPlus size={15} /> New
-                    </button>
+                    </Button>
                 </div>
             </div>
 
@@ -684,78 +751,126 @@ const FacebookAdsReportGenerator = () => {
 
             {/* ── Ad-Level Table ── */}
             <div className="panel rounded-xl overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 gap-4 border-b border-gray-100 dark:border-gray-800">
                     <h3 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
                         <IconChartBar size={17} className="text-blue-500" />
-                        Ad Performance Breakdown
-                        <span className="ml-1 text-xs font-normal text-gray-400">({sortedAds.length} ads)</span>
+                        Performance Breakdown
+                        <span className="ml-1 text-xs font-normal text-gray-400">({sortedData.length} rows)</span>
                     </h3>
+
+                    <div className="flex items-center gap-2">
+                        <label className="text-xs mb-0 text-gray-500 font-medium">Breakdown Level:</label>
+                        <Select
+                            value={breakdownLevel}
+                            onValueChange={(val: any) => {
+                                setBreakdownLevel(val);
+                                setPage(1);
+                            }}
+                        >
+                            <SelectTrigger className="h-8 text-sm focus:ring-blue-500 w-[130px] font-medium bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                                <SelectValue placeholder="Breakdown Level" />
+                            </SelectTrigger>
+                            <SelectContent className="z-50" align="end">
+                                <SelectItem value="campaigns">Campaigns</SelectItem>
+                                <SelectItem value="ad_sets">Ad Sets</SelectItem>
+                                <SelectItem value="ads">Ads</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                <ScrollArea className="w-full">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="bg-gray-50 dark:bg-gray-800/50">
-                                {[
-                                    { k: 'campaign', label: 'Campaign' },
-                                    { k: 'ad_set', label: 'Ad Set' },
-                                    { k: 'ad', label: 'Ad' },
-                                    { k: 'impressions', label: 'Impressions' },
-                                    { k: 'reach', label: 'Reach' },
-                                    { k: 'clicks', label: 'Clicks' },
-                                    { k: 'ctr', label: 'CTR' },
-                                    { k: 'spend', label: 'Spend' },
-                                    { k: 'cpc', label: 'CPC' },
-                                    { k: 'cpm', label: 'CPM' },
-                                    { k: 'conversions', label: 'Conv.' },
-                                    { k: 'roas', label: 'ROAS' },
-                                ].map(col => (
-                                    <th
-                                        key={col.k}
-                                        className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide cursor-pointer hover:text-blue-500 whitespace-nowrap select-none"
-                                        onClick={() => handleSort(col.k)}
-                                    >
-                                        <span className="flex items-center gap-1">
-                                            {col.label} <SortIcon k={col.k} />
-                                        </span>
-                                    </th>
-                                ))}
+                                {visibleColumns.map(col => {
+                                    // Make nice column labels
+                                    const label = col.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                                    const isNumeric = ['impressions', 'reach', 'clicks', 'ctr', 'spend', 'cpc', 'cpm', 'conversions', 'roas', 'frequency', 'results', 'view', 'play', 'amount', 'purchase', 'lead'].some(kw => col.toLowerCase().includes(kw));
+
+                                    return (
+                                        <th
+                                            key={col}
+                                            className={`px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide cursor-pointer hover:text-blue-500 whitespace-nowrap select-none ${isNumeric ? 'text-right' : 'text-left'}`}
+                                            onClick={() => handleSort(col)}
+                                        >
+                                            <span className={`flex items-center gap-1 ${isNumeric ? 'justify-end' : 'justify-start'}`}>
+                                                {label} <SortIcon k={col} />
+                                            </span>
+                                        </th>
+                                    );
+                                })}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {paginatedAds.map((ad: any, i: number) => (
+                            {paginatedData.map((ad: any, i: number) => (
                                 <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors">
-                                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300 font-medium max-w-[140px] truncate" title={ad.campaign}>{ad.campaign}</td>
-                                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 max-w-[120px] truncate" title={ad.ad_set}>{ad.ad_set}</td>
-                                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300 max-w-[140px] truncate" title={ad.ad}>{ad.ad}</td>
-                                    <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">{fmt(ad.impressions)}</td>
-                                    <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">{fmt(ad.reach)}</td>
-                                    <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300">{fmt(ad.clicks)}</td>
-                                    <td className="px-4 py-3 text-right text-blue-600 dark:text-blue-400 font-medium">{fmtPct(ad.ctr)}</td>
-                                    <td className="px-4 py-3 text-right text-gray-700 dark:text-gray-300 font-medium">{fmtMoney(ad.spend)}</td>
-                                    <td className="px-4 py-3 text-right text-gray-500">{fmtMoney(ad.cpc)}</td>
-                                    <td className="px-4 py-3 text-right text-gray-500">{fmtMoney(ad.cpm)}</td>
-                                    <td className="px-4 py-3 text-right text-emerald-600 dark:text-emerald-400 font-medium">{fmt(ad.conversions)}</td>
-                                    <td className="px-4 py-3 text-right">
-                                        <span className={`font-bold ${ad.roas >= 2 ? 'text-green-600 dark:text-green-400' : ad.roas >= 1 ? 'text-blue-600 dark:text-blue-400' : 'text-red-500'}`}>
-                                            {(ad.roas || 0).toFixed(2)}x
-                                        </span>
-                                    </td>
+                                    {visibleColumns.map(col => {
+                                        let val = ad[col];
+                                        let displayVal: React.ReactNode = val;
+
+                                        // Apply dynamic formatting based on column name convention
+                                        if (col === 'campaign' || col === 'ad_set' || col === 'ad') {
+                                            displayVal = <span className="max-w-[140px] truncate block" title={val as string}>{val || '—'}</span>;
+                                        } else if (['ctr', 'roas'].includes(col) || col.endsWith('_rate')) {
+                                            // Handle special rates
+                                            if (col === 'roas') displayVal = <span className={`font-bold ${val >= 2 ? 'text-green-600 dark:text-green-400' : val >= 1 ? 'text-blue-600 dark:text-blue-400' : 'text-red-500'}`}>{(val || 0).toFixed(2)}x</span>;
+                                            else displayVal = <span className="text-blue-600 dark:text-blue-400 font-medium">{val ? val.toFixed(2) + '%' : '0.00%'}</span>;
+                                        } else if (['spend', 'cpc', 'cpm'].includes(col) || col.includes('cost') || col.includes('amount') || col.endsWith('_value')) {
+                                            displayVal = <span className="font-medium text-gray-700 dark:text-gray-300">{fmtMoney(val as number)}</span>;
+                                        } else if (typeof val === 'number') {
+                                            displayVal = <span className="text-gray-700 dark:text-gray-300">{fmt(val)}</span>;
+                                        } else {
+                                            displayVal = <span className="text-gray-600 dark:text-gray-400">{val || '—'}</span>;
+                                        }
+
+                                        const align = typeof val === 'number' || !val ? 'text-right' : 'text-left';
+
+                                        return (
+                                            <td key={col} className={`px-4 py-3 ${align}`}>
+                                                {displayVal}
+                                            </td>
+                                        );
+                                    })}
                                 </tr>
                             ))}
-                            {paginatedAds.length === 0 && (
-                                <tr><td colSpan={12} className="text-center py-10 text-gray-400">No ads found.</td></tr>
+                            {paginatedData.length === 0 && (
+                                <tr><td colSpan={visibleColumns.length} className="text-center py-10 text-gray-400">No data found.</td></tr>
                             )}
                         </tbody>
                     </table>
-                </div>
+                    <ScrollBar orientation="horizontal" />
+                </ScrollArea>
 
                 {/* Pagination */}
-                {pageCount > 1 && (
-                    <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-gray-800">
-                        <span className="text-xs text-gray-500">
-                            Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, sortedAds.length)} of {sortedAds.length}
-                        </span>
+                {sortedData.length > 0 && (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-3 border-t border-gray-100 dark:border-gray-800">
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <div className="flex items-center gap-2">
+                                <span>Rows per page</span>
+                                <Select
+                                    value={pageSize.toString()}
+                                    onValueChange={(val) => {
+                                        setPageSize(Number(val));
+                                        setPage(1);
+                                    }}
+                                >
+                                    <SelectTrigger className="h-7 w-[70px] text-xs bg-white dark:bg-gray-900">
+                                        <SelectValue placeholder={pageSize.toString()} />
+                                    </SelectTrigger>
+                                    <SelectContent side="top">
+                                        {[10, 20, 50, 100].map((size) => (
+                                            <SelectItem key={size} value={size.toString()}>
+                                                {size}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <span>
+                                Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, sortedData.length)} of {sortedData.length}
+                            </span>
+                        </div>
                         <div className="flex items-center gap-1">
                             <button onClick={() => setPage(1)} disabled={page === 1} className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40"><IconChevronsLeft size={15} /></button>
                             <button onClick={() => setPage(p => p - 1)} disabled={page === 1} className="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40"><IconChevronLeft size={15} /></button>

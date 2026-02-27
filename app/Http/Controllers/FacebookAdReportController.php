@@ -256,7 +256,7 @@ class FacebookAdReportController extends Controller
             'Content-Disposition' => 'attachment; filename="fb-ads-report-' . $report->id . '.csv"',
         ];
 
-        return response()->stream(function () use ($ads, $report) {
+        return response()->stream(function () use ($ads, $report, $data) {
             $handle = fopen('php://output', 'w');
 
             // KPI summary rows
@@ -266,37 +266,25 @@ class FacebookAdReportController extends Controller
             fputcsv($handle, ['Generated', $report->created_at->format('Y-m-d H:i')]);
             fputcsv($handle, []);
 
-            // Ad-level headers
-            fputcsv($handle, [
-                'Campaign',
-                'Ad Set',
-                'Ad',
-                'Impressions',
-                'Reach',
-                'Clicks',
-                'CTR (%)',
-                'Spend',
-                'CPC',
-                'CPM',
-                'Conversions',
-                'ROAS',
-            ]);
+            // Dynamically determine headers from available columns or the first ad row
+            $availableColumns = $data['available_columns'] ?? [];
+            if (empty($availableColumns) && count($ads) > 0) {
+                $availableColumns = array_keys($ads[0]);
+            }
+
+            // Capitalize headers for display
+            $displayHeaders = array_map(function ($key) {
+                return ucwords(str_replace('_', ' ', $key));
+            }, $availableColumns);
+
+            fputcsv($handle, $displayHeaders);
 
             foreach ($ads as $ad) {
-                fputcsv($handle, [
-                    $ad['campaign'] ?? '',
-                    $ad['ad_set'] ?? '',
-                    $ad['ad'] ?? '',
-                    $ad['impressions'] ?? 0,
-                    $ad['reach'] ?? 0,
-                    $ad['clicks'] ?? 0,
-                    $ad['ctr'] ?? 0,
-                    $ad['spend'] ?? 0,
-                    $ad['cpc'] ?? 0,
-                    $ad['cpm'] ?? 0,
-                    $ad['conversions'] ?? 0,
-                    $ad['roas'] ?? 0,
-                ]);
+                $row = [];
+                foreach ($availableColumns as $col) {
+                    $row[] = $ad[$col] ?? '';
+                }
+                fputcsv($handle, $row);
             }
 
             fclose($handle);

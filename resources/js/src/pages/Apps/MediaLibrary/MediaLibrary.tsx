@@ -667,7 +667,7 @@ const MediaLibrary = () => {
                         <Button
                             onClick={() => setShowUploadModal(true)}
                             disabled={uploading}
-                            className="h-9 gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white"
+                            className="h-9 gap-1.5"
                         >
                             <IconUpload size={15} />
                             {uploading ? 'Uploading…' : 'Upload'}

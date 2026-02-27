@@ -683,55 +683,55 @@ const TiktokReportGenerator = () => {
                             <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
                           </div>
 
-                          <div className="space-y-4">
-                            <Button
-                              variant="outline"
-                              className="w-full gap-2 border-dashed"
-                              onClick={() => setShowMediaSelector(true)}
+                          <Button
+                            variant="outline"
+                            className="w-full gap-2 border-dashed"
+                            onClick={() => setShowMediaSelector(true)}
+                          >
+                            <IconFileSearch size={16} /> Select from Media Library
+                          </Button>
+
+                          <div className="flex gap-2 p-3 items-start bg-gray-50 dark:bg-gray-900/50 rounded-md border border-gray-100 dark:border-gray-800 text-left">
+                            <Checkbox
+                              size="lg"
+                              id="store-file"
+                              checked={storeFile}
+                              onCheckedChange={(checked) => setStoreFile(!!checked)}
+                            />
+                            <Label
+                              htmlFor="store-file"
+                              className="mt-1 !mb-0 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                             >
-                              <IconFileSearch size={16} /> Select from Media Library
-                            </Button>
-
-                            <div className="flex gap-2 p-3 items-start bg-gray-50 dark:bg-gray-900/50 rounded-md border border-gray-100 dark:border-gray-800 text-left">
-                              <Checkbox
-                                size="lg"
-                                id="store-file"
-                                checked={storeFile}
-                                onCheckedChange={(checked) => setStoreFile(!!checked)}
-                              />
-                              <Label
-                                htmlFor="store-file"
-                                className="mt-1 !mb-0 font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                              >
-                                Generate & Store Source File in Media Library
-                              </Label>
-                            </div>
-
-                            <div className="flex gap-3">
-                              <Button
-                                onClick={handleGenerate}
-                                disabled={loading || (!file && !selectedMediaFile)}
-                                className="flex-1 inline-flex items-center justify-center gap-3 px-6 py-6 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-all shadow-lg hover:shadow-xl"
-                              >
-                                <IconChartBar size={20} />
-                                Generate Report
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => navigate('/apps/report/history')}
-                                className="h-auto items-center justify-center gap-1 border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 group"
-                              >
-                                <IconHistory size={20} className="transition-transform group-hover:rotate-[-10deg]" />
-                                History
-                              </Button>
-                            </div>
-
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              <p>Ensure your file contains standard TikTok export columns</p>
-                            </div>
+                              Generate & Store Source File in Media Library
+                            </Label>
                           </div>
                         </>
                       )}
+
+                      <div className="space-y-4">
+                        <div className="flex gap-3">
+                          <Button
+                            onClick={handleGenerate}
+                            disabled={loading || (!file && !selectedMediaFile)}
+                            className="flex-1 inline-flex items-center justify-center gap-3 px-6 py-6 bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-md transition-all shadow-lg hover:shadow-xl"
+                          >
+                            <IconChartBar size={20} />
+                            Generate Report
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => navigate('/apps/report/history')}
+                            className="h-auto items-center justify-center gap-1 border-gray-200 dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 group"
+                          >
+                            <IconHistory size={20} className="transition-transform group-hover:rotate-[-10deg]" />
+                            History
+                          </Button>
+                        </div>
+
+                        <div className="text-xs text-center text-gray-500 dark:text-gray-400">
+                          <p>Ensure your file contains standard TikTok export columns</p>
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
                 </div>

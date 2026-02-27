@@ -9,8 +9,8 @@ use Illuminate\Support\Str;
 class FacebookAdsAnalyzer
 {
     /**
-     * Analyze a Facebook Ads Manager CSV export.
-     * Handles all standard column headers the Ads Manager can produce.
+     * Analyze a Facebook Ads Manager CSV/XLSX export.
+     * Uses dynamic header mapping to support an arbitrary number of columns.
      */
     public function analyze($file): array
     {
@@ -21,10 +21,33 @@ class FacebookAdsAnalyzer
             throw new \Exception('The uploaded file is empty.');
         }
 
-        // 2. Detect headers (row 0)
-        $rawHeaders = $data->first();
-        $headers = $rawHeaders->map(fn($h) => Str::slug((string) $h))->toArray();
-        $map = $this->mapHeaders($headers);
+        // 2. Detect headers (row 0 or wherever they start)
+        $headerRowIndex = 0;
+        $rawHeaders = null;
+
+        // Find the first row that doesn't look empty and isn't a "Total" row.
+        // Usually, the first valid row in an FB Ads export contains 'Campaign Name', 'Campaign ID', 'Reporting Starts', etc.
+        foreach ($data as $i => $row) {
+            $firstCell = strtolower(trim((string) ($row[0] ?? '')));
+            if ($firstCell !== '' && !is_numeric($firstCell) && !str_contains($firstCell, 'total')) {
+                $headerRowIndex = $i;
+                $rawHeaders = $row;
+                break;
+            }
+        }
+
+        if (!$rawHeaders) {
+            $rawHeaders = $data->first();
+        }
+
+        $headers = [];
+        foreach ($rawHeaders as $i => $h) {
+            $val = trim((string) $h);
+            if ($val !== '') {
+                $slug = str_replace('-', '_', Str::slug($val));
+                $headers[$i] = $slug;
+            }
+        }
 
         // 3. Process each data row
         $ads = [];
@@ -32,74 +55,86 @@ class FacebookAdsAnalyzer
         $adSets = [];
         $dates = [];
 
-        foreach ($data->slice(1) as $row) {
-            // Skip totally empty rows
+        foreach ($data->slice($headerRowIndex + 1) as $row) {
+            // Skip totally empty rows or rows that are summary totals
             if (!isset($row[0]) || trim((string) $row[0]) === '')
                 continue;
+            if (str_contains(strtolower((string) $row[0]), 'total'))
+                continue;
 
-            // --- Extract fields ---
-            $campaignName = $this->str($row, $map, 'campaign');
-            $adSetName = $this->str($row, $map, 'adset');
-            $adName = $this->str($row, $map, 'ad');
-            $startDate = $this->parseDate($row[$map['start_date']] ?? null);
-            $endDate = $this->parseDate($row[$map['end_date']] ?? null);
+            $adRow = [];
 
-            // --- Metrics ---
-            $impressions = $this->num($row, $map, 'impressions');
-            $reach = $this->num($row, $map, 'reach');
-            $clicks = $this->num($row, $map, 'clicks');
-            $linkClicks = $this->num($row, $map, 'link_clicks');
-            $spend = $this->dec($row, $map, 'spend');
-            $cpm = $this->dec($row, $map, 'cpm');
-            $cpc = $this->dec($row, $map, 'cpc');
-            $ctrRaw = $this->dec($row, $map, 'ctr');
-            $conversions = $this->num($row, $map, 'conversions');
-            $roas = $this->dec($row, $map, 'roas');
-            $frequency = $this->dec($row, $map, 'frequency');
-            $videoPlays = $this->num($row, $map, 'video_plays');
-            $thruPlays = $this->num($row, $map, 'thruplays');
+            // Map cells to slugified headers and cast to proper types
+            foreach ($headers as $i => $key) {
+                if (!isset($row[$i]))
+                    continue;
+                $val = trim((string) $row[$i]);
 
-            // Derive CTR if not provided
-            $ctr = $ctrRaw > 0 ? $ctrRaw : ($impressions > 0 ? round(($clicks / $impressions) * 100, 4) : 0);
-            // Derive CPC if not provided
-            if ($cpc == 0 && $clicks > 0 && $spend > 0) {
-                $cpc = round($spend / $clicks, 4);
+                // Allow empty values to be passed through for string breakdowns, 
+                // but zero them out for numeric metrics.
+                $type = $this->getMetricType($key);
+
+                if ($type === 'float') {
+                    $adRow[$key] = $this->floatFromStr($val);
+                } elseif ($type === 'int') {
+                    $adRow[$key] = $this->intFromStr($val);
+                } else {
+                    $adRow[$key] = $val;
+                }
             }
-            // Derive CPM if not provided
-            if ($cpm == 0 && $impressions > 0 && $spend > 0) {
-                $cpm = round(($spend / $impressions) * 1000, 4);
-            }
+
+            // Standardize some essential keys that the report generation expects
+            $campaignName = $adRow['campaign_name'] ?? $adRow['campaign'] ?? 'Unknown Campaign';
+            $adSetName = $adRow['ad_set_name'] ?? $adRow['ad_set'] ?? 'Unknown Ad Set';
+            $adName = $adRow['ad_name'] ?? $adRow['ad'] ?? 'Unknown Ad';
+
+            $adRow['campaign'] = $campaignName;
+            $adRow['ad_set'] = $adSetName;
+            $adRow['ad'] = $adName;
+
+            // Map KPIs from various potential header names
+            $spend = $this->findVal($adRow, ['amount_spent', 'amount_spent_usd', 'spend']);
+            $impressions = $this->findVal($adRow, ['impressions']);
+            $reach = $this->findVal($adRow, ['reach']);
+            $clicks = $this->findVal($adRow, ['clicks', 'clicks_all']);
+            $conversions = $this->findVal($adRow, ['results', 'conversions']);
+            $roas = $this->findVal($adRow, ['purchase_roas_return_on_ad_spend', 'roas']);
+
+            $adRow['spend'] = $spend;
+            $adRow['impressions'] = $impressions;
+            $adRow['reach'] = $reach;
+            $adRow['clicks'] = $clicks;
+            $adRow['conversions'] = $conversions;
+            $adRow['roas'] = $roas;
+
+            $ctrRaw = $this->findVal($adRow, ['ctr', 'ctr_all', 'ctr_link_click_through_rate']);
+            $cpcRaw = $this->findVal($adRow, ['cpc', 'cpc_all', 'cpc_cost_per_link_click']);
+            $cpmRaw = $this->findVal($adRow, ['cpm', 'cpm_cost_per_1000_impressions']);
+
+            // Derive rates if not inherently exported
+            $adRow['ctr'] = $ctrRaw > 0 ? $ctrRaw : ($impressions > 0 ? round(($clicks / $impressions) * 100, 4) : 0);
+            $adRow['cpc'] = $cpcRaw > 0 ? $cpcRaw : ($clicks > 0 && $spend > 0 ? round($spend / $clicks, 4) : 0);
+            $adRow['cpm'] = $cpmRaw > 0 ? $cpmRaw : ($impressions > 0 && $spend > 0 ? round(($spend / $impressions) * 1000, 4) : 0);
+
+            // Parse dates
+            $startDateRaw = $adRow['reporting_starts'] ?? $adRow['start_date'] ?? null;
+            $endDateRaw = $adRow['reporting_ends'] ?? $adRow['end_date'] ?? null;
+
+            $startDate = $this->parseDate($startDateRaw);
+            $endDate = $this->parseDate($endDateRaw);
+
+            $adRow['start_date'] = $startDate;
+            $adRow['end_date'] = $endDate;
 
             if ($startDate)
                 $dates[] = $startDate;
             if ($endDate)
                 $dates[] = $endDate;
 
-            $adRow = [
-                'campaign' => $campaignName ?: 'Unknown Campaign',
-                'ad_set' => $adSetName ?: 'Unknown Ad Set',
-                'ad' => $adName ?: 'Unknown Ad',
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'impressions' => $impressions,
-                'reach' => $reach,
-                'clicks' => $clicks,
-                'link_clicks' => $linkClicks ?: $clicks,
-                'spend' => $spend,
-                'cpm' => $cpm,
-                'cpc' => $cpc,
-                'ctr' => $ctr,
-                'conversions' => $conversions,
-                'roas' => $roas,
-                'frequency' => $frequency,
-                'video_plays' => $videoPlays,
-                'thruplays' => $thruPlays,
-            ];
-
             $ads[] = $adRow;
 
-            // Aggregate by campaign
-            $cKey = $campaignName ?: 'Unknown Campaign';
+            // Aggregation Setup
+            $cKey = $campaignName;
             if (!isset($campaigns[$cKey])) {
                 $campaigns[$cKey] = [
                     'name' => $cKey,
@@ -109,54 +144,67 @@ class FacebookAdsAnalyzer
                     'spend' => 0,
                     'conversions' => 0,
                     'roas' => 0,
-                    'ad_count' => 0,
+                    'ad_count' => 0
                 ];
             }
-            $campaigns[$cKey]['impressions'] += $impressions;
-            $campaigns[$cKey]['reach'] += $reach;
-            $campaigns[$cKey]['clicks'] += $clicks;
-            $campaigns[$cKey]['spend'] += $spend;
-            $campaigns[$cKey]['conversions'] += $conversions;
-            $campaigns[$cKey]['roas'] = $spend > 0 && $conversions > 0
-                ? round($campaigns[$cKey]['conversions'] / $campaigns[$cKey]['spend'], 4)
-                : max($campaigns[$cKey]['roas'], $roas);
-            $campaigns[$cKey]['ad_count']++;
-
-            // Aggregate by ad set
             $sKey = "{$cKey} › {$adSetName}";
             if (!isset($adSets[$sKey])) {
                 $adSets[$sKey] = [
-                    'name' => $adSetName ?: 'Unknown Ad Set',
+                    'name' => $adSetName,
                     'campaign' => $cKey,
                     'impressions' => 0,
                     'reach' => 0,
                     'clicks' => 0,
                     'spend' => 0,
-                    'conversions' => 0,
+                    'conversions' => 0
                 ];
             }
-            $adSets[$sKey]['impressions'] += $impressions;
-            $adSets[$sKey]['reach'] += $reach;
-            $adSets[$sKey]['clicks'] += $clicks;
-            $adSets[$sKey]['spend'] += $spend;
-            $adSets[$sKey]['conversions'] += $conversions;
+
+            // Dynamic Aggregation for all numeric metrics
+            foreach ($adRow as $k => $v) {
+                // Ignore key identifiers and dates
+                if (in_array($k, ['campaign', 'ad_set', 'ad', 'start_date', 'end_date', 'name', 'id', 'objective', 'status']))
+                    continue;
+
+                if ($this->getMetricType($k) !== 'string') {
+                    if (!isset($campaigns[$cKey][$k]))
+                        $campaigns[$cKey][$k] = 0;
+                    if (!isset($adSets[$sKey][$k]))
+                        $adSets[$sKey][$k] = 0;
+
+                    // Only sum counts and totals (NOT rates) - we will recalculate core rates below
+                    $campaigns[$cKey][$k] += $v;
+                    $adSets[$sKey][$k] += $v;
+                }
+            }
+            $campaigns[$cKey]['ad_count']++;
         }
 
-        // 4. Compute overall KPIs
+        // 4. Compute overall KPIs & recalibrate rates at agg levels
+        foreach ($campaigns as &$c) {
+            $c['roas'] = $c['spend'] > 0 && $c['conversions'] > 0 ? round($c['conversions'] / $c['spend'], 4) : ($c['roas'] ?? 0);
+            $c['ctr'] = $c['impressions'] > 0 ? round(($c['clicks'] / $c['impressions']) * 100, 4) : 0;
+            $c['cpc'] = $c['clicks'] > 0 ? round($c['spend'] / $c['clicks'], 4) : 0;
+            $c['cpm'] = $c['impressions'] > 0 ? round(($c['spend'] / $c['impressions']) * 1000, 4) : 0;
+        }
+
+        foreach ($adSets as &$s) {
+            $s['roas'] = $s['spend'] > 0 && $s['conversions'] > 0 ? round($s['conversions'] / $s['spend'], 4) : ($s['roas'] ?? 0);
+            $s['ctr'] = $s['impressions'] > 0 ? round(($s['clicks'] / $s['impressions']) * 100, 4) : 0;
+            $s['cpc'] = $s['clicks'] > 0 ? round($s['spend'] / $s['clicks'], 4) : 0;
+            $s['cpm'] = $s['impressions'] > 0 ? round(($s['spend'] / $s['impressions']) * 1000, 4) : 0;
+        }
+
         $totalImpressions = array_sum(array_column($ads, 'impressions'));
         $totalReach = array_sum(array_column($ads, 'reach'));
         $totalClicks = array_sum(array_column($ads, 'clicks'));
         $totalSpend = array_sum(array_column($ads, 'spend'));
         $totalConversions = array_sum(array_column($ads, 'conversions'));
 
-        $avgCtr = $totalImpressions > 0
-            ? round(($totalClicks / $totalImpressions) * 100, 4) : 0;
-        $avgCpc = $totalClicks > 0
-            ? round($totalSpend / $totalClicks, 4) : 0;
-        $avgCpm = $totalImpressions > 0
-            ? round(($totalSpend / $totalImpressions) * 1000, 4) : 0;
-        $totalRoas = $totalSpend > 0 && $totalConversions > 0
-            ? round($totalConversions / $totalSpend, 4) : 0;
+        $avgCtr = $totalImpressions > 0 ? round(($totalClicks / $totalImpressions) * 100, 4) : 0;
+        $avgCpc = $totalClicks > 0 ? round($totalSpend / $totalClicks, 4) : 0;
+        $avgCpm = $totalImpressions > 0 ? round(($totalSpend / $totalImpressions) * 1000, 4) : 0;
+        $totalRoas = $totalSpend > 0 && $totalConversions > 0 ? round($totalConversions / $totalSpend, 4) : 0;
 
         // 5. Top performers
         $adCollection = collect($ads);
@@ -169,9 +217,7 @@ class FacebookAdsAnalyzer
         sort($dates);
         $startDate = $dates[0] ?? null;
         $endDate = end($dates) ?: null;
-        $duration = ($startDate && $endDate)
-            ? Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate)) + 1
-            : 0;
+        $duration = ($startDate && $endDate) ? Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate)) + 1 : 0;
 
         return [
             'period' => [
@@ -201,117 +247,91 @@ class FacebookAdsAnalyzer
             ],
             'total_ads' => count($ads),
             'total_campaigns' => count($campaigns),
+            'available_columns' => array_values($headers),
         ];
     }
 
-    // -------------------------------------------------------------------------
-    // Header mapping — handles all standard Facebook Ads Manager export columns
-    // -------------------------------------------------------------------------
-    private function mapHeaders(array $headers): array
+    /**
+     * Helper to classify metrics to correct data types
+     */
+    private function getMetricType(string $key): string
     {
-        // Defaults (column index fallbacks for common export order)
-        $map = [
-            'campaign' => 0,
-            'adset' => 1,
-            'ad' => 2,
-            'impressions' => 3,
-            'reach' => 4,
-            'clicks' => 5,
-            'link_clicks' => 5,
-            'ctr' => 6,
-            'cpc' => 7,
-            'cpm' => 8,
-            'spend' => 9,
-            'conversions' => 10,
-            'roas' => 11,
-            'frequency' => 12,
-            'video_plays' => 13,
-            'thruplays' => 14,
-            'start_date' => 15,
-            'end_date' => 16,
+        $floatMetrics = [
+            'spend',
+            'amount',
+            'cpm',
+            'cpc',
+            'ctr',
+            'roas',
+            'frequency',
+            'cost_per',
+            'rate',
+            'value',
+            'return',
+            'budget'
+        ];
+        $strMetrics = [
+            'campaign',
+            'ad_set',
+            'ad',
+            'name',
+            'id',
+            'date',
+            'objective',
+            'status',
+            'gender',
+            'age',
+            'country',
+            'region',
+            'platform',
+            'placement',
+            'device',
+            'creative',
+            'category',
+            'brand',
+            'type',
+            'card',
+            'destination',
+            'source',
+            'url',
+            'text',
+            'headline',
+            'description',
+            'call_to_action',
+            'starts',
+            'ends',
+            'time'
         ];
 
-        foreach ($headers as $i => $h) {
-            // Campaign / Ad Set / Ad identity
-            if ($h === 'campaign-name' || str_contains($h, 'campaign'))
-                $map['campaign'] = $i;
-            if ($h === 'ad-set-name' || str_contains($h, 'ad-set'))
-                $map['adset'] = $i;
-            if ($h === 'ad-name' || ($h === 'ad' && !str_contains($h, 'account') && !str_contains($h, 'ad-set') && !str_contains($h, 'spend') && !str_contains($h, 'delivery')))
-                $map['ad'] = $i;
-
-            // Delivery
-            if ($h === 'impressions' || str_contains($h, 'impression'))
-                $map['impressions'] = $i;
-            if ($h === 'reach' || str_contains($h, 'reach'))
-                $map['reach'] = $i;
-            if ($h === 'frequency' || str_contains($h, 'frequency'))
-                $map['frequency'] = $i;
-
-            // Clicks
-            if ($h === 'clicks-all' || $h === 'clicks' || str_contains($h, 'all-clicks'))
-                $map['clicks'] = $i;
-            if ($h === 'link-clicks' || str_contains($h, 'link-click'))
-                $map['link_clicks'] = $i;
-
-            // Cost metrics
-            if ($h === 'amount-spent' || str_contains($h, 'amount-spent') || str_contains($h, 'spend'))
-                $map['spend'] = $i;
-            if ($h === 'cpm-cost-per-1000-impressions-reached' || $h === 'cpm' || str_contains($h, 'cpm'))
-                $map['cpm'] = $i;
-            if ($h === 'cpc-cost-per-link-click' || $h === 'cpc' || str_contains($h, 'cpc'))
-                $map['cpc'] = $i;
-            if ($h === 'ctr-link-click-through-rate' || $h === 'ctr' || str_contains($h, 'click-through-rate') || str_contains($h, 'ctr'))
-                $map['ctr'] = $i;
-
-            // Conversions / Results
-            if ($h === 'results' || str_contains($h, 'result') || str_contains($h, 'conversion'))
-                $map['conversions'] = $i;
-            if (str_contains($h, 'purchase-roas') || str_contains($h, 'roas'))
-                $map['roas'] = $i;
-
-            // Video
-            if (str_contains($h, 'video-play') && !str_contains($h, 'thru'))
-                $map['video_plays'] = $i;
-            if (str_contains($h, 'thruplay') || str_contains($h, 'thru-play'))
-                $map['thruplays'] = $i;
-
-            // Dates
-            if ($h === 'reporting-starts' || str_contains($h, 'start-date') || str_contains($h, 'reporting-starts'))
-                $map['start_date'] = $i;
-            if ($h === 'reporting-ends' || str_contains($h, 'end-date') || str_contains($h, 'reporting-ends'))
-                $map['end_date'] = $i;
+        foreach ($strMetrics as $m) {
+            if (str_contains($key, $m))
+                return 'string';
         }
-
-        return $map;
+        foreach ($floatMetrics as $m) {
+            if (str_contains($key, $m))
+                return 'float';
+        }
+        return 'int';
     }
 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-    private function str($row, array $map, string $key): string
+    private function findVal(array $arr, array $keys)
     {
-        $idx = $map[$key] ?? null;
-        if ($idx === null || !isset($row[$idx]))
-            return '';
-        return trim((string) $row[$idx]);
+        foreach ($keys as $k) {
+            if (isset($arr[$k]))
+                return $arr[$k];
+        }
+        return 0;
     }
 
-    private function num($row, array $map, string $key): int
+    private function intFromStr($val): int
     {
-        $idx = $map[$key] ?? null;
-        if ($idx === null || !isset($row[$idx]))
-            return 0;
-        $val = str_replace([',', ' '], '', (string) $row[$idx]);
+        $val = str_replace([',', ' '], '', (string) $val);
         return (int) $val;
     }
 
-    private function dec($row, array $map, string $key): float
+    private function floatFromStr($val): float
     {
-        $idx = $map[$key] ?? null;
-        if ($idx === null || !isset($row[$idx]))
-            return 0.0;
-        $val = str_replace([',', '%', '$', '€', '£', '฿', ' '], '', (string) $row[$idx]);
+        $val = str_replace([',', '%', '$', '€', '£', '฿', ' '], '', (string) $val);
         return (float) $val;
     }
 
@@ -326,7 +346,6 @@ class FacebookAdsAnalyzer
             $str = trim((string) $val);
             if ($str === '' || $str === '-')
                 return null;
-            // Common FB format: "2024-01-15" or "01/15/2024"
             if (str_contains($str, '/')) {
                 $parts = explode(' ', $str);
                 return Carbon::createFromFormat('m/d/Y', $parts[0])->format('Y-m-d');
