@@ -1,0 +1,97 @@
+resources/js/src/bootstrap.ts(4,8): error TS2339: Property 'Pusher' does not exist on type 'Window & typeof globalThis'.
+resources/js/src/components/Layouts/Header.tsx(12,40): error TS7016: Could not find a declaration file for module '../../utils/formatNotificationTime'. 'C:/laragon/www/report-maker/resources/js/src/utils/formatNotificationTime.js' implicitly has an 'any' type.
+resources/js/src/components/Layouts/Header.tsx(543,81): error TS2552: Cannot find name 'markAsRead'. Did you mean 'markAllRead'?
+resources/js/src/components/ui/calendar.tsx(8,3): error TS7031: Binding element 'className' implicitly has an 'any' type.
+resources/js/src/components/ui/calendar.tsx(9,3): error TS7031: Binding element 'classNames' implicitly has an 'any' type.
+resources/js/src/components/ui/calendar.tsx(13,3): error TS7031: Binding element 'formatters' implicitly has an 'any' type.
+resources/js/src/components/ui/calendar.tsx(14,3): error TS7031: Binding element 'components' implicitly has an 'any' type.
+resources/js/src/components/ui/calendar.tsx(27,7): error TS2322: Type 'string' is not assignable to type '"label" | "dropdown" | "dropdown-months" | "dropdown-years" | undefined'.
+resources/js/src/components/ui/calendar.tsx(146,30): error TS7031: Binding element 'className' implicitly has an 'any' type.
+resources/js/src/components/ui/calendar.tsx(146,41): error TS7031: Binding element 'day' implicitly has an 'any' type.
+resources/js/src/components/ui/calendar.tsx(146,46): error TS7031: Binding element 'modifiers' implicitly has an 'any' type.
+resources/js/src/components/ui/calendar.tsx(149,41): error TS2339: Property 'focus' does not exist on type 'never'.
+resources/js/src/components/ui/date-range-picker.tsx(152,56): error TS2345: Argument of type 'Date | undefined' is not assignable to parameter of type 'string | number | Date'.
+  Type 'undefined' is not assignable to type 'string | number | Date'.
+resources/js/src/components/ui/date-range-picker.tsx(275,18): error TS2739: Type '{ mode: string; selected: DateRange | undefined; onSelect: (range: DateRange | undefined) => void; month: Date | undefined; onMonthChange: Dispatch<SetStateAction<Date | undefined>>; numberOfMonths: number; disabled: (date: any) => boolean; className: string; }' is missing the following properties from type '{ [x: string]: any; className: any; classNames: any; showOutsideDays?: boolean | undefined; captionLayout?: string | undefined; buttonVariant?: string | undefined; formatters: any; components: any; }': classNames, formatters, components
+resources/js/src/components/ui/date-range-picker.tsx(282,30): error TS7006: Parameter 'date' implicitly has an 'any' type.
+resources/js/src/pages/Admin/PlanSettings.tsx(232,24): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+resources/js/src/pages/Admin/SubscriptionManager.tsx(414,25): error TS2322: Type '(page?: number) => Promise<void>' is not assignable to type 'MouseEventHandler<HTMLButtonElement>'.
+  Types of parameters 'page' and 'event' are incompatible.
+    Type 'MouseEvent<HTMLButtonElement, MouseEvent>' is not assignable to type 'number'.
+resources/js/src/pages/Apps/Calendar.tsx(308,33): error TS2339: Property 'Overlay' does not exist on type '_internal_ComponentDialog & { Panel: _internal_ComponentDialogPanel; Title: _internal_ComponentDialogTitle; Description: _internal_ComponentDialogDescription; }'.
+resources/js/src/pages/Apps/Invoice/List.tsx(4,20): error TS7016: Could not find a declaration file for module 'lodash/sortBy'. 'C:/laragon/www/report-maker/node_modules/lodash/sortBy.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lodash` if it exists or add a new declaration (.d.ts) file containing `declare module 'lodash/sortBy';`
+resources/js/src/pages/Apps/Invoice/List.tsx(252,33): error TS2322: Type '({ invoice }: { invoice: any; }) => Element' is not assignable to type '(record: unknown, index: number) => ReactNode'.
+  Types of parameters '__0' and 'record' are incompatible.
+    Type 'unknown' is not assignable to type '{ invoice: any; }'.
+resources/js/src/pages/Apps/Invoice/List.tsx(261,33): error TS2322: Type '({ name, id }: { name: any; id: any; }) => Element' is not assignable to type '(record: unknown, index: number) => ReactNode'.
+  Types of parameters '__0' and 'record' are incompatible.
+    Type 'unknown' is not assignable to type '{ name: any; id: any; }'.
+resources/js/src/pages/Apps/Invoice/List.tsx(282,33): error TS2322: Type '({ amount, id }: { amount: any; id: any; }) => Element' is not assignable to type '(record: unknown, index: number) => ReactNode'.
+  Types of parameters '__0' and 'record' are incompatible.
+    Type 'unknown' is not assignable to type '{ amount: any; id: any; }'.
+resources/js/src/pages/Apps/Invoice/List.tsx(287,33): error TS2322: Type '({ status }: { status: any; }) => Element' is not assignable to type '(record: unknown, index: number) => ReactNode'.
+  Types of parameters '__0' and 'record' are incompatible.
+    Type 'unknown' is not assignable to type '{ status: any; }'.
+resources/js/src/pages/Apps/Invoice/List.tsx(294,33): error TS2322: Type '({ id }: { id: any; }) => Element' is not assignable to type '(record: unknown, index: number) => ReactNode'.
+  Types of parameters '__0' and 'record' are incompatible.
+    Type 'unknown' is not assignable to type '{ id: any; }'.
+resources/js/src/pages/Apps/QRCodeGenerator.tsx(229,43): error TS2345: Argument of type 'Blob | Buffer' is not assignable to parameter of type 'Blob | MediaSource'.
+  Type 'Buffer' is not assignable to type 'Blob | MediaSource'.
+    Type 'Buffer' is missing the following properties from type 'Blob': size, type, arrayBuffer, stream, text
+resources/js/src/pages/Apps/QRCodeList.tsx(971,79): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: Props): ReactApexChart', gave the following error.
+    Type '{ chart?: undefined; dataLabels?: undefined; stroke?: undefined; xaxis?: undefined; yaxis?: undefined; grid?: undefined; tooltip?: undefined; colors?: undefined; fill?: undefined; } | { chart: { height: number; ... 4 more ...; background: string; }; ... 7 more ...; fill: { ...; }; }' is not assignable to type 'ApexOptions | undefined'.
+      Type '{ chart: { height: number; type: string; fontFamily: string; toolbar: { show: boolean; }; zoom: { enabled: boolean; }; background: string; }; dataLabels: { enabled: boolean; }; stroke: { curve: string; width: number; }; ... 5 more ...; fill: { ...; }; }' is not assignable to type 'ApexOptions'.
+        The types of 'chart.type' are incompatible between these types.
+          Type 'string' is not assignable to type '"area" | "line" | "donut" | "bar" | "pie" | "radialBar" | "scatter" | "bubble" | "heatmap" | "candlestick" | "boxPlot" | "radar" | "polarArea" | "rangeBar" | "rangeArea" | "treemap" | undefined'.
+  Overload 2 of 2, '(props: Props, context: any): ReactApexChart', gave the following error.
+    Type '{ chart?: undefined; dataLabels?: undefined; stroke?: undefined; xaxis?: undefined; yaxis?: undefined; grid?: undefined; tooltip?: undefined; colors?: undefined; fill?: undefined; } | { chart: { height: number; ... 4 more ...; background: string; }; ... 7 more ...; fill: { ...; }; }' is not assignable to type 'ApexOptions | undefined'.
+resources/js/src/pages/Apps/QRCodeList.tsx(1036,41): error TS2345: Argument of type 'Blob | Buffer' is not assignable to parameter of type 'Blob | MediaSource'.
+resources/js/src/pages/Apps/QRCodeList.tsx(1046,39): error TS2345: Argument of type 'Blob | Buffer' is not assignable to parameter of type 'Blob | MediaSource'.
+resources/js/src/pages/Apps/Report/FacebookReportGenerator.tsx(995,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: Props): ReactApexChart', gave the following error.
+    Type '{ labels: { style: { colors: string; fontSize: string; cssClass: string; }; formatter: (value: number) => string | number; }; }' is not assignable to type 'ApexYAxis | ApexYAxis[] | undefined'.
+      The types returned by 'labels.formatter(...)' are incompatible between these types.
+        Type 'string | number' is not assignable to type 'string | string[]'.
+          Type 'number' is not assignable to type 'string | string[]'.
+  Overload 2 of 2, '(props: Props, context: any): ReactApexChart', gave the following error.
+    Type '{ labels: { style: { colors: string; fontSize: string; cssClass: string; }; formatter: (value: number) => string | number; }; }' is not assignable to type 'ApexYAxis | ApexYAxis[] | undefined'.
+      The types of 'labels.formatter' are incompatible between these types.
+        Type '(value: number) => string | number' is not assignable to type '(val: number, opts?: any) => string | string[]'.
+resources/js/src/pages/Apps/Report/ReportHistory.tsx(331,32): error TS2339: Property 'start' does not exist on type 'DateRange'.
+resources/js/src/pages/Apps/Report/ReportHistory.tsx(332,30): error TS2339: Property 'end' does not exist on type 'DateRange'.
+resources/js/src/pages/Apps/Report/ReportHistory.tsx(729,69): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<"all" | "tiktok" | "facebook">'.
+resources/js/src/pages/Apps/Report/ReportHistoryDrawer.tsx(12,40): error TS7016: Could not find a declaration file for module '../../../utils/formatNotificationTime'. 'C:/laragon/www/report-maker/resources/js/src/utils/formatNotificationTime.js' implicitly has an 'any' type.
+resources/js/src/pages/Apps/Report/ReportLogDrawer.tsx(20,40): error TS7016: Could not find a declaration file for module '../../../utils/formatNotificationTime'. 'C:/laragon/www/report-maker/resources/js/src/utils/formatNotificationTime.js' implicitly has an 'any' type.
+resources/js/src/pages/Apps/Report/ReportLogDrawer.tsx(273,22): error TS2339: Property 'name' does not exist on type 'never'.
+resources/js/src/pages/Apps/Report/ReportLogDrawer.tsx(316,76): error TS2339: Property 'name' does not exist on type 'never'.
+resources/js/src/pages/Apps/Report/TiktokReportGenerator.tsx(935,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: Props): ReactApexChart', gave the following error.
+    Type '{ labels: { style: { colors: string; fontSize: string; cssClass: string; }; formatter: (value: number) => string | number; }; }' is not assignable to type 'ApexYAxis | ApexYAxis[] | undefined'.
+      The types returned by 'labels.formatter(...)' are incompatible between these types.
+        Type 'string | number' is not assignable to type 'string | string[]'.
+  Overload 2 of 2, '(props: Props, context: any): ReactApexChart', gave the following error.
+    Type '{ labels: { style: { colors: string; fontSize: string; cssClass: string; }; formatter: (value: number) => string | number; }; }' is not assignable to type 'ApexYAxis | ApexYAxis[] | undefined'.
+      The types of 'labels.formatter' are incompatible between these types.
+        Type '(value: number) => string | number' is not assignable to type '(val: number, opts?: any) => string | string[]'.
+resources/js/src/pages/Public/components/FacebookReportView.tsx(462,37): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | number) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | number' is not assignable to type 'SetStateAction<string>'.
+resources/js/src/pages/Public/components/FacebookReportView.tsx(619,45): error TS7034: Variable 'pageNum' implicitly has type 'any' in some locations where its type cannot be determined.
+resources/js/src/pages/Public/components/FacebookReportView.tsx(632,79): error TS7005: Variable 'pageNum' implicitly has an 'any' type.
+resources/js/src/pages/Public/components/TikTokReportView.tsx(458,53): error TS2322: Type 'Dispatch<SetStateAction<string>>' is not assignable to type '(value: string | number) => void'.
+  Types of parameters 'value' and 'value' are incompatible.
+    Type 'string | number' is not assignable to type 'SetStateAction<string>'.
+      Type 'number' is not assignable to type 'SetStateAction<string>'.
+resources/js/src/pages/Public/components/TikTokReportView.tsx(599,45): error TS7034: Variable 'pageNum' implicitly has type 'any' in some locations where its type cannot be determined.
+resources/js/src/pages/Public/components/TikTokReportView.tsx(612,79): error TS7005: Variable 'pageNum' implicitly has an 'any' type.
+resources/js/src/pages/Public/PublicReportView.tsx(9,32): error TS2307: Cannot find module './components/FacebookPublicView' or its corresponding type declarations.
+resources/js/src/pages/Public/PublicReportView.tsx(10,30): error TS2307: Cannot find module './components/TikTokPublicView' or its corresponding type declarations.
+resources/js/src/pages/Settings/WorkspaceRoles.tsx(89,32): error TS2345: Argument of type 'Set<unknown>' is not assignable to parameter of type 'SetStateAction<Set<string>>'.
+resources/js/src/pages/Team/TeamManagement.tsx(71,36): error TS2345: Argument of type 'Set<unknown>' is not assignable to parameter of type 'SetStateAction<Set<string>>'.
+  Type 'Set<unknown>' is not assignable to type 'Set<string>'.
+    Type 'unknown' is not assignable to type 'string'.
+resources/js/src/pages/Team/TeamManagement.tsx(564,77): error TS2322: Type 'unknown' is not assignable to type 'Key | null | undefined'.
+resources/js/src/pages/Team/TeamManagement.tsx(567,73): error TS2322: Type 'unknown' is not assignable to type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>'.
+resources/js/src/utils/cn.ts(1,1): error TS1208: 'cn.ts' cannot be compiled under '--isolatedModules' because it is considered a global script file. Add an import, export, or an empty 'export {}' statement to make it a module.

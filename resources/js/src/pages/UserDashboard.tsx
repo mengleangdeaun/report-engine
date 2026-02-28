@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../store/themeConfigSlice';
+import { formatUserDate } from '../utils/userDate';
 import axios from 'axios';
 
 const UserDashboard = () => {
     const dispatch = useDispatch();
     const [stats, setStats] = useState<any>({ balance: 0, total_reports: 0, recent_reports: [] });
-    
+
     useEffect(() => {
         dispatch(setPageTitle('My Dashboard'));
         fetchData();
@@ -77,7 +78,7 @@ const UserDashboard = () => {
                                 <tr key={report.id}>
                                     <td>{report.description}</td>
                                     <td className="text-danger font-bold">{report.amount}</td>
-                                    <td>{new Date(report.created_at).toLocaleDateString()}</td>
+                                    <td>{formatUserDate(report.created_at)}</td>
                                     <td><span className="badge bg-success">Completed</span></td>
                                 </tr>
                             ))}

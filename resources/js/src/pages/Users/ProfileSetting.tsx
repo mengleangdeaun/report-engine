@@ -1,4 +1,5 @@
 import { useState, useEffect, Fragment, useRef } from 'react';
+import { formatUserDate } from '../../utils/userDate';
 import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import api from '../../utils/api';
@@ -92,12 +93,7 @@ const Profile = () => {
 
 
         if (user.created_at) {
-            const date = new Date(user.created_at);
-            setJoinedDate(date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            }));
+            setJoinedDate(formatUserDate(user.created_at));
         }
 
         setOriginalData({

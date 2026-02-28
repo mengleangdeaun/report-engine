@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { IconCheck, IconX, IconRefresh, IconLoader } from '@tabler/icons-react';
 import { ConfirmationModal } from '../../components/ConfirmationModal';
 import DeleteModal from '../../components/DeleteModal';
+import { formatUserDate } from '../../utils/userDate';
 import { DateRangePicker } from '../../components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { Card, CardContent } from '../../components/ui/card';
@@ -544,8 +545,8 @@ const AdminTopUpRequests = () => {
                                         </td>
                                         <td className="p-4 text-gray-700 dark:text-gray-300">{req.team?.name}</td>
                                         <td className="p-4 text-gray-700 dark:text-gray-300">
-                                            <div>{new Date(req.created_at).toLocaleDateString()}</div>
-                                            <div className="text-xs text-gray-500 mt-0.5">{new Date(req.created_at).toLocaleTimeString()}</div>
+                                            <div>{formatUserDate(req.created_at)}</div>
+                                            <div className="text-xs text-gray-500 mt-0.5">{formatUserDate(req.created_at, true)}</div>
                                         </td>
                                         <td className="p-4 font-semibold">{req.amount}</td>
                                         <td className="p-4 font-semibold text-success">{req.approved_amount || '-'}</td>

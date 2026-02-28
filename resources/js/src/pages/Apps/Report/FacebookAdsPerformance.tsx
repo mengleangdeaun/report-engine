@@ -46,7 +46,7 @@ import DeleteModal from '../../../components/DeleteModal';
 import { DateRangePicker } from '../../../components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { Card, CardContent } from '../../../components/ui/card';
-import { Input } from '../../../components/ui/input';
+import { formatUserDate } from '@/utils/userDate';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '../../../components/ui/popover';
@@ -54,6 +54,7 @@ import { Checkbox } from '../../../components/ui/checkbox';
 import { Label } from '../../../components/ui/label';
 import { Search, X, SlidersHorizontal, Info } from 'lucide-react';
 import { Skeleton } from '../../../components/ui/skeleton';
+import { Input } from '../../../components/ui/input';
 
 type CanProps = {
     when: boolean;
@@ -264,18 +265,7 @@ const FacebookAdsPerformance = () => {
     };
 
     const formatDate = (dateString: string) => {
-        if (!dateString) return '-';
-        try {
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return dateString;
-            return date.toLocaleDateString('en-GB', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-            }).replace(/ /g, '-');
-        } catch (e) {
-            return dateString;
-        }
+        return formatUserDate(dateString);
     };
 
     const columnHelper = createColumnHelper<any>();
@@ -328,14 +318,6 @@ const FacebookAdsPerformance = () => {
             header: 'Conversions',
             cell: info => <span className="font-bold text-emerald-600 dark:text-emerald-400 italic">{Number(info.getValue() || 0).toLocaleString()}</span>,
         }),
-        columnHelper.accessor('total_roas', {
-            header: 'ROAS',
-            cell: info => {
-                const val = parseFloat(info.getValue() || 0);
-                const color = val >= 3 ? 'text-emerald-600' : val >= 1 ? 'text-amber-500' : 'text-rose-500';
-                return <span className={`font-extrabold italic ${color}`}>{val.toFixed(2)}x</span>
-            },
-        }),
         columnHelper.display({
             id: 'actions',
             header: 'Actions',
@@ -382,7 +364,7 @@ const FacebookAdsPerformance = () => {
 
     return (
         <div>
-            <Toaster position="top-right" />
+            <Toaster position="top-center" />
             <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
@@ -560,12 +542,12 @@ const FacebookAdsPerformance = () => {
                                     <div className="p-8">
                                         {selectedReport && (
                                             <div className="space-y-8">
-                                                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                                                     {[
-                                                        { label: 'Spend', value: `$${selectedReport.total_spend.toLocaleString()}`, color: 'blue' },
-                                                        { label: 'Impressions', value: selectedReport.total_impressions.toLocaleString(), color: 'amber' },
-                                                        { label: 'Clicks', value: selectedReport.total_clicks.toLocaleString(), color: 'purple' },
-                                                        { label: 'ROAS', value: `${selectedReport.total_roas}x`, color: 'emerald' }
+                                                        { label: 'Spend', value: `$${selectedReport.total_spend?.toLocaleString() || 0}`, color: 'blue' },
+                                                        { label: 'Impressions', value: selectedReport.total_impressions?.toLocaleString() || 0, color: 'amber' },
+                                                        { label: 'Clicks', value: selectedReport.total_clicks?.toLocaleString() || 0, color: 'purple' },
+                                                        { label: 'Conversions', value: selectedReport.total_conversions?.toLocaleString() || 0, color: 'emerald' }
                                                     ].map((kpi, idx) => (
                                                         <div key={idx} className="p-5 rounded-2xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
                                                             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">{kpi.label}</p>

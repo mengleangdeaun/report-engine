@@ -54,15 +54,17 @@ class FacebookAdsAnalyzer
         $campaigns = [];
         $adSets = [];
         $dates = [];
+        $uniqueAds = [];
+        $kpiRow = [];
+        $fallbackObjective = null;
 
         foreach ($data->slice($headerRowIndex + 1) as $row) {
-            // Skip totally empty rows or rows that are summary totals
+            // Skip totally empty rows
             if (!isset($row[0]) || trim((string) $row[0]) === '')
                 continue;
-            if (str_contains(strtolower((string) $row[0]), 'total'))
-                continue;
 
-            $adRow = [];
+            $isTotalRow = str_contains(strtolower((string) $row[0]), 'total') || (isset($row[1]) && str_contains(strtolower((string) $row[1]), 'total'));
+            $mappedRow = [];
 
             // Map cells to slugified headers and cast to proper types
             foreach ($headers as $i => $key) {
@@ -70,17 +72,26 @@ class FacebookAdsAnalyzer
                     continue;
                 $val = trim((string) $row[$i]);
 
-                // Allow empty values to be passed through for string breakdowns, 
-                // but zero them out for numeric metrics.
                 $type = $this->getMetricType($key);
 
                 if ($type === 'float') {
-                    $adRow[$key] = $this->floatFromStr($val);
+                    $mappedRow[$key] = $this->floatFromStr($val);
                 } elseif ($type === 'int') {
-                    $adRow[$key] = $this->intFromStr($val);
+                    $mappedRow[$key] = $this->intFromStr($val);
                 } else {
-                    $adRow[$key] = $val;
+                    $mappedRow[$key] = $val;
                 }
+            }
+
+            if ($isTotalRow) {
+                $kpiRow = array_merge($kpiRow, $mappedRow);
+                continue;
+            }
+
+            $adRow = $mappedRow;
+
+            if (!$fallbackObjective && !empty($adRow['objective'])) {
+                $fallbackObjective = $adRow['objective'];
             }
 
             // Standardize some essential keys that the report generation expects
@@ -116,6 +127,9 @@ class FacebookAdsAnalyzer
             $adRow['cpc'] = $cpcRaw > 0 ? $cpcRaw : ($clicks > 0 && $spend > 0 ? round($spend / $clicks, 4) : 0);
             $adRow['cpm'] = $cpmRaw > 0 ? $cpmRaw : ($impressions > 0 && $spend > 0 ? round(($spend / $impressions) * 1000, 4) : 0);
 
+            // Stash an implied purchase value so ROAS can be mathematically aggregated across multi-row age/gender combinations
+            $adRow['_implied_purchase_value'] = $roas * $spend;
+
             // Parse dates
             $startDateRaw = $adRow['reporting_starts'] ?? $adRow['start_date'] ?? null;
             $endDateRaw = $adRow['reporting_ends'] ?? $adRow['end_date'] ?? null;
@@ -131,7 +145,20 @@ class FacebookAdsAnalyzer
             if ($endDate)
                 $dates[] = $endDate;
 
-            $ads[] = $adRow;
+            $adIdentifier = $adRow['ad_id'] ?? $adRow['ad'] ?? 'ad_' . count($uniqueAds);
+
+            // Deduplicate Add Rows (Useful for CSVs that exported Age/Gender Breakdowns)
+            if (!isset($uniqueAds[$adIdentifier])) {
+                $uniqueAds[$adIdentifier] = $adRow;
+            } else {
+                foreach ($adRow as $k => $v) {
+                    if ($this->getMetricType($k) !== 'string') {
+                        $uniqueAds[$adIdentifier][$k] = ($uniqueAds[$adIdentifier][$k] ?? 0) + $v;
+                    } elseif (empty($uniqueAds[$adIdentifier][$k]) && !empty($v)) {
+                        $uniqueAds[$adIdentifier][$k] = $v;
+                    }
+                }
+            }
 
             // Aggregation Setup
             $cKey = $campaignName;
@@ -144,7 +171,8 @@ class FacebookAdsAnalyzer
                     'spend' => 0,
                     'conversions' => 0,
                     'roas' => 0,
-                    'ad_count' => 0
+                    'ad_count' => 0,
+                    '_unique_ads' => []
                 ];
             }
             $sKey = "{$cKey} › {$adSetName}";
@@ -160,7 +188,7 @@ class FacebookAdsAnalyzer
                 ];
             }
 
-            // Dynamic Aggregation for all numeric metrics
+            // Dynamic Aggregation for all metrics
             foreach ($adRow as $k => $v) {
                 // Ignore key identifiers and dates
                 if (in_array($k, ['campaign', 'ad_set', 'ad', 'start_date', 'end_date', 'name', 'id', 'objective', 'status']))
@@ -175,43 +203,169 @@ class FacebookAdsAnalyzer
                     // Only sum counts and totals (NOT rates) - we will recalculate core rates below
                     $campaigns[$cKey][$k] += $v;
                     $adSets[$sKey][$k] += $v;
+                } else {
+                    // It is a string metric. Preserve the first encountered non-empty value for campaigns/ad_sets.
+                    // This solves the missing "last_significant_edit" and others on aggregated breakdown levels
+                    if (empty($campaigns[$cKey][$k]) && !empty($v)) {
+                        $campaigns[$cKey][$k] = $v;
+                    }
+                    if (empty($adSets[$sKey][$k]) && !empty($v)) {
+                        $adSets[$sKey][$k] = $v;
+                    }
                 }
             }
-            $campaigns[$cKey]['ad_count']++;
+            $campaigns[$cKey]['_unique_ads'][$adIdentifier] = true;
+            $campaigns[$cKey]['ad_count'] = count($campaigns[$cKey]['_unique_ads']);
         }
+
+        // Finalize Ads Array
+        $ads = array_values($uniqueAds);
 
         // 4. Compute overall KPIs & recalibrate rates at agg levels
+        $kpi = $kpiRow;
+
+        // Ensure objective is preserved in the KPI
+        $kpi['objective'] = $kpiRow['objective'] ?? $fallbackObjective ?? 'Unknown';
+
+        // If the export was missing a total row, we must generate dynamic sums at least for all numeric columns.
+        if (empty($kpiRow)) {
+            $dynamicKpi = [];
+            foreach ($ads as $ad) {
+                foreach ($ad as $k => $v) {
+                    if ($this->getMetricType($k) !== 'string') {
+                        $dynamicKpi[$k] = ($dynamicKpi[$k] ?? 0) + $v;
+                    }
+                }
+            }
+            $dynamicKpi['objective'] = $fallbackObjective ?? 'Unknown';
+            $kpi = $dynamicKpi;
+        }
+
         foreach ($campaigns as &$c) {
-            $c['roas'] = $c['spend'] > 0 && $c['conversions'] > 0 ? round($c['conversions'] / $c['spend'], 4) : ($c['roas'] ?? 0);
-            $c['ctr'] = $c['impressions'] > 0 ? round(($c['clicks'] / $c['impressions']) * 100, 4) : 0;
-            $c['cpc'] = $c['clicks'] > 0 ? round($c['spend'] / $c['clicks'], 4) : 0;
-            $c['cpm'] = $c['impressions'] > 0 ? round(($c['spend'] / $c['impressions']) * 1000, 4) : 0;
+            unset($c['_unique_ads']);
         }
 
+        // Recalculate true rates for any aggregated items to avoid additive corruption (e.g. 5% + 5% != 10%)
+        $recalculateRates = function (&$item) {
+            $impressions = $item['impressions'] ?? 0;
+            $clicks = $item['clicks'] ?? 0;
+            $spend = $item['spend'] ?? 0;
+
+            if ($impressions > 0) {
+                $item['ctr'] = round(($clicks / $impressions) * 100, 4);
+                $item['ctr_all'] = $item['ctr'];
+                if ($spend > 0) {
+                    $item['cpm'] = round(($spend / $impressions) * 1000, 4);
+                    $item['cpm_cost_per_1000_impressions'] = $item['cpm'];
+                }
+            }
+            if ($clicks > 0 && $spend > 0) {
+                $item['cpc'] = round($spend / $clicks, 4);
+                $item['cpc_all'] = $item['cpc'];
+                $item['cpc_cost_per_link_click'] = $item['cpc'];
+            }
+            if ($spend > 0 && isset($item['_implied_purchase_value'])) {
+                $item['roas'] = round($item['_implied_purchase_value'] / $spend, 4);
+                $item['purchase_roas_return_on_ad_spend'] = $item['roas'];
+            }
+        };
+
+        foreach ($ads as &$ad) {
+            $recalculateRates($ad);
+        }
+        foreach ($campaigns as &$c) {
+            $recalculateRates($c);
+        }
         foreach ($adSets as &$s) {
-            $s['roas'] = $s['spend'] > 0 && $s['conversions'] > 0 ? round($s['conversions'] / $s['spend'], 4) : ($s['roas'] ?? 0);
-            $s['ctr'] = $s['impressions'] > 0 ? round(($s['clicks'] / $s['impressions']) * 100, 4) : 0;
-            $s['cpc'] = $s['clicks'] > 0 ? round($s['spend'] / $s['clicks'], 4) : 0;
-            $s['cpm'] = $s['impressions'] > 0 ? round(($s['spend'] / $s['impressions']) * 1000, 4) : 0;
+            $recalculateRates($s);
         }
+        $recalculateRates($kpi);
 
-        $totalImpressions = array_sum(array_column($ads, 'impressions'));
-        $totalReach = array_sum(array_column($ads, 'reach'));
-        $totalClicks = array_sum(array_column($ads, 'clicks'));
-        $totalSpend = array_sum(array_column($ads, 'spend'));
-        $totalConversions = array_sum(array_column($ads, 'conversions'));
+        // Map standard KPI keys for database preservation if present
+        $kpi['total_spend'] = $kpi['total_spend'] ?? $this->findVal($kpi, ['amount_spent', 'amount_spent_usd', 'spend', 'total_spend']);
+        $kpi['total_impressions'] = $kpi['total_impressions'] ?? $this->findVal($kpi, ['impressions', 'total_impressions']);
+        $kpi['total_reach'] = $kpi['total_reach'] ?? $this->findVal($kpi, ['reach', 'total_reach']);
+        $kpi['total_clicks'] = $kpi['total_clicks'] ?? $this->findVal($kpi, ['clicks', 'clicks_all', 'total_clicks']);
+        $kpi['total_conversions'] = $kpi['total_conversions'] ?? $this->findVal($kpi, ['results', 'conversions', 'total_conversions']);
+        $kpi['avg_ctr'] = $kpi['avg_ctr'] ?? $this->findVal($kpi, ['ctr', 'ctr_all', 'avg_ctr']);
+        $kpi['avg_cpc'] = $kpi['avg_cpc'] ?? $this->findVal($kpi, ['cpc', 'cpc_all', 'avg_cpc']);
+        $kpi['avg_cpm'] = $kpi['avg_cpm'] ?? $this->findVal($kpi, ['cpm', 'cpm_all', 'avg_cpm']);
+        $kpi['total_roas'] = $kpi['total_roas'] ?? $this->findVal($kpi, ['purchase_roas_return_on_ad_spend', 'roas', 'total_roas']);
 
-        $avgCtr = $totalImpressions > 0 ? round(($totalClicks / $totalImpressions) * 100, 4) : 0;
-        $avgCpc = $totalClicks > 0 ? round($totalSpend / $totalClicks, 4) : 0;
-        $avgCpm = $totalImpressions > 0 ? round(($totalSpend / $totalImpressions) * 1000, 4) : 0;
-        $totalRoas = $totalSpend > 0 && $totalConversions > 0 ? round($totalConversions / $totalSpend, 4) : 0;
-
-        // 5. Top performers
+        // 5. Dynamic Top performers driven by Objective
         $adCollection = collect($ads);
-        $topRoas = $adCollection->sortByDesc('roas')->first();
-        $topCtr = $adCollection->sortByDesc('ctr')->first();
-        $topConversions = $adCollection->sortByDesc('conversions')->first();
-        $topImpressions = $adCollection->sortByDesc('impressions')->first();
+        $objective = strtoupper($kpi['objective'] ?? '');
+        $topPerformers = [];
+
+        // Helper to format winners dynamically
+        $addWinner = function ($key, $title, $type = 'raw', $color = '#0866FF') use ($adCollection, &$topPerformers) {
+            $winner = $adCollection->sortByDesc($key)->first();
+            if ($winner && ($winner[$key] ?? 0) > 0) {
+                $topPerformers[] = [
+                    'id' => $key,
+                    'title' => $title,
+                    'ad' => $winner,
+                    'metric' => $winner[$key],
+                    'type' => $type,
+                    'color' => $color
+                ];
+            }
+        };
+
+        // Helper for lowest-cost winners
+        $addLowestCost = function ($key, $title, $color = '#FBBC05') use ($adCollection, &$topPerformers) {
+            $winner = $adCollection->filter(fn($a) => ($a[$key] ?? 0) > 0)->sortBy($key)->first();
+            if ($winner) {
+                $topPerformers[] = [
+                    'id' => $key,
+                    'title' => $title,
+                    'ad' => $winner,
+                    'metric' => $winner[$key],
+                    'type' => 'money',
+                    'color' => $color
+                ];
+            }
+        };
+
+        switch ($objective) {
+            case 'SALES':
+                $addWinner('roas', 'Best ROAS', 'multiplier', '#0866FF');
+                $addWinner('conversions', 'Most Conversions', 'raw', '#34A853');
+                $addLowestCost('cpc', 'Lowest CPC', '#FBBC05');
+                break;
+            case 'LEADS':
+                $addWinner('conversions', 'Most Leads', 'raw', '#34A853');
+                $addLowestCost('cost_per_results', 'Lowest Cost per Lead', '#FBBC05');
+                $addWinner('ctr', 'Highest CTR', 'pct', '#0866FF');
+                break;
+            case 'TRAFFIC':
+                $addWinner('clicks', 'Most Link Clicks', 'raw', '#0866FF');
+                $addWinner('ctr', 'Highest CTR', 'pct', '#34A853');
+                $addLowestCost('cpc', 'Lowest CPC', '#FBBC05');
+                break;
+            case 'ENGAGEMENT':
+                $addWinner('post_engagements', 'Most Engagements', 'raw', '#0866FF');
+                $addWinner('messaging_conversations_started', 'Most Messages', 'raw', '#34A853');
+                $addWinner('video_plays', 'Most Video Plays', 'raw', '#8B5CF6');
+                break;
+            case 'AWARENESS':
+                $addWinner('reach', 'Highest Reach', 'raw', '#0866FF');
+                $addWinner('impressions', 'Most Impressions', 'raw', '#34A853');
+                $addLowestCost('cpm', 'Lowest CPM', '#FBBC05');
+                break;
+            case 'APP PROMOTION':
+                $addWinner('conversions', 'Most App Installs', 'raw', '#34A853');
+                $addLowestCost('cost_per_results', 'Lowest Cost per Install', '#FBBC05');
+                $addWinner('clicks', 'Most Clicks', 'raw', '#0866FF');
+                break;
+            default:
+                // Fallback for Unknown or unmapped
+                $addWinner('roas', 'Best ROAS', 'multiplier', '#0866FF');
+                $addWinner('ctr', 'Highest CTR', 'pct', '#34A853');
+                $addWinner('conversions', 'Most Conversions', 'raw', '#FBBC05');
+                $addWinner('impressions', 'Most Impressions', 'raw', '#8B5CF6');
+                break;
+        }
 
         // 6. Period
         sort($dates);
@@ -225,34 +379,19 @@ class FacebookAdsAnalyzer
                 'end' => $endDate,
                 'duration' => $duration . ' Days',
             ],
-            'kpi' => [
-                'total_spend' => round($totalSpend, 2),
-                'total_impressions' => $totalImpressions,
-                'total_reach' => $totalReach,
-                'total_clicks' => $totalClicks,
-                'total_conversions' => $totalConversions,
-                'avg_ctr' => $avgCtr,
-                'avg_cpc' => $avgCpc,
-                'avg_cpm' => $avgCpm,
-                'total_roas' => $totalRoas,
-            ],
+            'kpi' => $kpi,
             'campaigns' => array_values($campaigns),
             'ad_sets' => array_values($adSets),
             'ads' => $ads,
-            'top_performers' => [
-                'best_roas' => $topRoas,
-                'best_ctr' => $topCtr,
-                'best_conversions' => $topConversions,
-                'best_impressions' => $topImpressions,
-            ],
-            'total_ads' => count($ads),
+            'top_performers' => $topPerformers,
+            'total_ads' => count($uniqueAds),
             'total_campaigns' => count($campaigns),
             'available_columns' => array_values($headers),
         ];
     }
 
     /**
-     * Helper to classify metrics to correct data types
+     * Helper to classify metrics to correct data types safely
      */
     private function getMetricType(string $key): string
     {
@@ -266,10 +405,14 @@ class FacebookAdsAnalyzer
             'frequency',
             'cost_per',
             'rate',
+            'percentage',
             'value',
             'return',
             'budget'
         ];
+
+        // Exact or explicit word-boundary strings to prevent the word 'ad' from matching 'leads', 
+        // or 'age' matching 'messages'
         $strMetrics = [
             'campaign',
             'ad_set',
@@ -279,6 +422,11 @@ class FacebookAdsAnalyzer
             'date',
             'objective',
             'status',
+            'indicator',
+            'setting',
+            'ranking',
+            'delivery',
+            'bid',
             'gender',
             'age',
             'country',
@@ -294,23 +442,43 @@ class FacebookAdsAnalyzer
             'destination',
             'source',
             'url',
+            'link',
             'text',
             'headline',
             'description',
             'call_to_action',
             'starts',
             'ends',
-            'time'
+            'time_of_day',
+            'edit',
+            'created',
+            'updated',
+            'goal',
+            'schedule',
+            'body',
+            'currency',
+            'timezone',
+            'hash',
+            'audience',
+            'business_locations',
+            'sound',
+            'component'
         ];
 
-        foreach ($strMetrics as $m) {
-            if (str_contains($key, $m))
-                return 'string';
-        }
+        // 1. Float Check (loose substring is slightly safer here, but still better to word-bound)
         foreach ($floatMetrics as $m) {
-            if (str_contains($key, $m))
+            if (preg_match("/(^|_)" . preg_quote($m, '/') . "($|_)/i", $key) || str_contains($key, $m)) {
                 return 'float';
+            }
         }
+
+        // 2. String Check (Must be strictly bound to avoid false positives)
+        foreach ($strMetrics as $m) {
+            if (preg_match("/(^|_|-)" . preg_quote($m, '/') . "($|_|-)/i", $key)) {
+                return 'string';
+            }
+        }
+
         return 'int';
     }
 

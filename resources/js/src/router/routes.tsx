@@ -29,6 +29,7 @@ const ActivityLog = lazy(() => import('../pages/Apps/ActivityLog'));
 
 const TelegramSettings = lazy(() => import('../pages/Settings/TelegramSettings'));
 const WorkspaceRoles = lazy(() => import('../pages/Settings/WorkspaceRoles'));
+const UserPreferences = lazy(() => import('../pages/Settings/UserPreferences'));
 
 
 const Mailbox = lazy(() => import('../pages/Apps/Mailbox'));
@@ -171,6 +172,15 @@ const routes = [
     {
         path: '/apps/settings/roles',
         element: <WorkspaceRoles />,
+    },
+
+    {
+        path: '/settings/preferences',
+        element: (
+            <ProtectedRoute>
+                <UserPreferences />
+            </ProtectedRoute>
+        ),
     },
 
     {

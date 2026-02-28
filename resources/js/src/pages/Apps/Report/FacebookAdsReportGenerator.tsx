@@ -11,9 +11,12 @@ import ProcessingOverlay from '../../../components/ProcessingOverlay';
 import { motion, AnimatePresence } from 'framer-motion';
 import usePermission from '../../../hooks/usePermission';
 import MediaSelectorModal from '../../../components/Media/MediaSelectorModal';
+import { formatUserDate } from '@/utils/userDate';
 import { Badge } from '../../../components/ui/badge';
 import { Checkbox } from '../../../components/ui/checkbox';
 import { Button } from '../../../components/ui/button';
+import { Input } from '../../../components/ui/input';
+import { cn } from '@/lib/utils';
 import {
     Select,
     SelectContent,
@@ -21,8 +24,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '../../../components/ui/popover';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { ColumnSelector } from '@/components/Report/ColumnSelector';
+import { MetricSelectorModal } from '@/components/Report/MetricSelectorModal';
 import {
     IconUpload, IconChartBar, IconTrophy, IconPrinter,
     IconFileSpreadsheet, IconPlus, IconHistory, IconTargetArrow,
@@ -30,7 +34,7 @@ import {
     IconArrowLeft, IconChevronLeft, IconChevronRight,
     IconChevronsLeft, IconChevronsRight, IconRefresh, IconZoomMoney,
     IconUsers, IconBuildingStore, IconSortAscending, IconSortDescending,
-    IconFileSearch, IconFile, IconX
+    IconFileSearch, IconFile, IconX, IconFilter, IconSettings, IconSearch
 } from '@tabler/icons-react';
 import { Label } from '../../../components/ui/label';
 
@@ -45,34 +49,54 @@ const fmtMoney = (n: number) =>
 
 const fmtPct = (n: number) => `${(n ?? 0).toFixed(2)}%`;
 
+const formatDisplay = (col: string) => col.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
 /* ─────────────────────────────────────────────────────────
    KPI Card
 ───────────────────────────────────────────────────────── */
 const KpiCard = ({
     label, value, icon, color = 'blue', sub
 }: { label: string; value: string; icon: React.ReactNode; color?: string; sub?: string }) => {
-    const palette: Record<string, string> = {
-        blue: 'from-blue-500 to-blue-600',
-        green: 'from-emerald-500 to-emerald-600',
-        purple: 'from-purple-500 to-purple-600',
-        orange: 'from-orange-500 to-orange-600',
-        pink: 'from-pink-500 to-pink-600',
-        teal: 'from-teal-500 to-teal-600',
-        indigo: 'from-indigo-500 to-indigo-600',
-        rose: 'from-rose-500 to-rose-600',
-        cyan: 'from-cyan-500 to-cyan-600',
+    const palette: Record<string, {
+        card: string; border: string; iconBg: string; iconText: string; text: string; valueTint: string; glow: string;
+    }> = {
+        blue: { card: 'bg-blue-50/60 dark:bg-blue-950/20', border: 'border-blue-200 border-2 dark:border-blue-800/60', iconBg: 'bg-blue-100 dark:bg-blue-900/40', iconText: 'text-blue-600 dark:text-blue-400', text: 'text-blue-600 dark:text-blue-400', valueTint: 'text-blue-950 dark:text-blue-50', glow: '0 8px 30px -6px rgba(59,130,246,0.3)' },
+        green: { card: 'bg-emerald-50/60 dark:bg-emerald-950/20', border: 'border-emerald-200 border-2 dark:border-emerald-800/60', iconBg: 'bg-emerald-100 dark:bg-emerald-900/40', iconText: 'text-emerald-600 dark:text-emerald-400', text: 'text-emerald-600 dark:text-emerald-400', valueTint: 'text-emerald-950 dark:text-emerald-50', glow: '0 8px 30px -6px rgba(16,185,129,0.3)' },
+        purple: { card: 'bg-purple-50/60 dark:bg-purple-950/20', border: 'border-purple-200 border-2 dark:border-purple-800/60', iconBg: 'bg-purple-100 dark:bg-purple-900/40', iconText: 'text-purple-600 dark:text-purple-400', text: 'text-purple-600 dark:text-purple-400', valueTint: 'text-purple-950 dark:text-purple-50', glow: '0 8px 30px -6px rgba(139,92,246,0.3)' },
+        orange: { card: 'bg-orange-50/60 dark:bg-orange-950/20', border: 'border-orange-200 border-2 dark:border-orange-800/60', iconBg: 'bg-orange-100 dark:bg-orange-900/40', iconText: 'text-orange-600 dark:text-orange-400', text: 'text-orange-600 dark:text-orange-400', valueTint: 'text-orange-950 dark:text-orange-50', glow: '0 8px 30px -6px rgba(249,115,22,0.3)' },
+        pink: { card: 'bg-pink-50/60 dark:bg-pink-950/20', border: 'border-pink-200 border-2 dark:border-pink-800/60', iconBg: 'bg-pink-100 dark:bg-pink-900/40', iconText: 'text-pink-600 dark:text-pink-400', text: 'text-pink-600 dark:text-pink-400', valueTint: 'text-pink-950 dark:text-pink-50', glow: '0 8px 30px -6px rgba(236,72,153,0.3)' },
+        teal: { card: 'bg-teal-50/60 dark:bg-teal-950/20', border: 'border-teal-200 border-2 dark:border-teal-800/60', iconBg: 'bg-teal-100 dark:bg-teal-900/40', iconText: 'text-teal-600 dark:text-teal-400', text: 'text-teal-600 dark:text-teal-400', valueTint: 'text-teal-950 dark:text-teal-50', glow: '0 8px 30px -6px rgba(20,184,166,0.3)' },
+        indigo: { card: 'bg-indigo-50/60 dark:bg-indigo-950/20', border: 'border-indigo-200 border-2 dark:border-indigo-800/60', iconBg: 'bg-indigo-100 dark:bg-indigo-900/40', iconText: 'text-indigo-600 dark:text-indigo-400', text: 'text-indigo-600 dark:text-indigo-400', valueTint: 'text-indigo-950 dark:text-indigo-50', glow: '0 8px 30px -6px rgba(99,102,241,0.3)' },
+        rose: { card: 'bg-rose-50/60 dark:bg-rose-950/20', border: 'border-rose-200 border-2 dark:border-rose-800/60', iconBg: 'bg-rose-100 dark:bg-rose-900/40', iconText: 'text-rose-600 dark:text-rose-400', text: 'text-rose-600 dark:text-rose-400', valueTint: 'text-rose-950 dark:text-rose-50', glow: '0 8px 30px -6px rgba(244,63,94,0.3)' },
+        cyan: { card: 'bg-cyan-50/60 dark:bg-cyan-950/20', border: 'border-cyan-200 border-2 dark:border-cyan-800/60', iconBg: 'bg-cyan-100 dark:bg-cyan-900/40', iconText: 'text-cyan-600 dark:text-cyan-400', text: 'text-cyan-600 dark:text-cyan-400', valueTint: 'text-cyan-950 dark:text-cyan-50', glow: '0 8px 30px -6px rgba(6,182,212,0.3)' },
     };
-    const bg = palette[color] ?? palette.blue;
 
-    return (
-        <div className="panel rounded-xl p-4 flex items-center gap-4 hover:shadow-md transition-shadow">
-            <div className={`bg-gradient-to-br ${bg} rounded-xl p-3 text-white shrink-0 shadow-sm`}>
-                {icon}
-            </div>
-            <div className="min-w-0">
-                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate">{label}</p>
-                <p className="text-xl font-bold text-gray-800 dark:text-white leading-tight">{value}</p>
-                {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+    const theme = palette[color] ?? palette.blue;
+
+    return (    
+        <div
+            className={cn(
+                "group relative rounded-lg border p-5 transition-all duration-300 hover:-translate-y-0.5",
+                theme.card, theme.border
+            )}
+            onMouseEnter={e => (e.currentTarget.style.boxShadow = theme.glow)}
+            onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+        >
+            <div className="flex items-start gap-3.5">
+                {/* Icon circle */}
+                <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full", theme.iconBg)}>
+                    <div className={theme.iconText}>{icon}</div>
+                </div>
+
+                <div className="min-w-0 flex-1 pt-0.5">
+                    <p className={cn("truncate text-[11px] font-semibold uppercase tracking-wider mb-1", theme.text)}>
+                        {label}
+                    </p>
+                    <p className={cn("xl:text-xl lg:text-lg md:text-md truncate text-sm font-bold leading-none tracking-tight", theme.valueTint)}>
+                        {value}
+                    </p>
+                    {sub && <p className={cn("mt-1.5 text-[11px] font-medium opacity-70", theme.text)}>{sub}</p>}
+                </div>
             </div>
         </div>
     );
@@ -84,16 +108,34 @@ const KpiCard = ({
 const TopCard = ({ title, ad, metric, metricLabel, color }: any) => {
     if (!ad) return null;
     return (
-        <div className="panel rounded-xl p-4 border-l-4" style={{ borderLeftColor: color }}>
-            <div className="flex items-center gap-2 mb-3">
-                <IconTrophy size={16} style={{ color }} />
-                <span className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">{title}</span>
+        <div
+            className="panel relative overflow-hidden rounded-2xl p-5 border-l-[6px] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl bg-white dark:bg-gray-800/90 backdrop-blur-xl group"
+            style={{ borderLeftColor: color }}
+        >
+            {/* Soft background highlight mapped to the specific metric color */}
+            <div
+                className="absolute inset-x-0 top-0 h-1 opacity-20 transition-opacity duration-300 group-hover:opacity-100"
+                style={{ background: `linear-gradient(90deg, ${color} 0%, transparent 100%)` }}
+            />
+
+            <div className="flex items-center gap-2 mb-4">
+                <div className="p-1.5 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                    <IconTrophy size={18} style={{ color }} className="transform transition-transform group-hover:scale-110 group-hover:-rotate-12 duration-300" />
+                </div>
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">{title}</span>
             </div>
-            <p className="font-semibold text-sm text-gray-800 dark:text-white mb-1 truncate" title={ad.ad}>{ad.ad || '—'}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2 truncate">{ad.campaign}</p>
-            <div className="flex items-baseline gap-1">
-                <span className="text-lg font-bold" style={{ color }}>{metric}</span>
-                <span className="text-xs text-gray-500">{metricLabel}</span>
+
+            <p className="font-bold text-[15px] leading-tight text-gray-900 dark:text-white mb-1.5 truncate transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400" title={ad.ad}>
+                {ad.ad || '—'}
+            </p>
+            <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-4 truncate flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+                {ad.campaign}
+            </p>
+
+            <div className="flex items-baseline gap-1.5 mt-auto">
+                <span className="text-2xl font-black tracking-tighter" style={{ color }}>{metric}</span>
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest">{metricLabel}</span>
             </div>
         </div>
     );
@@ -108,6 +150,7 @@ const FacebookAdsReportGenerator = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
+    const [reportId, setReportId] = useState<number | null>(location.state?.currentReportId || null);
     /* ── State ── */
     const [reportData, setReportData] = useState<any>(location.state?.preloadedData || null);
     const [accountName, setAccountName] = useState<any>(
@@ -129,6 +172,7 @@ const FacebookAdsReportGenerator = () => {
     const { can } = usePermission();
 
     const [breakdownLevel, setBreakdownLevel] = useState<'ads' | 'ad_sets' | 'campaigns'>('ads');
+    const [searchTerm, setSearchTerm] = useState('');
 
     // The active raw data depending on the selected breakdown
     const activeData = useMemo(() => {
@@ -144,8 +188,40 @@ const FacebookAdsReportGenerator = () => {
 
     // Default columns to show if no customization exists
     const defaultColumns = useMemo(() => [
-        'campaign', 'ad_set', 'ad', 'impressions', 'reach', 'clicks', 'ctr', 'spend', 'cpc', 'cpm', 'conversions', 'roas'
+        'last_significant_edit', 'campaign', 'ad_set', 'ad', 'spend', 'impressions', 'reach', 'clicks', 'ctr', 'cpc', 'cpm', 'conversions', 'results_roas'
     ].filter(c => availableColumns.includes(c)), [availableColumns]);
+
+    // --- KPI Dynamic Selection State ---
+    const [visibleKpis, setVisibleKpis] = useState<string[]>([]);
+    const [kpiSearch, setKpiSearch] = useState<string>('');
+
+    useEffect(() => {
+        if (reportData?.preferences && reportData.preferences.visible_kpis) {
+            setVisibleKpis(reportData.preferences.visible_kpis);
+            return;
+        }
+
+        if (reportData?.kpi) {
+            const saved = localStorage.getItem('fbAds_visibleKpis');
+            if (saved) {
+                setVisibleKpis(JSON.parse(saved));
+                return;
+            }
+
+            const available = Object.keys(reportData.kpi);
+            const defaultKeywords = [
+                'total_spend', 'amount_spent', 'impressions', 'reach', 'views', 'video_plays',
+                'messaging_conversations_started', 'new_messaging_contacts', 'cost_per_message',
+                'link_clicks', 'total_clicks', 'cpm', 'results_roas'
+            ];
+
+            const defaults = available.filter(k => defaultKeywords.some(kw => k.includes(kw)));
+
+            // Swap standard roas to the explicit result roas if available
+            const finalDefaults = defaults.map(d => d === 'roas' ? 'results_roas' : d).filter(d => d !== 'roas');
+            setVisibleKpis([...new Set(['objective', ...finalDefaults, 'total_campaigns', 'total_ads'])]);
+        }
+    }, [reportData]);
 
     // Visible columns state
     const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
@@ -153,6 +229,14 @@ const FacebookAdsReportGenerator = () => {
     // Initialize visible columns when report data loads or breakdown changes
     useEffect(() => {
         if (availableColumns.length > 0) {
+            if (reportData?.preferences && reportData.preferences.visible_columns) {
+                const validPref = reportData.preferences.visible_columns.filter((c: string) => availableColumns.includes(c));
+                if (validPref.length > 0) {
+                    setVisibleColumns(validPref);
+                    return;
+                }
+            }
+
             // Keep intersecting columns if already manually changed
             if (visibleColumns.length > 0) {
                 const validVisible = visibleColumns.filter(c => availableColumns.includes(c));
@@ -163,7 +247,33 @@ const FacebookAdsReportGenerator = () => {
             }
             setVisibleColumns(defaultColumns);
         }
-    }, [availableColumns, defaultColumns]);
+    }, [availableColumns, defaultColumns, reportData]);
+
+    const savePreferences = async (newKpis: string[], newCols: string[]) => {
+        setVisibleKpis(newKpis);
+        setVisibleColumns(newCols);
+
+        if (!reportId) return;
+
+        try {
+            await api.put(`/ad-reports/${reportId}/preferences`, {
+                visible_kpis: newKpis,
+                visible_columns: newCols
+            });
+            // Update the local object silently so it maps if re-evaluated
+            if (reportData) {
+                setReportData({
+                    ...reportData,
+                    preferences: {
+                        visible_kpis: newKpis,
+                        visible_columns: newCols
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Failed to save preferences', error);
+        }
+    };
 
     const hasMediaAccess = can('media_library_access');
 
@@ -259,6 +369,7 @@ const FacebookAdsReportGenerator = () => {
                 _skipToast: true,
             } as any);
             setReportData(res.data.data);
+            setReportId(res.data.id || null);
             setPage(1);
             toast.success('Report generated successfully!');
         } catch (err: any) {
@@ -310,11 +421,17 @@ const FacebookAdsReportGenerator = () => {
     /* ── Sorted Data ── */
     const sortedData = useMemo(() => {
         if (!activeData.length) return [];
-        return [...activeData].sort((a, b) => {
+        const filtered = activeData.filter((item: any) =>
+            Object.values(item).some(
+                (val: any) =>
+                    String(val).toLowerCase().includes(searchTerm.toLowerCase())
+            )
+        );
+        return [...filtered].sort((a, b) => {
             const va = a[sortKey] ?? 0, vb = b[sortKey] ?? 0;
             return sortDir === 'desc' ? vb - va : va - vb;
         });
-    }, [activeData, sortKey, sortDir]);
+    }, [activeData, sortKey, sortDir, searchTerm]);
 
     const pageCount = Math.ceil(sortedData.length / pageSize);
     const paginatedData = sortedData.slice((page - 1) * pageSize, page * pageSize);
@@ -672,17 +789,16 @@ const FacebookAdsReportGenerator = () => {
                     <Button onClick={handleExportCSV} className="flex items-center gap-1.5 text-sm bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all border border-emerald-200 dark:border-emerald-800/40">
                         <IconFileSpreadsheet size={16} /> Export CSV
                     </Button>
-                    <Button onClick={() => window.print()} className="flex items-center gap-1.5 text-sm border bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
-                        <IconPrinter size={16} /> Print
-                    </Button>
-                    {availableColumns.length > 0 && (
-                        <ColumnSelector
-                            availableColumns={availableColumns}
-                            visibleColumns={visibleColumns}
-                            onChange={setVisibleColumns}
-                            defaultColumns={defaultColumns}
-                        />
-                    )}
+                    <MetricSelectorModal
+                        className="sm:w-auto px-3 !py-5"
+                        title="Customize KPIs"
+                        triggerIcon={<IconFilter size={16} />}
+                        triggerText="Customize KPIs"
+                        availableItems={Object.keys(reportData?.kpi || {}).filter(k => k !== 'objective').concat(['total_campaigns', 'total_ads'])}
+                        selectedItems={visibleKpis}
+                        onChange={(metrics) => savePreferences(metrics, visibleColumns)}
+                        lockedItems={['objective']}
+                    />
                     <Button onClick={() => { setReportData(null); setFile(null); }} className="flex items-center gap-1.5 text-sm  transition-all">
                         <IconPlus size={15} /> New
                     </Button>
@@ -690,17 +806,89 @@ const FacebookAdsReportGenerator = () => {
             </div>
 
             {/* ── KPI Cards ── */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                <KpiCard label="Total Spend" value={fmtMoney(kpi.total_spend)} icon={<IconCurrencyDollar size={20} />} color="blue" />
-                <KpiCard label="Impressions" value={fmt(kpi.total_impressions)} icon={<IconEye size={20} />} color="purple" />
-                <KpiCard label="Reach" value={fmt(kpi.total_reach)} icon={<IconUsers size={20} />} color="teal" />
-                <KpiCard label="Clicks" value={fmt(kpi.total_clicks)} icon={<IconClick size={20} />} color="orange" />
-                <KpiCard label="Conversions" value={fmt(kpi.total_conversions)} icon={<IconTargetArrow size={20} />} color="green" />
-                <KpiCard label="Avg CTR" value={fmtPct(kpi.avg_ctr)} icon={<IconPercentage size={20} />} color="indigo" sub="Click-through rate" />
-                <KpiCard label="Avg CPC" value={fmtMoney(kpi.avg_cpc)} icon={<IconCurrencyDollar size={20} />} color="rose" sub="Cost per click" />
-                <KpiCard label="Avg CPM" value={fmtMoney(kpi.avg_cpm)} icon={<IconCurrencyDollar size={20} />} color="cyan" sub="Cost per 1k impressions" />
-                <KpiCard label="ROAS" value={`${(kpi.total_roas || 0).toFixed(2)}x`} icon={<IconZoomMoney size={20} />} color="pink" sub="Return on ad spend" />
-                <KpiCard label="Campaigns" value={fmt(reportData.total_campaigns)} icon={<IconBuildingStore size={20} />} color="green" sub={`${reportData.total_ads} Ads`} />
+            <div>
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-4 gap-3">
+                    <h3 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                        <IconChartBar size={18} className="text-blue-500" />
+                        Key Performance Indicators
+                    </h3>
+                    <div className="relative w-full sm:w-64 flex-shrink-0">
+                        <IconSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                        <Input
+                            placeholder="Find Metric..."
+                            value={kpiSearch}
+                            onChange={e => setKpiSearch(e.target.value)}
+                            className="pl-9 text-sm"
+                        />
+                        {kpiSearch && (
+                            <button
+                                onClick={() => setKpiSearch('')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            >
+                                <IconX size={14} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                    {(() => {
+                        const cards: JSX.Element[] = [];
+
+                        // 1. Objective (Always first)
+                        cards.push(
+                            <KpiCard key="objective" label="Objective" value={reportData.kpi?.objective || 'Unknown'} icon={<IconTargetArrow size={20} />} color="blue" />
+                        );
+
+                        const getKpiMeta = (k: string) => {
+                            const key = k.toLowerCase();
+                            if (key.includes('spend') || key.includes('cost') || key.includes('cpc') || key.includes('cpm') || key.includes('usd')) return { icon: <IconCurrencyDollar size={20} />, color: 'rose' };
+                            if (key.includes('impression') || key.includes('view') || key.includes('reach') || key.includes('play')) return { icon: <IconEye size={20} />, color: 'purple' };
+                            if (key.includes('click')) return { icon: <IconClick size={20} />, color: 'orange' };
+                            if (key.includes('message') || key.includes('contact')) return { icon: <IconUsers size={20} />, color: 'teal' };
+                            if (key.includes('conversion') || key.includes('result') || key.includes('lead')) return { icon: <IconTargetArrow size={20} />, color: 'green' };
+                            if (key.includes('ctr') || key.includes('rate') || key.includes('percentage')) return { icon: <IconPercentage size={20} />, color: 'indigo' };
+                            if (key.includes('roas') || key.includes('return')) return { icon: <IconZoomMoney size={20} />, color: 'pink' };
+                            return { icon: <IconChartBar size={20} />, color: 'cyan' };
+                        };
+
+                        // Filter visible KPIs against search query
+                        const query = kpiSearch.toLowerCase();
+
+                        // Always force string logic in loop, we can map original keys
+                        const searchableKpis = visibleKpis.filter(k => {
+                            if (!query) return true;
+                            if (k === 'objective') return 'objective'.includes(query);
+                            return formatDisplay(k).toLowerCase().includes(query) || k.toLowerCase().includes(query);
+                        });
+
+                        // 2. Dynamic KPIs from Data
+                        searchableKpis.forEach(k => {
+                            if (k === 'objective') return;
+                            if (k === 'total_campaigns') {
+                                cards.push(<KpiCard key="campaigns" label="Total Campaigns" value={fmt(reportData.total_campaigns)} icon={<IconBuildingStore size={20} />} color="green" />);
+                                return;
+                            }
+                            if (k === 'total_ads') {
+                                cards.push(<KpiCard key="ads" label="Total Ads" value={fmt(reportData.total_ads)} icon={<IconBuildingStore size={20} />} color="green" />);
+                                return;
+                            }
+
+                            if (reportData.kpi && reportData.kpi[k] !== undefined) {
+                                const val = reportData.kpi[k];
+                                const meta = getKpiMeta(k);
+                                const isMoney = k.includes('spend') || k.includes('cost') || k.includes('cpc') || k.includes('cpm') || k.includes('usd');
+                                const isPct = k.includes('ctr') || k.includes('rate');
+                                const displayVal = isMoney ? fmtMoney(val) : isPct ? fmtPct(val) : fmt(val, 2);
+
+                                cards.push(
+                                    <KpiCard key={k} label={formatDisplay(k)} value={displayVal} icon={meta.icon} color={meta.color} />
+                                );
+                            }
+                        });
+
+                        return cards;
+                    })()}
+                </div>
             </div>
 
             {/* ── Charts Row ── */}
@@ -735,31 +923,64 @@ const FacebookAdsReportGenerator = () => {
             )}
 
             {/* ── Top Performers ── */}
-            {(topPerformers.best_roas || topPerformers.best_ctr || topPerformers.best_conversions) && (
+            {Array.isArray(topPerformers) && topPerformers.length > 0 && (
                 <div>
                     <h3 className="font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
                         <IconTrophy size={18} className="text-amber-500" />
-                        Top Performers
+                        Top Performers <span className="text-xs font-normal text-gray-400">({reportData.kpi?.objective || 'Campaign'})</span>
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        <TopCard title="Best ROAS" ad={topPerformers.best_roas} metric={`${(topPerformers.best_roas?.roas || 0).toFixed(2)}x`} metricLabel="return" color="#0866FF" />
-                        <TopCard title="Best CTR" ad={topPerformers.best_ctr} metric={fmtPct(topPerformers.best_ctr?.ctr || 0)} metricLabel="CTR" color="#34A853" />
-                        <TopCard title="Most Conversions" ad={topPerformers.best_conversions} metric={fmt(topPerformers.best_conversions?.conversions || 0)} metricLabel="conv." color="#FBBC05" />
+                        {topPerformers.map((winner: any, idx: number) => {
+                            let displayVal = winner.metric;
+                            if (winner.type === 'multiplier') displayVal = `${(Number(winner.metric) || 0).toFixed(2)}x`;
+                            else if (winner.type === 'pct') displayVal = fmtPct(winner.metric);
+                            else if (winner.type === 'money') displayVal = fmtMoney(winner.metric);
+                            else displayVal = fmt(winner.metric);
+
+                            return (
+                                <TopCard
+                                    key={winner.id || idx}
+                                    title={winner.title}
+                                    ad={winner.ad}
+                                    metric={displayVal}
+                                    metricLabel=""
+                                    color={winner.color}
+                                />
+                            );
+                        })}
                     </div>
                 </div>
             )}
 
-            {/* ── Ad-Level Table ── */}
-            <div className="panel rounded-xl overflow-hidden">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 gap-4 border-b border-gray-100 dark:border-gray-800">
+            {/* ── Granular Data Table ── */}
+            <div className="panel p-0 rounded-xl overflow-hidden mt-8">
+                <div className="p-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex flex-wrap items-center justify-between gap-4">
                     <h3 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                        <IconChartBar size={17} className="text-blue-500" />
-                        Performance Breakdown
+                        <IconSortAscending size={18} className="text-blue-500" />
+                        Detailed Performance Breakdown
                         <span className="ml-1 text-xs font-normal text-gray-400">({sortedData.length} rows)</span>
                     </h3>
-
-                    <div className="flex items-center gap-2">
-                        <label className="text-xs mb-0 text-gray-500 font-medium">Breakdown Level:</label>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <MetricSelectorModal
+                            title="Customize Table Columns"
+                            triggerIcon={<IconSettings size={16} />}
+                            triggerText="Customize Columns"
+                            availableItems={availableColumns}
+                            selectedItems={visibleColumns}
+                            onChange={(cols) => savePreferences(visibleKpis, cols)}
+                            lockedItems={['campaign']}
+                        />
+                        <div className="hidden sm:block h-5 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
+                        <div className="w-full sm:w-48 relative">
+                            <IconSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search table..."
+                                value={searchTerm}
+                                onChange={e => { setSearchTerm(e.target.value); setPage(1); }}
+                                className="w-full text-sm pl-9 pr-3 py-1.5 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
+                            />
+                        </div>
                         <Select
                             value={breakdownLevel}
                             onValueChange={(val: any) => {
@@ -812,6 +1033,8 @@ const FacebookAdsReportGenerator = () => {
                                         // Apply dynamic formatting based on column name convention
                                         if (col === 'campaign' || col === 'ad_set' || col === 'ad') {
                                             displayVal = <span className="max-w-[140px] truncate block" title={val as string}>{val || '—'}</span>;
+                                        } else if (['last_significant_edit', 'reporting_starts', 'reporting_ends', 'start_date', 'end_date'].includes(col) || col.includes('date') || col.includes('created') || col.includes('updated') || col.includes('time')) {
+                                            displayVal = <span className="text-gray-600 dark:text-gray-400 whitespace-nowrap">{val && val !== '-' ? formatUserDate(val) : '—'}</span>;
                                         } else if (['ctr', 'roas'].includes(col) || col.endsWith('_rate')) {
                                             // Handle special rates
                                             if (col === 'roas') displayVal = <span className={`font-bold ${val >= 2 ? 'text-green-600 dark:text-green-400' : val >= 1 ? 'text-blue-600 dark:text-blue-400' : 'text-red-500'}`}>{(val || 0).toFixed(2)}x</span>;

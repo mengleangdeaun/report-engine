@@ -32,6 +32,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'avatar',
         'team_id',
         'email_verified_at', // ✅ Add this to allow mass assignment
+        'preferences',
     ];
 
     public function guardName()
@@ -89,6 +90,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'banned_at' => 'datetime',
         'settings' => 'array',
+        'preferences' => 'array',
         'team_id' => 'integer',
     ];
 

@@ -25,6 +25,7 @@ import {
 import api from '../../utils/api';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import DeleteModal from '../../components/DeleteModal';
+import { formatUserDate } from '../../utils/userDate';
 
 type Role = {
     id: number;
@@ -48,17 +49,17 @@ const WorkspaceRoles = () => {
     const [roles, setRoles] = useState<Role[]>([]);
     const [availablePermissions, setAvailablePermissions] = useState<Permission[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
-    
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editId, setEditId] = useState<number | null>(null);
     const [roleName, setRoleName] = useState('');
     const [selectedPerms, setSelectedPerms] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSyncing, setIsSyncing] = useState(false);
-    
+
     const [permissionSearch, setPermissionSearch] = useState('');
     const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
-    
+
     const [deleteModal, setDeleteModal] = useState<{
         isOpen: boolean;
         roleId: number | null;
@@ -175,14 +176,14 @@ const WorkspaceRoles = () => {
     const groupedPermissions = useMemo(() => {
         const groups: { module: string; permissions: Permission[] }[] = [];
         const modules = new Set(availablePermissions.map(p => p.module));
-        
+
         modules.forEach(module => {
-            const modulePerms = availablePermissions.filter(p => 
-                p.module === module && 
-                (!permissionSearch || 
-                 p.label.toLowerCase().includes(permissionSearch.toLowerCase()))
+            const modulePerms = availablePermissions.filter(p =>
+                p.module === module &&
+                (!permissionSearch ||
+                    p.label.toLowerCase().includes(permissionSearch.toLowerCase()))
             );
-            
+
             if (modulePerms.length > 0) {
                 groups.push({
                     module,
@@ -190,7 +191,7 @@ const WorkspaceRoles = () => {
                 });
             }
         });
-        
+
         // Sort modules alphabetically
         return groups.sort((a, b) => a.module.localeCompare(b.module));
     }, [availablePermissions, permissionSearch]);
@@ -198,10 +199,10 @@ const WorkspaceRoles = () => {
     // Filter roles based on search
     const filteredRoles = useMemo(() => {
         if (!searchTerm) return roles;
-        
+
         return roles.filter(role =>
             role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            role.permissions.some(p => 
+            role.permissions.some(p =>
                 p.label?.toLowerCase().includes(searchTerm.toLowerCase())
             )
         );
@@ -217,7 +218,7 @@ const WorkspaceRoles = () => {
 
     const confirmDelete = async () => {
         if (!deleteModal.roleId) return;
-        
+
         try {
             await api.delete(`/roles/${deleteModal.roleId}`);
             toast.success('Role deleted successfully');
@@ -249,7 +250,7 @@ const WorkspaceRoles = () => {
                             <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
                         </div>
                     </div>
-                    
+
                     {/* Plan Info Skeleton */}
                     <div className="bg-gray-200 dark:bg-gray-700 rounded-xl p-4 mb-6 animate-pulse">
                         <div className="flex items-start gap-3">
@@ -261,7 +262,7 @@ const WorkspaceRoles = () => {
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Roles Grid Skeleton */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {[...Array(3)].map((_, i) => (
@@ -316,24 +317,24 @@ const WorkspaceRoles = () => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3">
-                     <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search roles by name or permissions..."
-                            className="w-full pl-10 pr-10 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary/40 outline-0 focus:border-primary transition-all"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                        <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-                        {searchTerm && (
-                            <button
-                                onClick={() => setSearchTerm('')}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                            >
-                                <IconX size={16} />
-                            </button>
-                        )}
-                    </div>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="Search roles by name or permissions..."
+                                className="w-full pl-10 pr-10 py-2.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary/40 outline-0 focus:border-primary transition-all"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <IconSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                            {searchTerm && (
+                                <button
+                                    onClick={() => setSearchTerm('')}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                >
+                                    <IconX size={16} />
+                                </button>
+                            )}
+                        </div>
                         <button
                             onClick={handleSyncRoles}
                             disabled={isSyncing}
@@ -422,7 +423,7 @@ const WorkspaceRoles = () => {
                                         <IconPencil size={18} className="text-gray-600 dark:text-gray-400" />
                                     </button>
                                     {role.name.toLowerCase() !== 'admin' && (
-                                        <button 
+                                        <button
                                             onClick={() => handleDeleteRole(role.id, role.name)}
                                             className="p-2 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
                                             title="Delete role"
@@ -457,7 +458,7 @@ const WorkspaceRoles = () => {
                             <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
                                 <div className="flex items-center justify-between text-xs">
                                     <span className="text-gray-500 dark:text-gray-400">
-                                        {role.created_at ? `Created ${new Date(role.created_at).toLocaleDateString()}` : 'Custom role'}
+                                        {role.created_at ? `Created ${formatUserDate(role.created_at)}` : 'Custom role'}
                                     </span>
                                     <button
                                         onClick={() => handleOpenModal(role)}
@@ -487,8 +488,8 @@ const WorkspaceRoles = () => {
                         <div className="fixed inset-0 bg-black/70 backdrop:blur-xl" />
                     </Transition.Child>
 
-                <div className="fixed inset-0 overflow-y-auto">
-                    <div className="flex min-h-full items-center justify-center p-4 ">
+                    <div className="fixed inset-0 overflow-y-auto">
+                        <div className="flex min-h-full items-center justify-center p-4 ">
                             <Transition.Child
                                 as={Fragment}
                                 enter="ease-out duration-300"
@@ -533,119 +534,119 @@ const WorkspaceRoles = () => {
                                                         {selectedPerms.length} of {availablePermissions.length} permissions selected
                                                     </p>
                                                 </div>
-                                            <div className="flex gap-3">
-                                                <button
-                                                    type="button"
-                                                    onClick={toggleAllModules}
-                                                    className="flex items-center gap-2 text-sm text-primary  border border-primary px-3 py-2 rounded-lg hover:text-primary/80 font-medium focus:ring-2 focus:ring-primary/20 transition-all"
-                                                >
-                                                    {expandedModules.size === groupedPermissions.length ? (
-                                                        <>
-                                                            <IconChevronUp size={16} />
-                                                            Collapse All
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <IconChevronDown size={16} />
-                                                            Expand All
-                                                        </>
-                                                    )}
-                                                </button>
-                                                <div className="relative">
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Search permissions..."
-                                                        className="pl-9 pr-3 py-2 text-sm rounded-lg border text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-0 outline-primary transition-all"
-                                                        value={permissionSearch}
-                                                        onChange={(e) => setPermissionSearch(e.target.value)}
-                                                    />
-                                                    <IconSearch className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                                                <div className="flex gap-3">
+                                                    <button
+                                                        type="button"
+                                                        onClick={toggleAllModules}
+                                                        className="flex items-center gap-2 text-sm text-primary  border border-primary px-3 py-2 rounded-lg hover:text-primary/80 font-medium focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    >
+                                                        {expandedModules.size === groupedPermissions.length ? (
+                                                            <>
+                                                                <IconChevronUp size={16} />
+                                                                Collapse All
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <IconChevronDown size={16} />
+                                                                Expand All
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Search permissions..."
+                                                            className="pl-9 pr-3 py-2 text-sm rounded-lg border text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-0 outline-primary transition-all"
+                                                            value={permissionSearch}
+                                                            onChange={(e) => setPermissionSearch(e.target.value)}
+                                                        />
+                                                        <IconSearch className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                                                    </div>
                                                 </div>
-                                            </div>
                                             </div>
 
                                             {/* Permissions Grid - Grouped by Module */}
-                                           
-                                                <PerfectScrollbar className='relative max-h-[450px]'>
-                                                    <div className="p-3 space-y-4">
-                                                        {groupedPermissions.length === 0 ? (
-                                                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                                                                No permissions found matching your search
-                                                            </div>
-                                                        ) : (
-                                                            groupedPermissions.map((group) => (
-                                                                <div key={group.module} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                                                                    {/* Module Header */}
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => toggleModule(group.module)}
-                                                                        className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700/50 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                                    >
-                                                                        <div className="flex items-center gap-3">
-                                                                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                                                <IconShieldLock size={16} className="text-primary" />
-                                                                            </div>
-                                                                            <div className="text-left">
-                                                                                <h4 className="font-semibold text-gray-900 dark:text-white">{group.module}</h4>
-                                                                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                                    {group.permissions.length} permission{group.permissions.length !== 1 ? 's' : ''}
-                                                                                </p>
-                                                                            </div>
-                                                                        </div>
-                                                                        {expandedModules.has(group.module) ? (
-                                                                            <IconChevronUp size={20} className="text-gray-400" />
-                                                                        ) : (
-                                                                            <IconChevronDown size={20} className="text-gray-400" />
-                                                                        )}
-                                                                    </button>
 
-                                                                    {/* Module Permissions - Collapsible */}
-                                                                    {expandedModules.has(group.module) && (
-                                                                        <div className="p-3 bg-white dark:bg-gray-800 grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                                            {group.permissions.map((perm) => {
-                                                                                const isSelected = selectedPerms.includes(perm.name);
-                                                                                return (
-                                                                                    <label
-                                                                                        key={perm.name}
-                                                                                        className={`flex items-start gap-3 p-3 mb-0 rounded-lg border cursor-pointer transition-all ${isSelected 
-                                                                                            ? 'border-primary bg-primary/5' 
-                                                                                            : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                                            <PerfectScrollbar className='relative max-h-[450px]'>
+                                                <div className="p-3 space-y-4">
+                                                    {groupedPermissions.length === 0 ? (
+                                                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                                            No permissions found matching your search
+                                                        </div>
+                                                    ) : (
+                                                        groupedPermissions.map((group) => (
+                                                            <div key={group.module} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                                                {/* Module Header */}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleModule(group.module)}
+                                                                    className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700/50 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                                            <IconShieldLock size={16} className="text-primary" />
+                                                                        </div>
+                                                                        <div className="text-left">
+                                                                            <h4 className="font-semibold text-gray-900 dark:text-white">{group.module}</h4>
+                                                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                                                {group.permissions.length} permission{group.permissions.length !== 1 ? 's' : ''}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                    {expandedModules.has(group.module) ? (
+                                                                        <IconChevronUp size={20} className="text-gray-400" />
+                                                                    ) : (
+                                                                        <IconChevronDown size={20} className="text-gray-400" />
+                                                                    )}
+                                                                </button>
+
+                                                                {/* Module Permissions - Collapsible */}
+                                                                {expandedModules.has(group.module) && (
+                                                                    <div className="p-3 bg-white dark:bg-gray-800 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                                        {group.permissions.map((perm) => {
+                                                                            const isSelected = selectedPerms.includes(perm.name);
+                                                                            return (
+                                                                                <label
+                                                                                    key={perm.name}
+                                                                                    className={`flex items-start gap-3 p-3 mb-0 rounded-lg border cursor-pointer transition-all ${isSelected
+                                                                                        ? 'border-primary bg-primary/5'
+                                                                                        : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                                                                         }`}
-                                                                                    >
-                                                                                        <div className="flex items-center h-5">
-                                                                                            <input
-                                                                                                type="checkbox"
-                                                                                                className="w-4 h-4 form-checkbox peer text-primary border-gray-300 rounded focus:ring-primary/20"
-                                                                                                checked={isSelected}
-                                                                                                onChange={() => togglePermission(perm.name)}
-                                                                                            />
-                                                                                            <span className="peer-checked:text-primary text-gray-600 dark:text-gray-400 ml-1"> {perm.label}</span>
-                                                                                        </div>
-                                                                                        <div className="flex-1">
-                                                                                            <div className="flex items-start justify-between">
-                                                                                                <div>
-                                                                                                    {perm.description && (
-                                                                                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                                                                                            {perm.description}  {perm.label}
-                                                                                                        </p>
-                                                                                                    )}
-                                                                                                </div>
-                                                                                                {isSelected && (
-                                                                                                    <IconCheck size={16} className="text-primary shrink-0 mt-1" />
+                                                                                >
+                                                                                    <div className="flex items-center h-5">
+                                                                                        <input
+                                                                                            type="checkbox"
+                                                                                            className="w-4 h-4 form-checkbox peer text-primary border-gray-300 rounded focus:ring-primary/20"
+                                                                                            checked={isSelected}
+                                                                                            onChange={() => togglePermission(perm.name)}
+                                                                                        />
+                                                                                        <span className="peer-checked:text-primary text-gray-600 dark:text-gray-400 ml-1"> {perm.label}</span>
+                                                                                    </div>
+                                                                                    <div className="flex-1">
+                                                                                        <div className="flex items-start justify-between">
+                                                                                            <div>
+                                                                                                {perm.description && (
+                                                                                                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                                                                                        {perm.description}  {perm.label}
+                                                                                                    </p>
                                                                                                 )}
                                                                                             </div>
+                                                                                            {isSelected && (
+                                                                                                <IconCheck size={16} className="text-primary shrink-0 mt-1" />
+                                                                                            )}
                                                                                         </div>
-                                                                                    </label>
-                                                                                );
-                                                                            })}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            ))
-                                                        )}
-                                                    </div>
-                                                </PerfectScrollbar>
-                                            
+                                                                                    </div>
+                                                                                </label>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </PerfectScrollbar>
+
                                         </div>
 
                                         {/* Modal Footer */}

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { formatUserDate } from '../../../utils/userDate';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../../../utils/api';
@@ -7,11 +8,11 @@ import TikTokReportView from './TikTokReportView';
 import FacebookReportView from './FacebookReportView';
 import { motion, AnimatePresence } from 'framer-motion';
 import PerfectScrollbar from 'react-perfect-scrollbar';
-import { 
-    IconCalendar, 
-    IconChevronRight, 
-    IconLoader2, 
-    IconAlertCircle, 
+import {
+    IconCalendar,
+    IconChevronRight,
+    IconLoader2,
+    IconAlertCircle,
     IconChevronDown,
     IconInfoCircle,
     IconHelpCircle,
@@ -122,8 +123,7 @@ const PublicPageDashboard = () => {
 
     // Format date for display
     const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return formatUserDate(dateString);
     };
 
     // Instructions component
@@ -148,7 +148,7 @@ const PublicPageDashboard = () => {
                     ×
                 </button>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                 <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-800/30 rounded-xl">
                     <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
@@ -157,13 +157,13 @@ const PublicPageDashboard = () => {
                     <div>
                         <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Report History</h4>
                         <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-                            {showHistory 
-                                ? `Browse ${reportList.length} historical reports in the sidebar` 
+                            {showHistory
+                                ? `Browse ${reportList.length} historical reports in the sidebar`
                                 : 'Only one report available'}
                         </p>
                     </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-800/30 rounded-xl">
                     <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
                         <IconShare className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -182,7 +182,7 @@ const PublicPageDashboard = () => {
                         </button>
                     </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3 p-3 bg-white/50 dark:bg-gray-800/30 rounded-xl">
                     <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
                         <IconHelpCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -202,17 +202,16 @@ const PublicPageDashboard = () => {
     const ReportSelectorItem = ({ report, isActive, onClick }: any) => {
         const platformColor = report.platform === 'facebook' ? 'bg-blue-500' : 'bg-pink-500';
         const platformIcon = report.platform === 'facebook' ? 'FB' : <IconBrandTiktok size={16} className="text-white" />;
-        
+
         return (
             <motion.button
                 whileHover={{ scale: 1 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onClick}
-                className={`w-full text-left p-3 rounded-lg border transition-all duration-300 group ${
-                    isActive 
-                    ? 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 border-blue-300 dark:border-blue-700 shadow-lg shadow-blue-500/10' 
-                    : 'bg-gray-50/50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
-                }`}
+                className={`w-full text-left p-3 rounded-lg border transition-all duration-300 group ${isActive
+                        ? 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 border-blue-300 dark:border-blue-700 shadow-lg shadow-blue-500/10'
+                        : 'bg-gray-50/50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
+                    }`}
             >
                 <div className="flex items-start justify-between mb-3">
                     <div className={`w-8 h-8 ${platformColor} text-white rounded-lg flex items-center justify-center text-xs font-bold`}>
@@ -220,15 +219,15 @@ const PublicPageDashboard = () => {
                     </div>
                     <IconChevronRight size={16} className={isActive ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500'} />
                 </div>
-                
+
                 <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
                     {formatDate(report.start_date)} – {formatDate(report.end_date)}
                 </div>
-                
+
                 <div className="text-sm font-bold text-gray-900 dark:text-white truncate mb-2">
                     {report.platform === 'facebook' ? 'Facebook Report' : 'TikTok Report'}
                 </div>
-                
+
                 <div className="flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-1">
                         <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -273,25 +272,25 @@ const PublicPageDashboard = () => {
                     <IconShare size={18} />
                 </button>
             </div>
-            
+
             <PerfectScrollbar className='max-h-[400px] p-0'
-                            options={{ suppressScrollX: true, wheelPropagation: false }} 
+                options={{ suppressScrollX: true, wheelPropagation: false }}
             >
-            <div className="space-y-3 flex-1 overflow-y-auto p-2.5">
-                {reportList.map((report: any) => (
-                    <ReportSelectorItem
-                        key={report.id}
-                        report={report}
-                        isActive={activeReport?.id === report.id}
-                        onClick={() => {
-                            setActiveReport(report);
-                            setIsHistoryOpen(false);
-                        }}
-                    />
-                ))}
-            </div>
+                <div className="space-y-3 flex-1 overflow-y-auto p-2.5">
+                    {reportList.map((report: any) => (
+                        <ReportSelectorItem
+                            key={report.id}
+                            report={report}
+                            isActive={activeReport?.id === report.id}
+                            onClick={() => {
+                                setActiveReport(report);
+                                setIsHistoryOpen(false);
+                            }}
+                        />
+                    ))}
+                </div>
             </PerfectScrollbar>
-            
+
             {/* Help text for single report */}
             {reportList.length === 1 && (
                 <div className="mt-6 p-4 bg-gray-50/50 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700">
@@ -382,7 +381,7 @@ const PublicPageDashboard = () => {
     return (
         <PublicLayout>
             <div className="flex flex-col lg:flex-row gap-8 items-start relative min-h-[70vh]">
-                
+
                 {/* LEFT SIDE: DYNAMIC DASHBOARD */}
                 <div className="flex-1 w-full min-w-0">
                     {/* Instructions Panel */}
@@ -400,18 +399,18 @@ const PublicPageDashboard = () => {
                 {/* HISTORY SECTION - Desktop */}
                 {showHistory && (
                     <>
-                        
+
                         <div className="hidden lg:block w-80 shrink-0 sticky top-24">
                             <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-xl shadow-gray-200/50 dark:shadow-gray-900/50">
                                 <HistoryContent />
                             </div>
                         </div>
 
-                      
+
                         <div className="lg:hidden fixed bottom-6 right-6 z-[60]">
                             <AnimatePresence>
                                 {isHistoryOpen && (
-                                    <motion.div 
+                                    <motion.div
                                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -424,16 +423,15 @@ const PublicPageDashboard = () => {
                                 )}
                             </AnimatePresence>
 
-                            
-                            <motion.button 
+
+                            <motion.button
                                 whileHover={{ scale: 1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-                                className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${
-                                    isHistoryOpen 
-                                        ? 'bg-gradient-to-br from-rose-500 to-pink-500 rotate-180' 
+                                className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${isHistoryOpen
+                                        ? 'bg-gradient-to-br from-rose-500 to-pink-500 rotate-180'
                                         : 'bg-gradient-to-br from-blue-500 to-blue-600'
-                                }`}
+                                    }`}
                             >
                                 {isHistoryOpen ? (
                                     <IconChevronDown size={24} className="text-white" />
@@ -445,7 +443,7 @@ const PublicPageDashboard = () => {
                     </>
                 )}
             </div>
-            
+
             {/* Footer Instructions */}
             {/* <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
                 <div className="max-w-4xl mx-auto">
@@ -457,7 +455,7 @@ const PublicPageDashboard = () => {
                             <div>
                                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Data Freshness</h4>
                                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                                    Reports update automatically. Last sync: {new Date().toLocaleDateString()}
+                                    Reports update automatically. Last sync: {formatUserDate(new Date())}
                                 </p>
                             </div>
                         </div>

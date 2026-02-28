@@ -1,8 +1,9 @@
 import React, { useState, useMemo, Fragment, useEffect } from 'react';
+import { formatUserDate } from '../../../utils/userDate';
 import { useTranslation } from 'react-i18next';
-import { 
-    IconUsers, IconEye, IconThumbUp, IconShare, IconChartBar, 
-    IconTrophy, IconDownload, IconExternalLink, IconMessage, 
+import {
+    IconUsers, IconEye, IconThumbUp, IconShare, IconChartBar,
+    IconTrophy, IconDownload, IconExternalLink, IconMessage,
     IconClick, IconChevronRight, IconChevronDown, IconCheck,
     IconCalendar, IconSortAscending, IconFilter,
     IconInfoCircle, IconArrowUp, IconArrowDown,
@@ -69,11 +70,11 @@ const ChampionCard = ({ title, post, icon, metricLabel, metricValue }: ChampionC
             <IconExternalLink className="w-5 h-5 text-gray-300 dark:text-gray-700" />
         </div>
     );
-    
+
     return (
-        <a 
-            href={post.link} 
-            target="_blank" 
+        <a
+            href={post.link}
+            target="_blank"
             rel="noopener noreferrer"
             className="group bg-gradient-to-br from-white to-blue-50 dark:from-gray-900 dark:to-blue-900/10 p-6 rounded-2xl border border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700 flex gap-4 items-center transition-all duration-300 hover:shadow-lg active:scale-[0.99]"
         >
@@ -105,13 +106,13 @@ interface ListboxOption {
     label: string;
 }
 
-const CustomListbox = ({ 
-    value, 
-    onChange, 
-    options, 
+const CustomListbox = ({
+    value,
+    onChange,
+    options,
     icon: Icon,
     className = ""
-}: { 
+}: {
     value: string | number;
     onChange: (value: string | number) => void;
     options: ListboxOption[];
@@ -119,7 +120,7 @@ const CustomListbox = ({
     className?: string;
 }) => {
     const selectedOption = options.find(opt => opt.value === value);
-    
+
     return (
         <Listbox value={value} onChange={onChange}>
             <div className={`relative ${className}`}>
@@ -146,8 +147,7 @@ const CustomListbox = ({
                                 key={option.value}
                                 value={option.value}
                                 className={({ active }) =>
-                                    `cursor-pointer select-none relative px-4 py-3 text-sm border-b border-gray-100 dark:border-gray-700 last:border-0 ${
-                                        active ? 'bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'
+                                    `cursor-pointer select-none relative px-4 py-3 text-sm border-b border-gray-100 dark:border-gray-700 last:border-0 ${active ? 'bg-blue-50 dark:bg-gray-700 text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-white'
                                     }`
                                 }
                             >
@@ -178,7 +178,7 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [sortBy, setSortBy] = useState('date');
-    const [showPostTypes, setShowPostTypes] = useState<string[]>(['Photos', 'Videos','Reels']);
+    const [showPostTypes, setShowPostTypes] = useState<string[]>(['Photos', 'Videos', 'Reels']);
 
     const kpi = report?.report_data?.kpi;
     const champions = report?.report_data?.champions;
@@ -227,14 +227,14 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
 
     const exportToCSV = () => {
         const headers = ["Date,Title,Type,Reach,Views,Reactions,Comments,Clicks,Shares,ER%"];
-        const rows = paginatedPosts.map((p: any) => 
+        const rows = paginatedPosts.map((p: any) =>
             `"${p.date}","${p.title.replace(/"/g, '""')}","${p.type}",${p.reach},${p.views},${p.reactions},${p.comments},${p.link_clicks},${p.shares},${p.engagement_rate}`
         );
         const blob = new Blob([[...headers, ...rows].join("\n")], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a'); 
-        a.href = url; 
-        a.download = `${pageName}_Facebook_Report_${new Date().toISOString().split('T')[0]}.csv`; 
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${pageName}_Facebook_Report_${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
     };
 
@@ -245,17 +245,16 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
     };
 
     const togglePostType = (type: string) => {
-        setShowPostTypes(prev => 
-            prev.includes(type) 
+        setShowPostTypes(prev =>
+            prev.includes(type)
                 ? prev.filter(t => t !== type)
                 : [...prev, type]
         );
         setCurrentPage(1);
     };
 
-        const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric' });
+    const formatDate = (dateString: string) => {
+        return formatUserDate(dateString);
     };
 
     useEffect(() => {
@@ -299,7 +298,7 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
                         <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Period Start</div>
-                        <div className="text-lg font-bold text-gray-900 dark:text-white">{formatDate(report.start_date) || 'N/A'}</div> 
+                        <div className="text-lg font-bold text-gray-900 dark:text-white">{formatDate(report.start_date) || 'N/A'}</div>
                     </div>
                     <div className="bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800">
                         <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Period End</div>
@@ -325,31 +324,31 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                    <ChampionCard 
-                        title={t('report.highest_view') || 'Most Viewed'} 
-                        post={champions?.highest_view} 
-                        icon={<IconEye className="w-6 h-6" />} 
+                    <ChampionCard
+                        title={t('report.highest_view') || 'Most Viewed'}
+                        post={champions?.highest_view}
+                        icon={<IconEye className="w-6 h-6" />}
                         metricLabel="Views"
                         metricValue={champions?.highest_view?.views?.toLocaleString() || '0'}
                     />
-                    <ChampionCard 
-                        title={t('report.highest_engagement') || 'Highest Engagement'} 
-                        post={champions?.highest_engagement} 
-                        icon={<IconChartBar className="w-6 h-6" />} 
+                    <ChampionCard
+                        title={t('report.highest_engagement') || 'Highest Engagement'}
+                        post={champions?.highest_engagement}
+                        icon={<IconChartBar className="w-6 h-6" />}
                         metricLabel="Engagement Rate"
                         metricValue={`${champions?.highest_engagement?.engagement_rate || 0}%`}
                     />
-                    <ChampionCard 
-                        title={t('report.highest_comment') || 'Most Comments'} 
-                        post={champions?.highest_comments} 
-                        icon={<IconMessage className="w-6 h-6" />} 
+                    <ChampionCard
+                        title={t('report.highest_comment') || 'Most Comments'}
+                        post={champions?.highest_comments}
+                        icon={<IconMessage className="w-6 h-6" />}
                         metricLabel="Comments"
                         metricValue={champions?.highest_comments?.comments?.toLocaleString() || '0'}
                     />
-                    <ChampionCard 
-                        title={t('report.highest_share') || 'Most Shared'} 
-                        post={champions?.highest_shares} 
-                        icon={<IconShare className="w-6 h-6" />} 
+                    <ChampionCard
+                        title={t('report.highest_share') || 'Most Shared'}
+                        post={champions?.highest_shares}
+                        icon={<IconShare className="w-6 h-6" />}
                         metricLabel="Shares"
                         metricValue={champions?.highest_shares?.shares?.toLocaleString() || '0'}
                     />
@@ -360,40 +359,40 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
             <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Key Performance Indicators</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <StatCard 
-                        label={t('report.reach') || 'Reach'} 
-                        value={kpi?.reach || 0} 
-                        icon={<IconUsers className="w-6 h-6" />} 
+                    <StatCard
+                        label={t('report.reach') || 'Reach'}
+                        value={kpi?.reach || 0}
+                        icon={<IconUsers className="w-6 h-6" />}
                         color="text-blue-500"
                     />
-                    <StatCard 
-                        label={t('report.views') || 'Views'} 
-                        value={kpi?.views || 0} 
-                        icon={<IconEye className="w-6 h-6" />} 
+                    <StatCard
+                        label={t('report.views') || 'Views'}
+                        value={kpi?.views || 0}
+                        icon={<IconEye className="w-6 h-6" />}
                         color="text-purple-500"
                     />
-                    <StatCard 
-                        label={t('report.reactions') || 'Reactions'} 
-                        value={kpi?.reactions || 0} 
-                        icon={<IconThumbUp className="w-6 h-6" />} 
+                    <StatCard
+                        label={t('report.reactions') || 'Reactions'}
+                        value={kpi?.reactions || 0}
+                        icon={<IconThumbUp className="w-6 h-6" />}
                         color="text-rose-500"
                     />
-                    <StatCard 
-                        label={t('report.comments') || 'Comments'} 
-                        value={kpi?.comments || 0} 
-                        icon={<IconMessage className="w-6 h-6" />} 
+                    <StatCard
+                        label={t('report.comments') || 'Comments'}
+                        value={kpi?.comments || 0}
+                        icon={<IconMessage className="w-6 h-6" />}
                         color="text-sky-500"
                     />
-                    <StatCard 
-                        label={t('report.shares') || 'Shares'} 
-                        value={kpi?.shares || 0} 
-                        icon={<IconShare className="w-6 h-6" />} 
+                    <StatCard
+                        label={t('report.shares') || 'Shares'}
+                        value={kpi?.shares || 0}
+                        icon={<IconShare className="w-6 h-6" />}
                         color="text-pink-500"
                     />
-                    <StatCard 
-                        label={t('report.clicks') || 'Link Clicks'} 
-                        value={kpi?.link_clicks || 0} 
-                        icon={<IconClick className="w-6 h-6" />} 
+                    <StatCard
+                        label={t('report.clicks') || 'Link Clicks'}
+                        value={kpi?.link_clicks || 0}
+                        icon={<IconClick className="w-6 h-6" />}
                         color="text-orange-500"
                     />
 
@@ -409,12 +408,12 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                         </h3>
                         <div className="flex items-center gap-3 mt-2">
                             <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {sortedPosts.length} {t('report.content') || 'posts found'} • 
+                                {sortedPosts.length} {t('report.content') || 'posts found'} •
                                 Total Engagement: {kpi?.reactions + kpi?.comments + kpi?.shares || 0}
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="flex flex-wrap items-center gap-3">
                         {/* Post Type Filters */}
                         <div className="flex flex-wrap items-center gap-2">
@@ -422,11 +421,10 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                                 <button
                                     key={value}
                                     onClick={() => togglePostType(value)}
-                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                                        showPostTypes.includes(value)
+                                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${showPostTypes.includes(value)
                                             ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800'
                                             : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                                    }`}
+                                        }`}
                                 >
                                     {Icon && <Icon className="w-4 h-4" />}
                                     {label}
@@ -514,8 +512,8 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                         </thead>
                         <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                             {paginatedPosts.map((post: any, idx: number) => (
-                                <tr 
-                                    key={idx} 
+                                <tr
+                                    key={idx}
                                     className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors group"
                                 >
                                     <td className="px-6 py-4">
@@ -532,11 +530,10 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-center">
-                                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                                            post.type === 'Videos' 
+                                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${post.type === 'Videos'
                                                 ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
                                                 : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                                        }`}>
+                                            }`}>
                                             {post.type === 'Videos' ? <IconVideo className="w-3 h-3" /> : <IconPhoto className="w-3 h-3" />}
                                             {post.type}
                                         </span>
@@ -564,7 +561,7 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                                             <div className="text-sm flex items-center font-bold text-emerald-600 dark:text-emerald-400">
                                                 <IconThumbUp className="w-4 h-4 mr-1" />
                                                 <span>
-                                                 {post.reactions?.toLocaleString() || 0}
+                                                    {post.reactions?.toLocaleString() || 0}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-1 mt-1">
@@ -630,11 +627,10 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                                             <button
                                                 key={pageNum}
                                                 onClick={() => setCurrentPage(pageNum)}
-                                                className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                                                    currentPage === pageNum
+                                                className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === pageNum
                                                         ? 'bg-blue-600 text-white'
                                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                                                }`}
+                                                    }`}
                                             >
                                                 {pageNum}
                                             </button>
@@ -665,7 +661,7 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                         </p>
                         <button
                             onClick={() => {
-                                setShowPostTypes(['Photos', 'Videos','Reels']);
+                                setShowPostTypes(['Photos', 'Videos', 'Reels']);
                                 setSortBy('date');
                             }}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"

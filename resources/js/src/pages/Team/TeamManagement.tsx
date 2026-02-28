@@ -1,7 +1,7 @@
 import { useEffect, useState, Fragment } from 'react';
 import { Tab, Dialog, Transition, Listbox } from '@headlessui/react';
-import { 
-    IconUserPlus, IconTrash, IconMail, IconLock, 
+import {
+    IconUserPlus, IconTrash, IconMail, IconLock,
     IconSettings, IconUsers, IconChevronDown, IconCheck,
     IconBuilding, IconChartBar, IconShield, IconTicket,
     IconInfoCircle, IconX, IconSearch, IconFilter,
@@ -13,13 +13,14 @@ import api from '../../utils/api';
 import usePermission from '../../hooks/usePermission';
 import DeleteModal from '../../components/DeleteModal';
 import PerfectScrollbar from 'react-perfect-scrollbar';
+import { formatUserDate } from '../../utils/userDate';
 
 const TeamManagement = () => {
     const { can } = usePermission();
     const [teamData, setTeamData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [roleTemplates, setRoleTemplates] = useState<any[]>([]);
-    
+
     // Rename State
     const [teamName, setTeamName] = useState('');
     const [isRenaming, setIsRenaming] = useState(false);
@@ -60,7 +61,7 @@ const TeamManagement = () => {
                 api.get('/team/my-team'),
                 api.get('/team/role-templates')
             ]);
-            
+
             setTeamData(teamRes.data);
             setTeamName(teamRes.data.team_name);
 
@@ -75,7 +76,7 @@ const TeamManagement = () => {
 
             const roles = Array.isArray(rolesRes.data) ? rolesRes.data : [];
             setRoleTemplates(roles);
-            
+
         } catch (error) {
             toast.error("Failed to load team data");
             setAvailablePermissions([]);
@@ -92,14 +93,14 @@ const TeamManagement = () => {
     const groupedPermissions = () => {
         const groups: { module: string; permissions: any[] }[] = [];
         const modules = new Set(availablePermissions.map(p => p.module));
-        
+
         modules.forEach(module => {
-            const modulePerms = availablePermissions.filter(p => 
-                p.module === module && 
-                (!permissionSearch || 
-                 p.label.toLowerCase().includes(permissionSearch.toLowerCase()))
+            const modulePerms = availablePermissions.filter(p =>
+                p.module === module &&
+                (!permissionSearch ||
+                    p.label.toLowerCase().includes(permissionSearch.toLowerCase()))
             );
-            
+
             if (modulePerms.length > 0) {
                 groups.push({
                     module,
@@ -107,7 +108,7 @@ const TeamManagement = () => {
                 });
             }
         });
-        
+
         return groups.sort((a, b) => a.module.localeCompare(b.module));
     };
 
@@ -209,23 +210,23 @@ const TeamManagement = () => {
         if (roleName === 'Custom') return;
 
         const template = roleTemplates.find(r => r.name === roleName);
-        
+
         if (template) {
-            const rolePermNames = template.permissions.map((p: any) => 
+            const rolePermNames = template.permissions.map((p: any) =>
                 typeof p === 'string' ? p : p.name
             );
-            setSelectedPerms(rolePermNames); 
+            setSelectedPerms(rolePermNames);
         }
     };
 
     const togglePerm = (permId: string) => {
         setSelectedPerms((prev) => {
-            const newPerms = prev.includes(permId) 
-                ? prev.filter((id) => id !== permId) 
+            const newPerms = prev.includes(permId)
+                ? prev.filter((id) => id !== permId)
                 : [...prev, permId];
 
-            setSelectedRole('Custom'); 
-            
+            setSelectedRole('Custom');
+
             return newPerms;
         });
     };
@@ -235,9 +236,9 @@ const TeamManagement = () => {
         try {
             await api.put(`/team/member/${permMember.id}/permissions`, {
                 permissions: selectedPerms,
-                role_name: selectedRole 
+                role_name: selectedRole
             });
-            
+
             toast.success('Access updated');
             setPermModalOpen(false);
             fetchTeamAndTemplates();
@@ -277,15 +278,17 @@ const TeamManagement = () => {
         }
     };
 
+    const formatDate = (dateString: string) => formatUserDate(dateString);
+
     // Filter members based on search and role
     const filteredMembers = teamData?.members?.filter((member: any) => {
-        const matchesSearch = searchTerm === '' || 
+        const matchesSearch = searchTerm === '' ||
             member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             member.email.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesRole = selectedRoleFilter === 'all' || 
+
+        const matchesRole = selectedRoleFilter === 'all' ||
             member.display_role?.toLowerCase() === selectedRoleFilter.toLowerCase();
-        
+
         return matchesSearch && matchesRole;
     }) || [];
 
@@ -302,14 +305,14 @@ const TeamManagement = () => {
                             <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64 animate-pulse"></div>
                         </div>
                     </div>
-                    
+
                     {/* Tab Skeleton */}
                     <div className="flex gap-4 mb-6">
                         <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
                         <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
                     </div>
                 </div>
-                
+
                 {/* General Tab Skeleton */}
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -318,7 +321,7 @@ const TeamManagement = () => {
                             <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded w-full mb-3"></div>
                             <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
                         </div>
-                        
+
                         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 animate-pulse">
                             <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4"></div>
                             <div className="space-y-4">
@@ -352,7 +355,7 @@ const TeamManagement = () => {
                             <p className="text-gray-500 dark:text-gray-400 mt-0.5">Manage your workspace members and permissions</p>
                         </div>
                     </div>
-                    
+
                     {/* Status Badge */}
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-full font-medium">
                         <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
@@ -380,8 +383,7 @@ const TeamManagement = () => {
                     <Tab.List className="flex space-x-1 rounded-xl bg-white dark:bg-gray-800 p-1 border border-gray-200 dark:border-gray-700 shadow-sm">
                         <Tab
                             className={({ selected }) =>
-                                `w-full py-3 px-4 text-sm font-medium rounded-lg transition-all ${
-                                    selected
+                                `w-full py-3 px-4 text-sm font-medium rounded-lg transition-all ${selected
                                     ? 'bg-primary text-white shadow-sm'
                                     : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                 }`
@@ -394,8 +396,7 @@ const TeamManagement = () => {
                         </Tab>
                         <Tab
                             className={({ selected }) =>
-                                `w-full py-3 px-4 text-sm font-medium rounded-lg transition-all ${
-                                    selected
+                                `w-full py-3 px-4 text-sm font-medium rounded-lg transition-all ${selected
                                     ? 'bg-primary text-white shadow-sm'
                                     : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
                                 }`
@@ -484,10 +485,9 @@ const TeamManagement = () => {
                                         </span>
                                     </div>
                                     <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                                        <div 
-                                            className={`h-full rounded-full transition-all duration-500 ${
-                                                teamData?.member_count >= teamData?.member_limit ? 'bg-red-500' : 'bg-blue-500'
-                                            }`}
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-500 ${teamData?.member_count >= teamData?.member_limit ? 'bg-red-500' : 'bg-blue-500'
+                                                }`}
                                             style={{ width: `${Math.min((teamData?.member_count / teamData?.member_limit) * 100, 100)}%` }}
                                         ></div>
                                     </div>
@@ -502,10 +502,9 @@ const TeamManagement = () => {
                                         </span>
                                     </div>
                                     <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                                        <div 
-                                            className={`h-full rounded-full transition-all duration-500 ${
-                                                (teamData?.tokens_used / teamData?.token_limit) > 0.9 ? 'bg-red-500' : 'bg-purple-500'
-                                            }`}
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-500 ${(teamData?.tokens_used / teamData?.token_limit) > 0.9 ? 'bg-red-500' : 'bg-purple-500'
+                                                }`}
                                             style={{ width: `${Math.min((teamData?.tokens_used / teamData?.token_limit) * 100, 100)}%` }}
                                         ></div>
                                     </div>
@@ -617,8 +616,8 @@ const TeamManagement = () => {
                                                 <tr key={member.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/20 transition-colors">
                                                     <td className="py-4 px-6">
                                                         <div className="flex items-center gap-3">
-                                                            <img 
-                                                                src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=primary&color=fff&bold=true&size=128`} 
+                                                            <img
+                                                                src={member.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=primary&color=fff&bold=true&size=128`}
                                                                 className="w-10 h-10 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm"
                                                                 alt={member.name}
                                                             />
@@ -643,8 +642,8 @@ const TeamManagement = () => {
                                                                 Owner
                                                             </span>
                                                         ) : (
-                                                            <Listbox 
-                                                                value={member.pivot?.role || 'member'} 
+                                                            <Listbox
+                                                                value={member.pivot?.role || 'member'}
                                                                 onChange={(val) => handleRoleChange(member.id, val)}
                                                             >
                                                                 <div className="relative">
@@ -652,11 +651,11 @@ const TeamManagement = () => {
                                                                         <span className="capitalize">{member.pivot?.role || 'member'}</span>
                                                                         <IconChevronDown size={14} />
                                                                     </Listbox.Button>
-                                                                    
+
                                                                     <Listbox.Options className="absolute z-50 mt-1 w-32 rounded-lg bg-white dark:bg-gray-800 py-1 shadow-lg border border-gray-200 dark:border-gray-700 focus:outline-none">
                                                                         {roleTemplates.map((role: any) => (
-                                                                            <Listbox.Option 
-                                                                                key={role.id} 
+                                                                            <Listbox.Option
+                                                                                key={role.id}
                                                                                 value={role.name}
                                                                                 className={({ active }) => `px-3 py-2 cursor-pointer text-sm ${active ? 'bg-primary/5 text-primary' : 'text-gray-700 dark:text-gray-300'}`}
                                                                             >
@@ -694,11 +693,10 @@ const TeamManagement = () => {
                                                                 {member.token_limit === null ? (
                                                                     <div className="h-full bg-emerald-500 w-full"></div>
                                                                 ) : (
-                                                                    <div 
-                                                                        className={`h-full rounded-full ${
-                                                                            (member.tokens_used / member.token_limit) > 0.9 ? 'bg-red-500' : 
+                                                                    <div
+                                                                        className={`h-full rounded-full ${(member.tokens_used / member.token_limit) > 0.9 ? 'bg-red-500' :
                                                                             (member.tokens_used / member.token_limit) > 0.7 ? 'bg-amber-500' : 'bg-primary'
-                                                                        }`}
+                                                                            }`}
                                                                         style={{ width: `${Math.min(((member.tokens_used || 0) / member.token_limit) * 100, 100)}%` }}
                                                                     ></div>
                                                                 )}
@@ -762,8 +760,13 @@ const TeamManagement = () => {
                                                     <div>
                                                         <div className="font-medium text-gray-900 dark:text-white">{invite.email}</div>
                                                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                            Sent {new Date(invite.created_at).toLocaleDateString()}
+                                                            Sent {formatUserDate(invite.created_at, true)}
                                                         </div>
+                                                        {invite.expires_at && (
+                                                            <div className="text-xs text-amber-600 dark:text-amber-400">
+                                                                Expires {formatUserDate(invite.expires_at, true)}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                                 <button
@@ -1074,10 +1077,10 @@ const TeamManagement = () => {
                                                                         return (
                                                                             <label
                                                                                 key={perm.id}
-                                                                                className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${isSelected 
-                                                                                    ? 'border-primary bg-primary/5' 
+                                                                                className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${isSelected
+                                                                                    ? 'border-primary bg-primary/5'
                                                                                     : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'
-                                                                                }`}
+                                                                                    }`}
                                                                             >
                                                                                 <div className="flex items-center h-5">
                                                                                     <input

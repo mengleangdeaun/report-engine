@@ -5,8 +5,8 @@ import api from '../../../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'react-hot-toast';
 import {
-    IconFolder, IconFolderPlus, IconUpload, IconFile, IconFileTypePdf, IconFileTypeCsv, 
-    IconFileTypeXls, IconFileTypeTxt, IconTable, IconFileTypeDocx,IconLetterCase, IconFileTypePpt,
+    IconFolder, IconFolderPlus, IconUpload, IconFile, IconFileTypePdf, IconFileTypeCsv,
+    IconFileTypeXls, IconFileTypeTxt, IconTable, IconFileTypeDocx, IconLetterCase, IconFileTypePpt,
     IconPhoto, IconVideo, IconMusic, IconDownload, IconTrash, IconEdit,
     IconChevronRight, IconChevronDown, IconLayoutGrid, IconList,
     IconSearch, IconX, IconPlus, IconDots, IconCheck, IconRefresh,
@@ -47,6 +47,7 @@ import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
 import DeleteModal from '@/components/DeleteModal';
 import MediaLibrarySkeleton from '@/components/Skeletons/MediaLibrarySkeleton';
+import { formatUserDate } from '@/utils/userDate';
 
 /* ────────────────────────────────────────
    TYPES
@@ -783,7 +784,7 @@ const MediaLibrary = () => {
                                                 <p className="text-xs font-semibold text-gray-800 dark:text-white truncate" title={file.name}>{file.name}</p>
                                                 <div className="flex items-center justify-between mt-1">
                                                     <span className="text-[10px] text-gray-400 font-medium">
-                                                        {new Date(file.created_at).toLocaleDateString()}
+                                                        {formatUserDate(file.created_at)}
                                                     </span>
                                                     <span className="text-[10px] text-gray-400 font-medium">{file.size_human}</span>
                                                 </div>
@@ -832,7 +833,7 @@ const MediaLibrary = () => {
                                                 </td>
                                                 <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs font-medium">{file.size_human}</td>
                                                 <td className="px-4 py-3 text-gray-400 text-xs">
-                                                    {new Date(file.created_at).toLocaleDateString()}
+                                                    {formatUserDate(file.created_at)}
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center justify-end">

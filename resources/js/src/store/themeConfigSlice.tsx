@@ -37,8 +37,13 @@ const initialState = {
         { code: 'kh', name: 'Khmer' },
         { code: 'en', name: 'English' },
         { code: 'zh', name: 'Chinese' },
-
     ],
+    // User Preferences Data
+    dateFormat: localStorage.getItem('dateFormat') || 'MMM DD, YYYY',
+    timeFormat: localStorage.getItem('timeFormat') || '12h',
+    fontFamily: localStorage.getItem('fontFamily') || 'Google Sans',
+    notificationsEnabled: localStorage.getItem('notificationsEnabled') !== 'false',
+    cookieConsent: localStorage.getItem('cookieConsent') || 'pending',
 };
 
 const themeConfigSlice = createSlice({
@@ -112,9 +117,40 @@ const themeConfigSlice = createSlice({
         setPageTitle(state, { payload }) {
             document.title = `${payload} | Report Engine`;
         },
+
+        // --- USER PREFERENCES ---
+        setUserPreferences(state, { payload }) {
+            if (!payload) return;
+
+            if (payload.date_format) {
+                state.dateFormat = payload.date_format;
+                localStorage.setItem('dateFormat', payload.date_format);
+            }
+            if (payload.time_format) {
+                state.timeFormat = payload.time_format;
+                localStorage.setItem('timeFormat', payload.time_format);
+            }
+            if (payload.font_family) {
+                state.fontFamily = payload.font_family;
+                localStorage.setItem('fontFamily', payload.font_family);
+                document.documentElement.style.setProperty('--font-family', payload.font_family);
+            }
+            if (payload.notifications_enabled !== undefined) {
+                state.notificationsEnabled = payload.notifications_enabled;
+                localStorage.setItem('notificationsEnabled', payload.notifications_enabled);
+            }
+            if (payload.cookie_consent) {
+                state.cookieConsent = payload.cookie_consent;
+                localStorage.setItem('cookieConsent', payload.cookie_consent);
+            }
+        },
     },
 });
 
-export const { toggleTheme, toggleMenu, toggleLayout, toggleRTL, toggleAnimation, toggleNavbar, toggleSemidark, toggleLocale, toggleSidebar, setPageTitle } = themeConfigSlice.actions;
+export const {
+    toggleTheme, toggleMenu, toggleLayout, toggleRTL, toggleAnimation,
+    toggleNavbar, toggleSemidark, toggleLocale, toggleSidebar, setPageTitle,
+    setUserPreferences
+} = themeConfigSlice.actions;
 
 export default themeConfigSlice.reducer;

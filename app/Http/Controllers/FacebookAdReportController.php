@@ -207,6 +207,43 @@ class FacebookAdReportController extends Controller
     }
 
     /**
+     * Update the UI preferences for a specific report.
+     */
+    public function updatePreferences(Request $request, int $id)
+    {
+        $request->validate([
+            'visible_columns' => 'nullable|array',
+            'visible_kpis' => 'nullable|array',
+        ]);
+
+        $user = Auth::user();
+        $team = \App\Models\Team::find($user->team_id);
+        $report = FacebookAdReport::where('team_id', $team?->id)->findOrFail($id);
+
+        $rawData = $report->report_data;
+        $data = is_string($rawData) ? json_decode((string) $rawData, true) : (array) $rawData;
+        if (!is_array($data))
+            $data = [];
+
+        if (!isset($data['preferences'])) {
+            $data['preferences'] = [];
+        }
+
+        if ($request->has('visible_columns')) {
+            $data['preferences']['visible_columns'] = $request->visible_columns;
+        }
+
+        if ($request->has('visible_kpis')) {
+            $data['preferences']['visible_kpis'] = $request->visible_kpis;
+        }
+
+        $report->report_data = $data;
+        $report->save();
+
+        return response()->json(['message' => 'Preferences saved.', 'preferences' => $data['preferences']]);
+    }
+
+    /**
      * List all Ad Accounts for the current workspace (for autocomplete).
      */
     public function adAccounts(Request $request)

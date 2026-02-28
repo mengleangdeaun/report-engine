@@ -24,6 +24,7 @@ import {
 import DeleteModal from '../../components/DeleteModal';
 import { ConfirmationModal } from '../../components/ConfirmationModal';
 import PerfectScrollbar from 'react-perfect-scrollbar';
+import { formatUserDate } from '../../utils/userDate';
 
 const UserManagement = () => {
     const dispatch = useDispatch();
@@ -349,7 +350,7 @@ const UserManagement = () => {
             header: 'Joined',
             cell: (info) => (
                 <div className="text-gray-600 dark:text-gray-400">
-                    {new Date(info.getValue()).toLocaleDateString()}
+                    {formatUserDate(info.getValue())}
                 </div>
             ),
         }),

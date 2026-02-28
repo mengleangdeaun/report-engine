@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatUserDate } from '../../../utils/userDate';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPageTitle } from '../../../store/themeConfigSlice';
 import { IRootState } from '../../../store';
@@ -7,13 +8,13 @@ import { ApexOptions } from 'apexcharts';
 import toast, { Toaster } from 'react-hot-toast'; // <--- NEW LIBRARY
 import axios from 'axios';
 import CreatableSelect from 'react-select/creatable';
-import { 
-    IconBrandTiktok, 
-    IconBrandFacebook, 
-    IconShare, 
-    IconDownload, 
-    IconEye, 
-    IconHistory, 
+import {
+    IconBrandTiktok,
+    IconBrandFacebook,
+    IconShare,
+    IconDownload,
+    IconEye,
+    IconHistory,
     IconCopy
 } from '@tabler/icons-react';
 
@@ -26,11 +27,11 @@ const ReportGenerator = () => {
     const [platform, setPlatform] = useState<string>('tiktok');
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
-    
+
     // Select Inputs
     const [pageOptions, setPageOptions] = useState<any[]>([]);
     const [pageName, setPageName] = useState<any>(null);
-    
+
     // Data & History
     const [reportData, setReportData] = useState<any>(null);
     const [recentReports, setRecentReports] = useState<any[]>([]);
@@ -79,9 +80,9 @@ const ReportGenerator = () => {
             }
 
             setRecentReports(historyData);
-        } catch (error) { 
+        } catch (error) {
             console.error("Failed to fetch history");
-            setRecentReports([]); 
+            setRecentReports([]);
         }
     };
 
@@ -114,7 +115,7 @@ const ReportGenerator = () => {
         formData.append('page_name', pageName?.value || '');
 
         const token = localStorage.getItem('token');
-        
+
         // toast.promise handles loading, success, and error states automatically
         const apiPromise = axios.post('http://localhost:8000/api/generate-report', formData, {
             headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
@@ -150,7 +151,7 @@ const ReportGenerator = () => {
     const fmt = (num: number) => num ? num.toLocaleString() : '0';
 
     // --- CHART CONFIG ---
-// --- CHART CONFIG ---
+    // --- CHART CONFIG ---
     const getChartOptions = (): ApexOptions => {
         return {
             chart: {
@@ -181,9 +182,9 @@ const ReportGenerator = () => {
     const getChartSeries = () => {
         if (!reportData) return [];
         const data = [
-            reportData.total_views, 
-            reportData.total_likes, 
-            reportData.total_comments, 
+            reportData.total_views,
+            reportData.total_likes,
+            reportData.total_comments,
             reportData.total_shares,
             platform === 'facebook' ? reportData.total_reach : reportData.total_saves
         ];
@@ -192,8 +193,8 @@ const ReportGenerator = () => {
 
     return (
         <div>
-            
-            
+
+
             {/* --- HEADER --- */}
             <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
                 <div>
@@ -206,10 +207,10 @@ const ReportGenerator = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                
+
                 {/* --- LEFT PANEL: INPUTS (4 Columns) --- */}
                 <div className="panel lg:col-span-4 h-fit">
-                    
+
                     {/* 1. Platform Selection */}
                     <div className="mb-5">
                         <h5 className="font-semibold text-lg mb-4">1. Select Platform</h5>
@@ -277,14 +278,14 @@ const ReportGenerator = () => {
                         <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                             {Array.isArray(recentReports) && recentReports.length > 0 ? (
                                 recentReports.map((report: any, index: number) => (
-                                    <div 
-                                        key={report.id || index} 
-                                        onClick={() => setReportData(report)} 
+                                    <div
+                                        key={report.id || index}
+                                        onClick={() => setReportData(report)}
                                         className={`p-3 rounded-lg border cursor-pointer transition-all hover:bg-gray-50 dark:hover:bg-gray-900 ${reportData?.id === report.id ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700'}`}
                                     >
                                         <div className="flex justify-between items-center">
                                             <span className="font-semibold text-sm truncate max-w-[150px]">{report.page_name}</span>
-                                            <span className="text-xs text-gray-400">{report.created_at ? new Date(report.created_at).toLocaleDateString() : ''}</span>
+                                            <span className="text-xs text-gray-400">{report.created_at ? formatUserDate(report.created_at) : ''}</span>
                                         </div>
                                         <div className="flex justify-between items-center mt-1">
                                             <span className={`badge ${report.platform === 'tiktok' ? 'bg-black' : 'bg-blue-600'} text-xs capitalize`}>{report.platform}</span>
@@ -309,12 +310,12 @@ const ReportGenerator = () => {
                         </div>
                     ) : (
                         <div className="animate-fade-in-up space-y-6">
-                            
+
                             {/* 1. REPORT HEADER & ACTIONS */}
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-[#1b2e4b] p-5 rounded-xl shadow-sm">
                                 <div>
                                     <h2 className="text-2xl font-bold flex items-center gap-2">
-                                        {reportData.platform === 'tiktok' ? <IconBrandTiktok /> : <IconBrandFacebook className="text-blue-600"/>}
+                                        {reportData.platform === 'tiktok' ? <IconBrandTiktok /> : <IconBrandFacebook className="text-blue-600" />}
                                         {reportData.page_name}
                                     </h2>
                                     <p className="text-xs text-gray-500 mt-1">
@@ -368,7 +369,7 @@ const ReportGenerator = () => {
                                             "{reportData.top_performers.views.title || 'No caption'}"
                                         </p>
                                         <a href={reportData.top_performers.views.link} target="_blank" className="text-xs text-primary mt-2 inline-flex items-center gap-1 hover:underline">
-                                            View Post <IconEye size={12}/>
+                                            View Post <IconEye size={12} />
                                         </a>
                                     </div>
 
@@ -382,7 +383,7 @@ const ReportGenerator = () => {
                                             "{reportData.top_performers.engagement.title || 'No caption'}"
                                         </p>
                                         <a href={reportData.top_performers.engagement.link} target="_blank" className="text-xs text-primary mt-2 inline-flex items-center gap-1 hover:underline">
-                                            View Post <IconEye size={12}/>
+                                            View Post <IconEye size={12} />
                                         </a>
                                     </div>
                                 </div>

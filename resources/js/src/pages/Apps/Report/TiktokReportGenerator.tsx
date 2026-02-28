@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo, Fragment } from 'react';
+import { formatUserDate } from '../../../utils/userDate';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPageTitle } from '../../../store/themeConfigSlice';
 import { IRootState } from '../../../store';
@@ -224,8 +225,8 @@ const TiktokReportGenerator = () => {
     });
 
     toast.success(
-      `Switched to report from ${new Date(report.start_date).toLocaleDateString()} 
-          to ${new Date(report.end_date).toLocaleDateString()}`
+      `Switched to report from ${formatUserDate(report.start_date)} 
+          to ${formatUserDate(report.end_date)}`
     );
   };
 
@@ -1049,7 +1050,7 @@ const TiktokReportGenerator = () => {
                         <a href={post.link} target="_blank" rel="noreferrer" className="font-semibold text-black dark:text-white hover:underline block truncate max-w-[300px]">
                           {truncate(post.title || 'Untitled Video', 50)}
                         </a>
-                        <span className="text-xs text-gray-500 block">{post.date ? new Date(post.date).toLocaleDateString() : '-'}</span>
+                        <span className="text-xs text-gray-500 block">{post.date ? formatUserDate(post.date) : '-'}</span>
                       </td>
                       <td className="p-3 text-right font-mono">{fmt(post.views)}</td>
                       <td className="p-3 text-right font-mono text-[#FE2C55]">{fmt(post.likes)}</td>

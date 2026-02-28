@@ -70,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/profile', [ProfileController::class, 'update']);
+    Route::put('/user/preferences', [ProfileController::class, 'updatePreferences']);
     Route::put('/user/password', [ProfileController::class, 'updatePassword']);
     Route::post('/user/delete', [ProfileController::class, 'destroy']);
 
@@ -114,6 +115,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/ad-reports/generate', [FacebookAdReportController::class, 'generate']);
     Route::get('/ad-reports/history', [FacebookAdReportController::class, 'history']);
     Route::get('/ad-reports/{id}', [FacebookAdReportController::class, 'show']);
+    Route::put('/ad-reports/{id}/preferences', [FacebookAdReportController::class, 'updatePreferences']);
     Route::get('/ad-reports/{id}/export', [FacebookAdReportController::class, 'exportCsv']);
     Route::delete('/ad-reports/{id}', [FacebookAdReportController::class, 'destroy']);
     Route::get('/ad-accounts', [FacebookAdReportController::class, 'adAccounts']);

@@ -51,6 +51,7 @@ import {
   IconFilterOff
 } from '@tabler/icons-react';
 import DeleteModal from '../../../components/DeleteModal';
+import { formatUserDate } from '../../../utils/userDate';
 
 // --- SHADCN UI ---
 import { DateRangePicker } from '../../../components/ui/date-range-picker';
@@ -307,20 +308,7 @@ const ReportHistory = () => {
   };
 
   // --- HELPER: FORMAT DATE ---
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '-';
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return dateString;
-      return date.toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      }).replace(/ /g, '-');
-    } catch (e) {
-      return dateString;
-    }
-  };
+  const formatDate = (dateString: string) => formatUserDate(dateString);
 
   const handleExport = async () => {
     try {

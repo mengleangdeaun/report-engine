@@ -1,4 +1,5 @@
 import { useEffect, useState, Fragment } from 'react';
+import { formatUserDate } from '../../utils/userDate';
 import { Dialog, Transition, Listbox } from '@headlessui/react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
@@ -365,7 +366,7 @@ const PermissionManagement = () => {
                                                 </code>
                                             </div>
                                             <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                Created {new Date(p.created_at).toLocaleDateString()}
+                                                Created {formatUserDate(p.created_at)}
                                             </div>
                                         </td>
 
@@ -395,8 +396,8 @@ const PermissionManagement = () => {
                                                 />
                                             ) : (
                                                 <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${p.module
-                                                        ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'
-                                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600'
+                                                    ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30'
+                                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600'
                                                     }`}>
                                                     {p.module || 'Uncategorized'}
                                                 </span>
@@ -407,8 +408,8 @@ const PermissionManagement = () => {
                                             <button
                                                 onClick={() => handleToggleActive(p.id)}
                                                 className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/20 ${p.is_active
-                                                        ? 'bg-emerald-500 dark:bg-emerald-600'
-                                                        : 'bg-gray-300 dark:bg-gray-600'
+                                                    ? 'bg-emerald-500 dark:bg-emerald-600'
+                                                    : 'bg-gray-300 dark:bg-gray-600'
                                                     }`}
                                             >
                                                 <span className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${p.is_active ? 'translate-x-6' : 'translate-x-1'

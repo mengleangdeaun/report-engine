@@ -202,7 +202,7 @@ export const ColumnSelector: React.FC<ColumnSelectorProps> = ({
                                                                             className={`w-full flex items-center justify-between px-3 py-1.5 text-sm rounded transition-colors ${active ? 'bg-gray-50 dark:bg-gray-700/50' : ''
                                                                                 }`}
                                                                         >
-                                                                            <span className={`truncate mr-3 ${isSelected ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
+                                                                            <span className={`truncate max-w-[250px] mr-3 ${isSelected ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-600 dark:text-gray-400'}`}>
                                                                                 {formatDisplay(col)}
                                                                             </span>
                                                                             {isSelected && (

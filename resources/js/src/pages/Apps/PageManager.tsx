@@ -20,6 +20,7 @@ import {
 import ReportHistoryDrawer from '../../pages/Apps/Report/ReportHistoryDrawer'; // Import it
 import ReportLogDrawer from '../../pages/Apps/Report/ReportLogDrawer';
 import DeleteModal from '../../components/DeleteModal';
+import { formatUserDate } from '../../utils/userDate';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Card, CardContent } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
@@ -389,12 +390,7 @@ const PageManager = () => {
 
   const totalPages = Math.ceil(filteredPages.length / pageSize);
 
-  const formatDate = (date: string) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleDateString('en-GB', {
-      day: '2-digit', month: 'short', year: 'numeric'
-    });
-  };
+  const formatDate = (date: string) => formatUserDate(date);
 
   const getDisplayName = (name: string) => name || '(Untitled Profile)';
 
@@ -441,32 +437,32 @@ const PageManager = () => {
               )}
             </Button>
 
-{/* View Mode Toggle */}
-<div className="flex items-center gap-2">
-  <Tabs
-    defaultValue={viewMode}
-    value={viewMode}
-    onValueChange={(value) => setViewMode(value as 'grid' | 'list')}
-    className="w-auto"
-  >
-    <TabsList className="grid w-full grid-cols-2 h-10 border bg-background">
-      <TabsTrigger
-        value="list"
-        aria-label="List view"
-        className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-      >
-        <IconList size={18} />
-      </TabsTrigger>
-      <TabsTrigger
-        value="grid"
-        aria-label="Grid view"
-        className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-      >
-        <IconLayoutGrid size={18} />
-      </TabsTrigger>
-    </TabsList>
-  </Tabs>
-</div>
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2">
+              <Tabs
+                defaultValue={viewMode}
+                value={viewMode}
+                onValueChange={(value) => setViewMode(value as 'grid' | 'list')}
+                className="w-auto"
+              >
+                <TabsList className="grid w-full grid-cols-2 h-10 border bg-background">
+                  <TabsTrigger
+                    value="list"
+                    aria-label="List view"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  >
+                    <IconList size={18} />
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="grid"
+                    aria-label="Grid view"
+                    className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  >
+                    <IconLayoutGrid size={18} />
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
         </div>
 

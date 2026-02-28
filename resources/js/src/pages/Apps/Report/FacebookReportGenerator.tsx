@@ -1,4 +1,5 @@
 import PerfectScrollbar from 'react-perfect-scrollbar';
+import { formatUserDate } from '../../../utils/userDate';
 import { useEffect, useState, useRef, useMemo, Fragment } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setPageTitle } from '../../../store/themeConfigSlice';
@@ -208,8 +209,8 @@ const FacebookReportGenerator = () => {
 
 
     toast.success(
-      `Switched to report from ${new Date(report.start_date).toLocaleDateString()} 
-   to ${new Date(report.end_date).toLocaleDateString()}`
+      `Switched to report from ${formatUserDate(report.start_date)} 
+   to ${formatUserDate(report.end_date)}`
     );
 
   };
@@ -1205,7 +1206,7 @@ const FacebookReportGenerator = () => {
                         <a href={post.link} target="_blank" rel="noreferrer" className="font-semibold text-blue-600 hover:underline block truncate max-w-[300px]">
                           {truncate(post.title || 'Untitled Post', 50)}
                         </a>
-                        <span className="text-xs text-gray-500 block">{post.date ? new Date(post.date).toLocaleDateString() : '-'}</span>
+                        <span className="text-xs text-gray-500 block">{post.date ? formatUserDate(post.date) : '-'}</span>
                       </td>
                       <td className="p-3 text-center">{getTypeIcon(post.type)}</td>
                       <td className="p-3 text-right font-mono">{fmt(post.views)}</td>

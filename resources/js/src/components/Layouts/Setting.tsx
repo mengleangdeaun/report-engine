@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { IRootState } from '../../store';
 import { toggleAnimation, toggleLayout, toggleMenu, toggleNavbar, toggleRTL, toggleTheme, toggleSemidark } from '../../store/themeConfigSlice';
+import { NavLink } from 'react-router-dom';
+import { IconSettings } from '@tabler/icons-react';
+import PerfectScrollbar from 'react-perfect-scrollbar';
+
 
 const Setting = () => {
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
@@ -14,9 +18,8 @@ const Setting = () => {
             <div className={`${(showCustomizer && '!block') || ''} fixed inset-0 bg-[black]/60 z-[51] px-4 hidden transition-[display]`} onClick={() => setShowCustomizer(false)}></div>
 
             <nav
-                className={`${
-                    (showCustomizer && 'ltr:!right-0 rtl:!left-0') || ''
-                } bg-white fixed ltr:-right-[400px] rtl:-left-[400px] top-0 bottom-0 w-full max-w-[400px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] transition-[right] duration-300 z-[51] dark:bg-black p-4`}
+                className={`${(showCustomizer && 'ltr:!right-0 rtl:!left-0') || ''
+                    } bg-white fixed p-4 ltr:-right-[400px] rtl:-left-[400px] top-0 bottom-0 w-full max-w-[400px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] transition-[right] duration-300 z-[51] dark:bg-black p-4`}
             >
                 <button
                     type="button"
@@ -34,8 +37,8 @@ const Setting = () => {
                     </svg>
                 </button>
 
-                <div className="overflow-y-auto overflow-x-hidden perfect-scrollbar h-full">
-                    <div className="text-center relative pb-5">
+                <PerfectScrollbar className="h-full">
+                    <div className="text-center relative pb-5 p-5">
                         <button type="button" className="absolute top-0 ltr:right-0 rtl:left-0 opacity-30 hover:opacity-100 dark:text-white" onClick={() => setShowCustomizer(false)}>
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -56,6 +59,11 @@ const Setting = () => {
                         <h4 className="mb-1 dark:text-white">TEMPLATE CUSTOMIZER</h4>
                         <p className="text-white-dark">Set preferences that will be cookied for your live preview demonstration.</p>
                     </div>
+
+                    <NavLink to="/settings/preferences" className='btn flex items-center gap-2 btn-primary mb-4' onClick={() => setShowCustomizer(false)}>
+                        <IconSettings size={16} />
+                        Preferences
+                    </NavLink>
 
                     <div className="border border-dashed border-white-light dark:border-[#1b2e4b] rounded-md mb-3 p-3">
                         <h5 className="mb-1 text-base dark:text-white leading-none">Color Scheme</h5>
@@ -226,7 +234,7 @@ const Setting = () => {
                             </select>
                         </div>
                     </div>
-                </div>
+                </PerfectScrollbar>
             </nav>
         </div>
     );

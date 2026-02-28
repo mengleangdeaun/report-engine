@@ -123,7 +123,24 @@ class ProfileController extends Controller
         });
     }
 
+    // 4. Update User Preferences (Date format, Theme, etc)
+    public function updatePreferences(Request $request)
+    {
+        $user = Auth::user();
 
+        $request->validate([
+            'preferences' => 'required|array',
+        ]);
 
+        $currentPreferences = $user->preferences ?? [];
 
+        // Merge so we don't wipe out un-sent preferences
+        $user->preferences = array_merge($currentPreferences, $request->preferences);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Preferences updated successfully',
+            'preferences' => $user->preferences
+        ]);
+    }
 }

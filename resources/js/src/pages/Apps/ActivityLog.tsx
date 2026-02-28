@@ -5,6 +5,7 @@ import api from '../../utils/api';
 import { getStoragePath } from '../../utils/config';
 import { IconSearch, IconHistory, IconUser, IconClock } from '@tabler/icons-react';
 import { useLocation } from 'react-router-dom';
+import { formatUserDate } from '../../utils/userDate';
 
 const ActivityLog = () => {
     const dispatch = useDispatch();
@@ -41,12 +42,7 @@ const ActivityLog = () => {
         return () => clearTimeout(timer);
     }, [search]);
 
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric'
-        }).format(date);
-    };
+    const formatDate = (dateString: string) => formatUserDate(dateString, true);
 
     return (
         <div>
@@ -64,9 +60,9 @@ const ActivityLog = () => {
 
                 {/* Search */}
                 <div className="relative w-full sm:w-64">
-                    <input 
-                        type="text" 
-                        placeholder="Search logs..." 
+                    <input
+                        type="text"
+                        placeholder="Search logs..."
                         className="form-input pl-10 pr-4"
                         value={search}
                         onChange={e => setSearch(e.target.value)}
@@ -121,11 +117,10 @@ const ActivityLog = () => {
                                             </div>
                                         </td>
                                         <td className="p-4">
-                                            <span className={`badge ${
-                                                log.action.includes('Delete') ? 'bg-red-100 text-red-600' :
-                                                log.action.includes('Update') ? 'bg-blue-100 text-blue-600' :
-                                                'bg-gray-100 text-gray-600'
-                                            } border-0`}>
+                                            <span className={`badge ${log.action.includes('Delete') ? 'bg-red-100 text-red-600' :
+                                                    log.action.includes('Update') ? 'bg-blue-100 text-blue-600' :
+                                                        'bg-gray-100 text-gray-600'
+                                                } border-0`}>
                                                 {log.action}
                                             </span>
                                         </td>
@@ -145,8 +140,8 @@ const ActivityLog = () => {
                 {/* Pagination */}
                 {meta && meta.last_page > 1 && (
                     <div className="p-4 border-t dark:border-gray-700 flex justify-center gap-2">
-                        <button 
-                            disabled={page === 1} 
+                        <button
+                            disabled={page === 1}
                             onClick={() => setPage(p => p - 1)}
                             className="btn btn-sm btn-outline-secondary"
                         >
@@ -155,8 +150,8 @@ const ActivityLog = () => {
                         <span className="px-3 py-1 text-sm font-semibold flex items-center">
                             Page {page} of {meta.last_page}
                         </span>
-                        <button 
-                            disabled={page === meta.last_page} 
+                        <button
+                            disabled={page === meta.last_page}
                             onClick={() => setPage(p => p + 1)}
                             className="btn btn-sm btn-outline-secondary"
                         >
