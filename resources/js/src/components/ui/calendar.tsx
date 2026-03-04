@@ -182,7 +182,7 @@ function CalendarDayButton({ className, day, modifiers, ...props }) {
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
 
         // ── Today: subtle ring ────────────────────────────────────
-        "data-[today]:ring-1 data-[today]:ring-border",
+        "data-[today]:ring-1 data-[today]:ring-border data-[today]:bg-primary/40",
 
         // ── Outside month: dimmed, no interaction ─────────────────
         "data-[outside]:text-muted-foreground/30",

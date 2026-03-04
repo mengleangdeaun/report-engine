@@ -76,14 +76,19 @@ const Dashboard = () => {
                     {/* Inside the Tokens Used Card */}
                     <div className="mt-5">
                         <div className="flex justify-between items-end mb-1">
-                            <div className="text-3xl font-bold">{data.stats.token_used}</div>
-                            <div className="text-xs text-white/80">of {data.stats.token_limit}</div>
+                            <div className="text-3xl font-bold">{data?.stats?.token_used || 0}</div>
+                            <div className="text-xs text-white/80">of {data?.stats?.token_limit || 0}</div>
                         </div>
                         {/* Progress Bar */}
                         <div className="w-full bg-black/20 rounded-full h-1.5 mt-2">
                             <div
                                 className="bg-white h-1.5 rounded-full"
-                                style={{ width: `${Math.min(100, (data.stats.token_used / data.stats.token_limit) * 100)}%` }}
+                                style={{
+                                    width: `${Math.min(
+                                        100,
+                                        data?.stats?.token_limit ? (data.stats.token_used / data.stats.token_limit) * 100 : 0
+                                    )}%`,
+                                }}
                             ></div>
                         </div>
                     </div>
@@ -143,7 +148,7 @@ const Dashboard = () => {
                                             </td>
 
                                             {/* ✅ Admin: Show User Avatar + Name */}
-                                            {data.is_admin && (
+                                            {data?.is_admin && (
                                                 <td>
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200">

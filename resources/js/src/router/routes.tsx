@@ -19,9 +19,13 @@ const MediaLibrary = lazy(() => import('../pages/Apps/MediaLibrary/MediaLibrary'
 const PublicReportView = lazy(() => import('../pages/Public/PublicReportView'));
 const PublicReportDashboard = lazy(() => import('../pages/Public/PublicLayout'));
 const PublicPageDashboard = lazy(() => import('../pages/Public/components/PublicPageDashboard'));
-
+const PublicLandingPage = lazy(() => import('../pages/Public/PublicLandingPage'));
 
 const TeamManagement = lazy(() => import('../pages/Team/TeamManagement'));
+const ClientManagement = lazy(() => import('../pages/Team/ClientManagement'));
+const PortalLogin = lazy(() => import('../pages/ClientPortal/Login'));
+const PortalDashboard = lazy(() => import('../pages/ClientPortal/Dashboard'));
+const PortalReportDetail = lazy(() => import('../pages/ClientPortal/PortalReportDetail'));
 
 const MustVerify = lazy(() => import('../pages/Authentication/VerifyEmail'));
 
@@ -70,6 +74,7 @@ const RecoverIdCover = lazy(() => import('../pages/Authentication/RecoverIdCover
 const UnlockCover = lazy(() => import('../pages/Authentication/UnlockCover'));
 const ResetPasswordBoxed = lazy(() => import('../pages/Authentication/ResetPasswordBoxed'));
 const Banned = lazy(() => import('../pages/Authentication/Banned'));
+const WorkspaceInactive = lazy(() => import('../pages/WorkspaceInactive'));
 
 
 const UserManagement = lazy(() => import('../pages/Admin/UserManagement'));
@@ -80,6 +85,8 @@ const PermissionManagement = lazy(() => import('../pages/Admin/PermissionManagem
 const ColorManager = lazy(() => import('../pages/Admin/ColorManager'));
 const TopUpRequests = lazy(() => import('../pages/Admin/TopUpRequests'));
 const SystemConfig = lazy(() => import('../pages/Admin/SystemConfig'));
+const LandingPageBuilder = lazy(() => import('../pages/Admin/LandingPageBuilder'));
+const ContactSubmissions = lazy(() => import('../pages/Admin/ContactSubmissions'));
 
 
 const Dashboard = lazy(() => import('../pages/Dashboard'));
@@ -133,11 +140,8 @@ const routes = [
     // 1. The Main Dashboard (Splits traffic)
     {
         path: '/',
-        element: (
-            <ProtectedRoute>
-                <DashboardSplitter />
-            </ProtectedRoute>
-        ),
+        element: <PublicLandingPage />,
+        layout: 'blank'
     },
     {
         path: '/dashboard',
@@ -162,6 +166,25 @@ const routes = [
     {
         path: '/team/settings',
         element: <TeamManagement />,
+    },
+    {
+        path: '/team/clients',
+        element: <ClientManagement />,
+    },
+    {
+        path: '/portal/login',
+        element: <PortalLogin />,
+        layout: 'blank',
+    },
+    {
+        path: '/portal/dashboard',
+        element: <PortalDashboard />,
+        layout: 'blank',
+    },
+    {
+        path: '/portal/reports/:type/:id',
+        element: <PortalReportDetail />,
+        layout: 'blank',
     },
 
     {
@@ -256,6 +279,22 @@ const routes = [
         element: (
             <ProtectedRoute roleRequired="super_admin">
                 <SystemConfig />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/admin/landing-page',
+        element: (
+            <ProtectedRoute roleRequired="super_admin">
+                <LandingPageBuilder />
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: '/admin/contact-submissions',
+        element: (
+            <ProtectedRoute roleRequired="super_admin">
+                <ContactSubmissions />
             </ProtectedRoute>
         ),
     },
@@ -509,6 +548,11 @@ const routes = [
     {
         path: '/banned',
         element: <Banned />,
+        layout: 'blank',
+    },
+    {
+        path: '/workspace-inactive',
+        element: <WorkspaceInactive />,
         layout: 'blank',
     },
     {

@@ -25,7 +25,7 @@ class Report extends Model
         'total_comments',
         'total_shares',
         'total_saves',
-        'total_link_clicks', 
+        'total_link_clicks',
         'engagement_rate',
         'top_performers',
         'public_uuid'
@@ -35,8 +35,8 @@ class Report extends Model
 
     protected $casts = [
         'report_data' => 'array',
-        'start_date'  => 'date',
-        'end_date'    => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
         'total_views' => 'integer',
         'engagement_rate' => 'float',
         'total_likes' => 'integer',
@@ -62,5 +62,10 @@ class Report extends Model
     public function team()
     {
         return $this->belongsTo(Team::class);
+    }
+
+    public function clients()
+    {
+        return $this->morphToMany(Client::class, 'reportable', 'client_reports');
     }
 }

@@ -7,7 +7,8 @@ import { toast, Toaster } from 'react-hot-toast';
 import {
     IconSettings, IconPalette, IconClock, IconBell, IconShieldCheck,
     IconDeviceFloppy, IconTypography, IconCalendar, IconClockHour4,
-    IconCookie, IconLoader2, IconDroplet, IconCheck, IconSun, IconMoon, IconDeviceDesktop
+    IconCookie, IconLoader2, IconDroplet, IconCheck, IconSun, IconMoon,
+    IconDeviceDesktop, IconBrush, IconBrandTelegram
 } from '@tabler/icons-react';
 import { toggleTheme } from '@/store/themeConfigSlice';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { THEME_COLORS } from '@/constants/themeColors';
 import {
     Select,
     SelectContent,
@@ -22,6 +24,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 
 /* ─────────────────────────────────────────────────────────
    Options
@@ -55,23 +64,39 @@ const TIME_FORMATS = [
     { label: '24-Hour', example: '13:30', value: '24h' },
 ];
 
-const THEME_COLORS = [
-    { label: 'Blue', value: 'blue', hex: '#0284c7', primary: '198 100% 39%', secondary: '198 40% 94%', accent: '198 50% 90%', ring: '198 100% 39%', darkPrimary: '198 100% 45%', darkSecondary: '198 30% 18%', darkAccent: '198 35% 20%', darkRing: '198 100% 45%' },
-    { label: 'Sky', value: 'sky', hex: '#0ea5e9', primary: '199 89% 48%', secondary: '199 40% 94%', accent: '199 50% 90%', ring: '199 89% 48%', darkPrimary: '199 89% 52%', darkSecondary: '199 30% 18%', darkAccent: '199 35% 20%', darkRing: '199 89% 52%' },
-    { label: 'Indigo', value: 'indigo', hex: '#6366f1', primary: '239 84% 67%', secondary: '239 40% 94%', accent: '239 50% 92%', ring: '239 84% 67%', darkPrimary: '239 84% 67%', darkSecondary: '239 30% 18%', darkAccent: '239 35% 20%', darkRing: '239 84% 67%' },
-    { label: 'Violet', value: 'violet', hex: '#8b5cf6', primary: '263 70% 66%', secondary: '263 40% 94%', accent: '263 50% 92%', ring: '263 70% 66%', darkPrimary: '263 70% 66%', darkSecondary: '263 30% 18%', darkAccent: '263 35% 20%', darkRing: '263 70% 66%' },
-    { label: 'Fuchsia', value: 'fuchsia', hex: '#d946ef', primary: '292 84% 61%', secondary: '292 40% 94%', accent: '292 50% 92%', ring: '292 84% 61%', darkPrimary: '292 84% 61%', darkSecondary: '292 30% 18%', darkAccent: '292 35% 20%', darkRing: '292 84% 61%' },
-    { label: 'Pink', value: 'pink', hex: '#ec4899', primary: '330 81% 60%', secondary: '330 40% 94%', accent: '330 50% 92%', ring: '330 81% 60%', darkPrimary: '330 81% 60%', darkSecondary: '330 30% 18%', darkAccent: '330 35% 20%', darkRing: '330 81% 60%' },
-    { label: 'Rose', value: 'rose', hex: '#f43f5e', primary: '347 77% 60%', secondary: '347 40% 94%', accent: '347 50% 92%', ring: '347 77% 60%', darkPrimary: '347 77% 60%', darkSecondary: '347 30% 18%', darkAccent: '347 35% 20%', darkRing: '347 77% 60%' },
-    { label: 'Red', value: 'red', hex: '#ef4444', primary: '0 72% 51%', secondary: '0 40% 94%', accent: '0 50% 92%', ring: '0 72% 51%', darkPrimary: '0 72% 55%', darkSecondary: '0 30% 18%', darkAccent: '0 35% 20%', darkRing: '0 72% 55%' },
-    { label: 'Orange', value: 'orange', hex: '#f97316', primary: '25 95% 53%', secondary: '25 40% 94%', accent: '25 50% 90%', ring: '25 95% 53%', darkPrimary: '25 95% 53%', darkSecondary: '25 30% 18%', darkAccent: '25 35% 20%', darkRing: '25 95% 53%' },
-    { label: 'Amber', value: 'amber', hex: '#f59e0b', primary: '38 92% 50%', secondary: '38 40% 94%', accent: '38 50% 90%', ring: '38 92% 50%', darkPrimary: '38 92% 50%', darkSecondary: '38 30% 18%', darkAccent: '38 35% 20%', darkRing: '38 92% 50%' },
-    { label: 'Lime', value: 'lime', hex: '#84cc16', primary: '84 81% 44%', secondary: '84 40% 94%', accent: '84 50% 90%', ring: '84 81% 44%', darkPrimary: '84 81% 50%', darkSecondary: '84 30% 18%', darkAccent: '84 35% 20%', darkRing: '84 81% 50%' },
-    { label: 'Emerald', value: 'emerald', hex: '#10b981', primary: '160 84% 39%', secondary: '160 40% 94%', accent: '160 50% 90%', ring: '160 84% 39%', darkPrimary: '160 84% 45%', darkSecondary: '160 30% 18%', darkAccent: '160 35% 20%', darkRing: '160 84% 45%' },
-    { label: 'Teal', value: 'teal', hex: '#14b8a6', primary: '174 72% 40%', secondary: '174 40% 94%', accent: '174 50% 90%', ring: '174 72% 40%', darkPrimary: '174 72% 46%', darkSecondary: '174 30% 18%', darkAccent: '174 35% 20%', darkRing: '174 72% 46%' },
-    { label: 'Cyan', value: 'cyan', hex: '#06b6d4', primary: '189 94% 43%', secondary: '189 40% 94%', accent: '189 50% 90%', ring: '189 94% 43%', darkPrimary: '189 94% 48%', darkSecondary: '189 30% 18%', darkAccent: '189 35% 20%', darkRing: '189 94% 48%' },
-    { label: 'Slate', value: 'slate', hex: '#64748b', primary: '215 16% 47%', secondary: '215 20% 94%', accent: '215 25% 90%', ring: '215 16% 47%', darkPrimary: '215 20% 55%', darkSecondary: '215 15% 18%', darkAccent: '215 18% 20%', darkRing: '215 20% 55%' },
-];
+
+// Helper: convert hex to HSL object
+function hexToHsl(hex: string): { h: number; s: number; l: number } {
+    let r = 0, g = 0, b = 0;
+    if (hex.length === 4) {
+        r = parseInt(hex[1] + hex[1], 16);
+        g = parseInt(hex[2] + hex[2], 16);
+        b = parseInt(hex[3] + hex[3], 16);
+    } else if (hex.length === 7) {
+        r = parseInt(hex[1] + hex[2], 16);
+        g = parseInt(hex[3] + hex[4], 16);
+        b = parseInt(hex[5] + hex[6], 16);
+    }
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+// Helper: HSL to CSS string
+function hslToString(h: number, s: number, l: number): string {
+    return `${h} ${s}% ${l}%`;
+}
 
 /* ─────────────────────────────────────────────────────────
    Section Card
@@ -140,34 +165,81 @@ export default function UserPreferences() {
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
     const [saving, setSaving] = useState(false);
 
+    // Custom color state
+    const [customColor, setCustomColor] = useState<{ h: number; s: number; l: number } | null>(() => {
+        const saved = localStorage.getItem('customPrimaryColor');
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch { return null; }
+        }
+        return null;
+    });
+    const [isCustom, setIsCustom] = useState(() => {
+        const accent = localStorage.getItem('accentColor');
+        return accent === 'custom';
+    });
+
     const [preferences, setPreferences] = useState({
         font_family: themeConfig.fontFamily || 'Nunito',
         date_format: themeConfig.dateFormat || 'MMM DD, YYYY',
         time_format: themeConfig.timeFormat || '12h',
         notifications_enabled: themeConfig.notificationsEnabled,
         cookie_consent: themeConfig.cookieConsent || 'pending',
-        accent_color: localStorage.getItem('accentColor') || 'blue',
+        accent_color: isCustom ? 'custom' : (localStorage.getItem('accentColor') || 'blue'),
     });
 
     // Apply accent color CSS variables
-    const applyAccentColor = (colorValue: string) => {
-        const color = THEME_COLORS.find(c => c.value === colorValue);
-        if (!color) return;
+    const applyAccentColor = (colorValue: string, customHsl?: { h: number; s: number; l: number }) => {
+        let primaryHsl: string;
+        let secondaryHsl: string, accentHsl: string, ringHsl: string;
         const isDark = document.body.classList.contains('dark');
+
+        if (colorValue === 'custom' && customHsl) {
+            // Generate derived shades using fixed saturation/lightness pattern
+            const h = customHsl.h;
+            primaryHsl = hslToString(h, customHsl.s, customHsl.l);
+            if (isDark) {
+                secondaryHsl = hslToString(h, 30, 18);
+                accentHsl = hslToString(h, 35, 20);
+                ringHsl = primaryHsl;
+            } else {
+                secondaryHsl = hslToString(h, 40, 94);
+                accentHsl = hslToString(h, 50, 90);
+                ringHsl = primaryHsl;
+            }
+        } else {
+            const color = THEME_COLORS.find(c => c.value === colorValue);
+            if (!color) return;
+            primaryHsl = isDark ? color.darkPrimary : color.primary;
+            secondaryHsl = isDark ? color.darkSecondary : color.secondary;
+            accentHsl = isDark ? color.darkAccent : color.accent;
+            ringHsl = isDark ? color.darkRing : color.ring;
+        }
+
         const targets = [document.documentElement, document.body];
         targets.forEach(el => {
-            el.style.setProperty('--primary', isDark ? color.darkPrimary : color.primary);
+            el.style.setProperty('--primary', primaryHsl);
             el.style.setProperty('--primary-foreground', '0 0% 100%');
-            el.style.setProperty('--secondary', isDark ? color.darkSecondary : color.secondary);
-            el.style.setProperty('--accent', isDark ? color.darkAccent : color.accent);
-            el.style.setProperty('--ring', isDark ? color.darkRing : color.ring);
+            el.style.setProperty('--secondary', secondaryHsl);
+            el.style.setProperty('--accent', accentHsl);
+            el.style.setProperty('--ring', ringHsl);
         });
         localStorage.setItem('accentColor', colorValue);
+        if (colorValue === 'custom' && customHsl) {
+            localStorage.setItem('customPrimaryColor', JSON.stringify(customHsl));
+        } else {
+            localStorage.removeItem('customPrimaryColor');
+        }
     };
 
     useEffect(() => {
-        applyAccentColor(preferences.accent_color);
-    }, [preferences.accent_color, themeConfig.theme]);
+        if (preferences.accent_color === 'custom' && customColor) {
+            applyAccentColor('custom', customColor);
+        } else if (preferences.accent_color !== 'custom') {
+            applyAccentColor(preferences.accent_color);
+        }
+    }, [preferences.accent_color, customColor, themeConfig.theme]);
 
     const handleChange = (key: string, value: any) => {
         setPreferences(prev => ({ ...prev, [key]: value }));
@@ -187,6 +259,11 @@ export default function UserPreferences() {
         }
     };
 
+    const handleCustomColorChange = (newHsl: { h: number; s: number; l: number }) => {
+        setCustomColor(newHsl);
+        applyAccentColor('custom', newHsl);
+    };
+
     const currentFont = FONTS.find(f => f.value === preferences.font_family);
     const currentDate = DATE_FORMATS.find(f => f.value === preferences.date_format);
     const currentTime = TIME_FORMATS.find(f => f.value === preferences.time_format);
@@ -197,17 +274,15 @@ export default function UserPreferences() {
 
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h2 className="text-2xl font-bold flex items-center gap-2.5 text-gray-900 dark:text-gray-50">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
-                            <IconSettings size={22} />
-                        </div>
-                        User Preferences
-                    </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5 ml-[52px]">
-                        Customize your Report Engine experience.
-                    </p>
-                </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
+              <IconSettings size={22} className="text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">User Preferences</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Manage your preferences</p>
+            </div>
+          </div>
                 <Button
                     onClick={handleSave}
                     disabled={saving}
@@ -225,7 +300,7 @@ export default function UserPreferences() {
                     icon={<IconDroplet size={18} className="text-sky-600 dark:text-sky-400" />}
                     iconColor="bg-sky-100 dark:bg-sky-900/40"
                     title="Theme & Colors"
-                    description="Choose your preferred appearance mode and accent color"
+                    description="Choose your preferred appearance mode and primary color"
                 >
                     {/* Dark / Light / System */}
                     <div>
@@ -253,39 +328,146 @@ export default function UserPreferences() {
 
                     <Separator className="dark:bg-gray-800" />
 
-                    {/* Accent Color Picker */}
+                    {/* Primary Color Picker */}
                     <div>
-                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-200 !mb-1">Accent Color</Label>
-                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">Sets the primary color for buttons, links, and highlights</p>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-200 !mb-1">Primary Color</Label>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+                            Sets the main color for buttons, links, and highlights
+                        </p>
+
+                        {/* Preset swatches + Custom trigger */}
                         <div className="flex flex-wrap gap-3">
                             {THEME_COLORS.map(color => (
                                 <button
                                     key={color.value}
                                     onClick={() => {
                                         handleChange('accent_color', color.value);
+                                        setIsCustom(false);
                                         applyAccentColor(color.value);
                                     }}
                                     className="group relative flex flex-col items-center gap-1.5"
                                     title={color.label}
                                 >
                                     <div
-                                        className={`w-10 h-10 rounded-xl transition-all duration-200 flex items-center justify-center ${preferences.accent_color === color.value
-                                            ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 scale-110'
-                                            : 'hover:scale-105'
-                                            }`}
-                                        style={{
-                                            backgroundColor: color.hex,
-                                            boxShadow: preferences.accent_color === color.value ? `0 4px 12px ${color.hex}40` : undefined,
-                                        }}
+                                        className={`w-10 h-10 rounded-xl transition-all duration-200 flex items-center justify-center ${
+                                            preferences.accent_color === color.value && !isCustom
+                                                ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 scale-110'
+                                                : 'hover:scale-105'
+                                        }`}
+                                        style={{ backgroundColor: color.hex }}
                                     >
-                                        {preferences.accent_color === color.value && (
+                                        {preferences.accent_color === color.value && !isCustom && (
                                             <IconCheck size={16} className="text-white drop-shadow-sm" />
                                         )}
                                     </div>
-                                    <span className={`text-[10px] font-medium ${preferences.accent_color === color.value ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'
-                                        }`}>{color.label}</span>
+                                    <span className={`text-[10px] font-medium ${
+                                        preferences.accent_color === color.value && !isCustom
+                                            ? 'text-gray-900 dark:text-gray-100'
+                                            : 'text-gray-400 dark:text-gray-500'
+                                    }`}>{color.label}</span>
                                 </button>
                             ))}
+
+                            {/* Custom color picker */}
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <button
+                                        onClick={() => {
+                                            handleChange('accent_color', 'custom');
+                                            setIsCustom(true);
+                                        }}
+                                        className="group relative flex flex-col items-center gap-1.5"
+                                        title="Custom color"
+                                    >
+                                        <div
+                                            className={`w-10 h-10 rounded-xl transition-all duration-200 flex items-center justify-center bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 ${
+                                                isCustom ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-gray-900 scale-110' : 'hover:scale-105'
+                                            }`}
+                                        >
+                                            {isCustom && <IconBrush size={16} className="text-white drop-shadow-sm" />}
+                                        </div>
+                                        <span className={`text-[10px] font-medium ${
+                                            isCustom ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-500'
+                                        }`}>Custom</span>
+                                    </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80 p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl">
+                                    <div className="space-y-4">
+                                        <h4 className="font-medium text-sm">Custom primary color</h4>
+
+                                        {/* Color preview and hex input */}
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className="w-12 h-12 rounded-lg border border-gray-200 dark:border-gray-700"
+                                                style={{ backgroundColor: customColor ? `hsl(${customColor.h}, ${customColor.s}%, ${customColor.l}%)` : '#0284c7' }}
+                                            />
+                                            <Input
+                                                type="color"
+                                                value={customColor ? `hsl(${customColor.h}, ${customColor.s}%, ${customColor.l}%)` : '#0284c7'}
+                                                onChange={(e) => {
+                                                    const hsl = hexToHsl(e.target.value);
+                                                    setCustomColor(hsl);
+                                                    applyAccentColor('custom', hsl);
+                                                }}
+                                                className="w-full h-10"
+                                            />
+                                        </div>
+
+                                        {/* HSL sliders */}
+                                        <div className="space-y-3">
+                                            <div>
+                                                <Label className="text-xs">Hue: {customColor?.h ?? 198}°</Label>
+                                                <Slider
+                                                    value={[customColor?.h ?? 198]}
+                                                    min={0}
+                                                    max={360}
+                                                    step={1}
+                                                    onValueChange={([h]) => {
+                                                        if (customColor) {
+                                                            handleCustomColorChange({ ...customColor, h });
+                                                        } else {
+                                                            handleCustomColorChange({ h, s: 100, l: 50 });
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="text-xs">Saturation: {customColor?.s ?? 100}%</Label>
+                                                <Slider
+                                                    value={[customColor?.s ?? 100]}
+                                                    min={0}
+                                                    max={100}
+                                                    step={1}
+                                                    onValueChange={([s]) => customColor && handleCustomColorChange({ ...customColor, s })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="text-xs">Lightness: {customColor?.l ?? 50}%</Label>
+                                                <Slider
+                                                    value={[customColor?.l ?? 50]}
+                                                    min={0}
+                                                    max={100}
+                                                    step={1}
+                                                    onValueChange={([l]) => customColor && handleCustomColorChange({ ...customColor, l })}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Live preview button */}
+                                        <div className="pt-2">
+                                            <Button
+                                                className="w-full gap-2"
+                                                style={{
+                                                    backgroundColor: customColor ? `hsl(${customColor.h}, ${customColor.s}%, ${customColor.l}%)` : '#0284c7',
+                                                    color: '#fff'
+                                                }}
+                                            >
+                                                Preview
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
                         </div>
                     </div>
                 </SectionCard>
@@ -418,7 +600,7 @@ export default function UserPreferences() {
                         <Separator className="dark:bg-gray-800" />
 
                         <div className="flex items-center gap-3 p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-800/40">
-                            <span className="text-blue-500 dark:text-blue-400 shrink-0">💬</span>
+                            <span className="text-blue-500 dark:text-blue-400 shrink-0"> <IconBrandTelegram /> </span>
                             <p className="text-xs text-gray-600 dark:text-gray-400">
                                 For Telegram notifications, configure your integration in{' '}
                                 <a href="/apps/settings/telegram" className="text-blue-600 dark:text-blue-400 font-medium hover:underline">

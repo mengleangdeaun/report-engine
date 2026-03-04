@@ -11,7 +11,8 @@ const api = axios.create({
 
 // ✅ FIX: Interceptor checks Local AND Session storage
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
+    const isPortal = config.url?.includes('portal/');
+    const token = isPortal ? localStorage.getItem('clientToken') : localStorage.getItem('token');
     const activeTeamId = localStorage.getItem('active_team_id');
 
     if (token) {
@@ -19,7 +20,7 @@ api.interceptors.request.use((config) => {
     }
 
     // ✅ This tells the backend to isolate permissions for this team
-    if (activeTeamId) {
+    if (activeTeamId && !isPortal) {
         config.headers['X-Team-Id'] = activeTeamId;
     }
 
@@ -30,6 +31,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        const isPortal = error.config?.url?.includes('portal/');
         // ✅ Check if the specific request asked to skip the global toast
         const shouldSkipToast = error.config?._skipToast;
 
@@ -40,6 +42,16 @@ api.interceptors.response.use(
                 return Promise.reject(error);
             }
 
+            // Check if workspace is inactive
+            if (error.response.data.message === 'workspace_inactive') {
+                sessionStorage.setItem('inactive_team_name', error.response.data.team_name || '');
+                sessionStorage.setItem('inactive_owner_email', error.response.data.owner_email || '');
+                localStorage.clear();
+                sessionStorage.removeItem('token');
+                window.location.href = '/workspace-inactive';
+                return Promise.reject(error);
+            }
+
             // Only show toast if we aren't skipping it
             if (!shouldSkipToast) {
                 toast.error(error.response.data.message || "Access Denied");
@@ -47,10 +59,18 @@ api.interceptors.response.use(
         }
 
         if (error.response?.status === 401) {
-            localStorage.clear();
-            sessionStorage.clear();
-            if (window.location.pathname !== '/auth/boxed-signin') {
-                window.location.href = '/auth/boxed-signin';
+            if (isPortal) {
+                localStorage.removeItem('clientToken');
+                localStorage.removeItem('client');
+                if (window.location.pathname !== '/portal/login') {
+                    window.location.href = '/portal/login';
+                }
+            } else {
+                localStorage.clear();
+                sessionStorage.clear();
+                if (window.location.pathname !== '/auth/boxed-signin') {
+                    window.location.href = '/auth/boxed-signin';
+                }
             }
         }
         return Promise.reject(error);

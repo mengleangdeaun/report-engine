@@ -3,12 +3,13 @@ import { formatUserDate } from '../../utils/userDate';
 import { Dialog, Transition, Listbox } from '@headlessui/react';
 import api from '../../utils/api';
 import toast from 'react-hot-toast';
+import { Badge } from '../../components/ui/badge';
 import {
     IconBuilding, IconUsers, IconCoin, IconCrown,
     IconCalendar, IconCheck, IconChevronDown, IconRefresh,
     IconSearch, IconFilter, IconInfoCircle, IconShield,
     IconChartBar, IconTicket, IconX, IconPlus,
-    IconAlertCircle
+    IconAlertCircle, IconClock, IconAlertTriangle
 } from '@tabler/icons-react';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 
@@ -219,15 +220,41 @@ const SubscriptionManager = () => {
         return diffDays;
     };
 
-    const getStatusBadge = (expiryDate: string | null) => {
-        const days = getRemainingDays(expiryDate);
 
-        if (days === null) return <span className="text-gray-400">No Expiry</span>;
-        if (days < 0) return <span className="px-2 py-1 rounded bg-red-100 text-red-600 text-xs font-bold">Expired</span>;
-        if (days <= 7) return <span className="px-2 py-1 rounded bg-orange-100 text-orange-600 text-xs font-bold">{days} Days Left</span>;
+const getStatusBadge = (expiryDate: string | null) => {
+    const days = getRemainingDays(expiryDate);
 
-        return <span className="px-2 py-1 rounded bg-green-100 text-green-600 text-xs font-bold">{days} Days Left</span>;
-    };
+    if (days === null) {
+        return (
+            <Badge variant="secondary" className="gap-1 px-2 py-1 text-xs font-medium">
+                <IconClock size={11} />
+                No Expiry
+            </Badge>
+        );
+    }
+    if (days < 0) {
+        return (
+            <Badge variant="destructive" className="gap-1 px-2 py-1 text-xs font-medium">
+                <IconAlertTriangle size={11} />
+                Expired
+            </Badge>
+        );
+    }
+    if (days <= 7) {
+        return (
+            <Badge variant="warning" className="gap-1 px-2 py-1 text-xs font-medium">
+                <IconAlertTriangle size={11} />
+                {days} {days === 1 ? 'Day' : 'Days'} Left
+            </Badge>
+        );
+    }
+    return (
+        <Badge variant="success" className="gap-1 px-2 py-1 text-xs font-medium">
+            <IconCheck size={12} />
+            {days} Days Left
+        </Badge>
+    );
+};
 
     // Loading skeleton
     if (loading) {
@@ -570,15 +597,15 @@ const SubscriptionManager = () => {
                                         </td>
                                         <td className="py-4 px-6">
                                             <div className="flex flex-col">
-                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                <span className="text-sm mb-1 font-medium text-gray-900 dark:text-white">
                                                     {team.subscription_expires_at
                                                         ? formatUserDate(team.subscription_expires_at)
                                                         : 'Lifetime'
                                                     }
                                                 </span>
-                                                <div className="mt-1">
+                                                
                                                     {getStatusBadge(team.subscription_expires_at)}
-                                                </div>
+                                                
                                             </div>
                                         </td>
 
@@ -758,7 +785,7 @@ const SubscriptionManager = () => {
                                             </div>
                                         </div>
 
-                                        <div className="pt-2 border-t border-blue-200 dark:border-blue-500/30 flex justify-between items-center">
+                                        <div className=" border-blue-200 dark:border-blue-500/30 flex justify-between items-center">
                                             <span className="flex items-center gap-1">
                                                 <IconCalendar size={14} /> New Expiry:
                                             </span>
@@ -768,7 +795,7 @@ const SubscriptionManager = () => {
                                         </div>
 
                                         {/* Buttons */}
-                                        <div className="flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                        <div className="flex justify-end mt-4 gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
                                             <button
                                                 onClick={() => setIsOpen(false)}
                                                 disabled={isSubmitting}

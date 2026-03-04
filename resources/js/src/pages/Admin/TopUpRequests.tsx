@@ -550,7 +550,7 @@ const AdminTopUpRequests = () => {
                                         </td>
                                         <td className="p-4 font-semibold">{req.amount}</td>
                                         <td className="p-4 font-semibold text-success">{req.approved_amount || '-'}</td>
-                                        <td className="p-4">
+                                        <td className="p-4 capitalize">
                                             <Badge dot
                                                 variant={
                                                     req.status === 'approved' ? 'success' :

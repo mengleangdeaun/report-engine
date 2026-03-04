@@ -23,8 +23,11 @@ use App\Http\Controllers\{
     QrCodeController,
     TopUpRequestController,
     SystemConfigController,
-    FacebookAdReportController
-
+    FacebookAdReportController,
+    LandingPageController,
+    ContactSubmissionController,
+    TeamClientController,
+    ClientPortalController
 };
 
 /*
@@ -38,6 +41,8 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::get('/config', [SystemConfigController::class, 'getPublicConfig']); // Public Config
+Route::get('/landing-page/config', [LandingPageController::class, 'getConfig']); // Landing Page Config
+Route::post('/landing-page/contact', [ContactSubmissionController::class, 'store']); // Public Contact Form
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/plans', [PlanController::class, 'index']);
 Route::get('/auth/google/redirect', [AuthController::class, 'redirectToGoogle']);
@@ -62,7 +67,7 @@ Route::get('api/email/verify/{id}/{hash}', [VerificationController::class, 'veri
 |--------------------------------------------------------------------------
 */
 // Route::middleware('auth:sanctum')->get('/me', [AuthController::class, 'me']);
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'workspace.active'])->group(function () {
 
 
     // User Profile & Basics
@@ -90,6 +95,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/team/switch', [TeamController::class, 'switchWorkspace']);
     Route::put('/team/name', [TeamController::class, 'updateName']);
     Route::get('/team/role-templates', [TeamController::class, 'getRoleTemplates']);
+    Route::post('/team/toggle-active', [TeamController::class, 'toggleActive']);
+    Route::delete('/team/destroy', [TeamController::class, 'destroyWorkspace']);
 
     Route::post('/email/verification-notification', [VerificationController::class, 'resend']);
     // ->middleware('throttle:3,60');
@@ -102,7 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
 */
 
 
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:sanctum', 'workspace.active'])->group(function () {
 
     // --- REPORTING ---
     // Basic Report Generation (Gates by either FB or TT permissions)
@@ -205,6 +212,34 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/admin/top-up-requests/{id}', [TopUpRequestController::class, 'update']);
     Route::post('/admin/top-up-requests/batch-delete', [TopUpRequestController::class, 'destroyMultiple']);
     Route::delete('/admin/top-up-requests/{id}', [TopUpRequestController::class, 'destroy']);
+
+    // --- CLIENT MANAGEMENT ---
+    Route::prefix('clients')->group(function () {
+        Route::get('/', [TeamClientController::class, 'index']);
+        Route::post('/', [TeamClientController::class, 'store']);
+        Route::put('/{client}', [TeamClientController::class, 'update']);
+        Route::delete('/{client}', [TeamClientController::class, 'destroy']);
+        Route::get('/available-reports', [TeamClientController::class, 'getAvailableReports']);
+        Route::post('/{client}/assign-reports', [TeamClientController::class, 'assignReports']);
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| 5. CLIENT PORTAL ROUTES (External Clients)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('portal')->group(function () {
+    Route::post('/login', [ClientPortalController::class, 'login']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/me', [ClientPortalController::class, 'me']);
+        Route::get('/reports', [ClientPortalController::class, 'index']);
+        Route::get('/reports/{type}/{id}', [ClientPortalController::class, 'show']);
+        Route::get('/reports/{type}/{id}/export', [ClientPortalController::class, 'export']);
+        Route::post('/logout', [ClientPortalController::class, 'logout']);
+    });
 });
 
 /*
@@ -252,4 +287,11 @@ Route::middleware(['auth:sanctum', 'superadmin'])->prefix('admin')->group(functi
     Route::post('/settings', [SystemConfigController::class, 'update']);
     Route::post('/settings/test-telegram', [SystemConfigController::class, 'testTelegram']); // Route name matches controller method
 
+    Route::post('/landing-page/config', [LandingPageController::class, 'updateConfig']);
+    Route::post('/landing-page/upload-image', [LandingPageController::class, 'uploadImage']);
+
+    // Contact Submissions
+    Route::get('/landing-page/contacts', [ContactSubmissionController::class, 'index']);
+    Route::put('/landing-page/contacts/{id}/status', [ContactSubmissionController::class, 'updateStatus']);
+    Route::delete('/landing-page/contacts/{id}', [ContactSubmissionController::class, 'destroy']);
 });

@@ -89,10 +89,10 @@ const KpiCard = ({
                 </div>
 
                 <div className="min-w-0 flex-1 pt-0.5">
-                    <p className={cn("truncate text-[11px] font-semibold uppercase tracking-wider mb-1", theme.text)}>
+                    <p className={cn("wrap-break-word text-[11px] font-semibold uppercase tracking-wider mb-1", theme.text)}>
                         {label}
                     </p>
-                    <p className={cn("xl:text-xl lg:text-lg md:text-md truncate text-sm font-bold leading-none tracking-tight", theme.valueTint)}>
+                    <p className={cn("xl:text-xl lg:text-lg md:text-md wrap-break-word text-sm font-bold leading-none tracking-tight", theme.valueTint)}>
                         {value}
                     </p>
                     {sub && <p className={cn("mt-1.5 text-[11px] font-medium opacity-70", theme.text)}>{sub}</p>}

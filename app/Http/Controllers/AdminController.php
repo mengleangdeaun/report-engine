@@ -14,27 +14,29 @@ class AdminController extends Controller
     // 1. LIST ALL USERS
 // app/Http/Controllers/AdminController.php
 
-public function index(Request $request)
-{
-    $perPage = $request->input('per_page', 10);
-    $sortBy = $request->input('sort_by', 'created_at');
-    $sortDir = $request->input('sort_dir', 'desc');
-    $search = $request->input('search', '');
+    public function index(Request $request)
+    {
+        $perPage = $request->input('per_page', 10);
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortDir = $request->input('sort_dir', 'desc');
+        $search = $request->input('search', '');
 
-    // ✅ Clean Database Query: No hard-coded emails
-    $users = User::with(['roles' => function($query) {
-            // This ensures roles are fetched even if team_id is null (Global Roles)
-            $query->whereNull('team_id')->orWhere('team_id', 1);
-        }])
-        ->where(function($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
-        })
-        ->orderBy($sortBy, $sortDir)
-        ->paginate($perPage);
+        // ✅ Clean Database Query: No hard-coded emails
+        $users = User::with([
+            'roles' => function ($query) {
+                // This ensures roles are fetched even if team_id is null (Global Roles)
+                $query->whereNull('team_id')->orWhere('team_id', 1);
+            }
+        ])
+            ->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })
+            ->orderBy($sortBy, $sortDir)
+            ->paginate($perPage);
 
-    return response()->json($users);
-}
+        return response()->json($users);
+    }
 
     // 2. MANAGE TOKENS (Add/Remove)
     public function adjustTokens(Request $request, $id)
@@ -69,13 +71,13 @@ public function index(Request $request)
     public function updateRole(Request $request, $id)
     {
         $request->validate(['role' => 'required|exists:roles,name']);
-        
+
         $user = User::findOrFail($id);
         $user->syncRoles([$request->role]); // Replaces old roles with new one
 
         return response()->json(['message' => 'User role updated to ' . $request->role]);
     }
-    
+
     // 4. DELETE USER
     public function destroy($id)
     {
@@ -88,14 +90,13 @@ public function index(Request $request)
     {
         // A. Key Metrics
         $totalUsers = User::count();
-        $totalReports = Transaction::where('type', 'spend')->count();
+        $totalReports = \App\Models\Report::count() + \App\Models\FacebookAdReport::count();
         // Sum of all tokens currently held by users (Liability)
-        $tokensOutstanding = User::sum('token_balance'); 
+        $tokensOutstanding = User::sum('token_balance');
         // Sum of all tokens ever spent (Revenue indicator)
         $tokensSpent = abs(Transaction::where('type', 'spend')->sum('amount'));
 
-        // B. Chart Data: Reports Generated in the last 7 days
-        // This groups transactions by date
+        // B. Chart Data: Available but unused in Iteration 1 frontend.
         $chartData = Transaction::where('type', 'spend')
             ->where('created_at', '>=', now()->subDays(7))
             ->selectRaw('DATE(created_at) as date, COUNT(*) as count')
@@ -109,12 +110,27 @@ public function index(Request $request)
             ->take(5)
             ->get();
 
+        // D. Additional requested metrics (Iteration 2)
+        $totalWorkspaces = \App\Models\Team::count();
+        $totalQrCodes = \App\Models\QrCode::count();
+        $totalAdReports = \App\Models\FacebookAdReport::count();
+
+        $topPlatformResult = \App\Models\Report::select('platform', DB::raw('count(*) as total'))
+            ->groupBy('platform')
+            ->orderBy('total', 'desc')
+            ->first();
+
+        $topPlatform = $topPlatformResult ? ucfirst($topPlatformResult->platform) : 'N/A';
+
         return response()->json([
             'total_users' => $totalUsers,
             'total_reports' => $totalReports,
+            'total_workspaces' => $totalWorkspaces,
+            'total_qr_codes' => $totalQrCodes,
+            'total_ad_reports' => $totalAdReports,
+            'top_platform' => $topPlatform,
             'tokens_outstanding' => $tokensOutstanding,
             'tokens_spent' => $tokensSpent,
-            'chart_data' => $chartData,
             'recent_activity' => $recentActivity
         ]);
     }

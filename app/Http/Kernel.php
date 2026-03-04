@@ -72,5 +72,6 @@ class Kernel extends HttpKernel
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         'plan.check' => \App\Http\Middleware\EnsurePlanSupportsPermission::class,
         'superadmin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+        'workspace.active' => \App\Http\Middleware\CheckWorkspaceActive::class,
     ];
 }

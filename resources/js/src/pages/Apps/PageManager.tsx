@@ -82,6 +82,7 @@ const PageManager = () => {
 
   // ✅ NEW: Admin Filter State
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [teamMemberSearch, setTeamMemberSearch] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false);
 
@@ -487,6 +488,7 @@ const PageManager = () => {
                   className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5"
                   onClick={() => {
                     clearUserFilter();
+                    setTeamMemberSearch('');
                     setFilterPlatform('all');
                     setFilterStatus('all');
                     setSearch('');
@@ -541,7 +543,7 @@ const PageManager = () => {
                   )}
                   {/* Team Members Filter - Popover + Checkbox */}
                   {!isTeamMembersLoading && teamMembers.length > 0 && (
-                    <div className="space-y-2">
+                    <div>
                       <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                         <IconUsers size={13} />
                         Team Members
@@ -575,8 +577,19 @@ const PageManager = () => {
                               </button>
                             )}
                           </div>
+                          <div className="p-2 border-b">
+                            <div className="relative">
+                              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                              <Input
+                                placeholder="Search members..."
+                                className="h-8 pl-8 text-xs bg-muted/50 border-transparent hover:border-border focus:border-primary transition-colors focus-visible:ring-0 focus-visible:ring-offset-0"
+                                value={teamMemberSearch}
+                                onChange={(e) => setTeamMemberSearch(e.target.value)}
+                              />
+                            </div>
+                          </div>
                           <div className="max-h-56 overflow-y-auto p-1">
-                            {teamMembers.map((member) => {
+                            {teamMembers.filter(member => member.name.toLowerCase().includes(teamMemberSearch.toLowerCase())).map((member) => {
                               const isSelected = selectedUsers.some((u: any) => u.id === member.id);
                               return (
                                 <div
@@ -599,6 +612,12 @@ const PageManager = () => {
                                 </div>
                               );
                             })}
+
+                            {teamMembers.filter(member => member.name.toLowerCase().includes(teamMemberSearch.toLowerCase())).length === 0 && (
+                              <div className="py-4 text-center text-xs text-muted-foreground">
+                                No members found.
+                              </div>
+                            )}
                           </div>
                         </PopoverContent>
                       </Popover>

@@ -81,7 +81,7 @@ class TeamController extends Controller
         $user = Auth::user();
 
         // ✅ ACTIVE WORKSPACE: Fetch team with the plan relationship
-        $team = \App\Models\Team::where('id', $user->team_id)->with('plan')->first();
+        $team = Team::where('id', $user->team_id)->with('plan')->first();
 
         if (!$team)
             return response()->json(['message' => 'No team found'], 404);
@@ -94,7 +94,7 @@ class TeamController extends Controller
 
         // 1. Calculate Team Usage safely
         $memberIds = $team->members()->pluck('users.id');
-        $tokensUsed = \App\Models\Transaction::whereIn('user_id', $memberIds)
+        $tokensUsed = Transaction::whereIn('user_id', $memberIds)
             ->where('type', 'spend')
             ->where('created_at', '>=', now()->startOfMonth())
             ->sum('amount');
@@ -133,6 +133,7 @@ class TeamController extends Controller
             'invites' => $team->invitations()->get(),
             'is_owner' => $user->id === $team->user_id,
             'is_admin' => $this->isTeamAdmin($user, $team),
+            'is_active' => $team->is_active ?? true,
             'available_permissions' => $availablePermissions
         ]);
     }
@@ -367,6 +368,83 @@ class TeamController extends Controller
         $user->update(['team_id' => $request->team_id]);
 
         return response()->json(['message' => 'Workspace switched successfully.']);
+    }
+
+    /**
+     * Toggle Active/Inactive (Owner Only)
+     */
+    public function toggleActive()
+    {
+        $user = Auth::user();
+        $team = $user->team;
+
+        if (!$team) {
+            return response()->json(['message' => 'Workspace not found.'], 404);
+        }
+
+        if ($user->id !== $team->user_id) {
+            return response()->json(['message' => 'Only the workspace owner can do this.'], 403);
+        }
+
+        $team->is_active = !$team->is_active;
+        $team->save();
+
+        return response()->json([
+            'message' => $team->is_active ? 'Workspace activated.' : 'Workspace deactivated.',
+            'is_active' => $team->is_active
+        ]);
+    }
+
+    /**
+     * Delete Workspace (Owner Only)
+     */
+    public function destroyWorkspace()
+    {
+        $user = Auth::user();
+        $team = $user->team;
+
+        if (!$team) {
+            return response()->json(['message' => 'Workspace not found.'], 404);
+        }
+
+        if ($user->id !== $team->user_id) {
+            return response()->json(['message' => 'Only the workspace owner can delete this workspace.'], 403);
+        }
+
+        DB::transaction(function () use ($team, $user) {
+            // 1. Explicitly delete related records (Safety in case DB cascade fails or for observers)
+            $team->reports()->delete();
+            $team->facebookAdReports()->delete();
+            $team->adAccounts()->delete();
+            $team->qrCodes()->delete();
+            $team->pages()->delete();
+            $team->transactions()->delete();
+            $team->topUpRequests()->delete();
+            $team->activityLogs()->delete();
+
+            // 2. Media cleanup (Database)
+            $team->mediaFiles()->delete();
+            $team->mediaFolders()->delete();
+
+            // 3. Physical Storage Cleanup
+            $storagePath = "media/{$team->id}";
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($storagePath)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->deleteDirectory($storagePath);
+            }
+
+            // 4. Team membership cleanup
+            $team->members()->detach();
+            $team->invitations()->delete();
+
+            // 5. Delete the team itself
+            $team->delete();
+
+            // 6. Switch user to another workspace if available
+            $nextTeam = $user->teams()->first();
+            $user->update(['team_id' => $nextTeam ? $nextTeam->id : null]);
+        });
+
+        return response()->json(['message' => 'Workspace deleted successfully.']);
     }
 
 }

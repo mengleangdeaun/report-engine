@@ -76,7 +76,80 @@ const SystemConfig = () => {
         }
     };
 
-    if (loading) return <div className="p-5">Loading...</div>;
+    if (loading) {
+    return (
+        <div>
+            <div className="flex items-center justify-between mb-5">
+                <h1 className="text-xl font-bold flex items-center gap-2">
+                    System Configuration
+                </h1>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Telegram Settings Skeleton */}
+                <div className="panel animate-pulse" id="telegram_settings_skeleton">
+                    <div className="flex items-center justify-between mb-5">
+                        <div className="h-6 bg-gray-200 rounded w-48"></div>
+                        <div className="h-5 bg-gray-200 rounded w-32"></div>
+                    </div>
+                    <div className="space-y-4">
+                        <div>
+                            <div className="h-4 bg-gray-200 rounded w-20 mb-1"></div>
+                            <div className="h-9 bg-gray-200 rounded w-full"></div>
+                            <div className="h-3 bg-gray-200 rounded w-32 mt-1"></div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div className="h-4 bg-gray-200 rounded w-16 mb-1"></div>
+                                <div className="h-9 bg-gray-200 rounded w-full"></div>
+                            </div>
+                            <div>
+                                <div className="h-4 bg-gray-200 rounded w-16 mb-1"></div>
+                                <div className="h-9 bg-gray-200 rounded w-full"></div>
+                            </div>
+                        </div>
+                        <div className="pt-2">
+                            <div className="h-9 bg-gray-200 rounded w-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Pusher Settings Skeleton */}
+                <div className="panel animate-pulse" id="pusher_settings_skeleton">
+                    <div className="mb-5">
+                        <div className="h-6 bg-gray-200 rounded w-48"></div>
+                        <div className="h-3 bg-gray-200 rounded w-64 mt-1"></div>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <div className="h-4 bg-gray-200 rounded w-16 mb-1"></div>
+                                <div className="h-9 bg-gray-200 rounded w-full"></div>
+                            </div>
+                            <div>
+                                <div className="h-4 bg-gray-200 rounded w-16 mb-1"></div>
+                                <div className="h-9 bg-gray-200 rounded w-full"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="h-4 bg-gray-200 rounded w-20 mb-1"></div>
+                            <div className="h-9 bg-gray-200 rounded w-full"></div>
+                        </div>
+                        <div>
+                            <div className="h-4 bg-gray-200 rounded w-20 mb-1"></div>
+                            <div className="h-9 bg-gray-200 rounded w-full"></div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Save Button Skeleton */}
+                <div className="lg:col-span-2 flex justify-end">
+                    <div className="h-9 bg-gray-200 rounded w-32"></div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
     return (
         <div>

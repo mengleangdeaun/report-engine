@@ -204,7 +204,8 @@ export const MetricSelectorModal: React.FC<MetricSelectorModalProps> = ({
     };
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open}
+         onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button variant={triggerVariant as any} size="sm" className={`gap-2 shrink-0 border-gray-200 dark:border-gray-700 h-8 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${className}`}>
                     {triggerIcon} {triggerText}

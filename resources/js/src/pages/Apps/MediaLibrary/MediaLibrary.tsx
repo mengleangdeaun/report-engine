@@ -243,14 +243,16 @@ const MediaLibrary = () => {
 
     const [renameTarget, setRenameTarget] = useState<{ type: 'folder' | 'file'; id: number; name: string; color?: string } | null>(null);
     const [renameInput, setRenameInput] = useState('');
-    const [renameColor, setRenameColor] = useState('#6366f1');
+    const [renameColor, setRenameColor] = useState('#0866FF');
     const [renameSaving, setRenameSaving] = useState(false);
 
     const [showFolderCreateModal, setShowFolderCreateModal] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
-    const [newFolderColor, setNewFolderColor] = useState('#6366f1');
+    const [newFolderColor, setNewFolderColor] = useState('#0866FF');
     const [folderParentId, setFolderParentId] = useState<number | null>(null);
     const [newFolderSaving, setNewFolderSaving] = useState(false);
+
+    const [refreshing, setRefreshing] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -266,6 +268,7 @@ const MediaLibrary = () => {
     useEffect(() => {
         fetchFiles();
     }, [activeFolderId, typeFilter, search, page, pageSize, favoriteFilter]);
+    
 
     /* ── Data fetchers ── */
     const fetchAll = () => {
@@ -355,7 +358,7 @@ const MediaLibrary = () => {
     const openCreateFolder = (parentId: number | null = null) => {
         setFolderParentId(parentId);
         setNewFolderName('');
-        setNewFolderColor('#6366f1');
+        setNewFolderColor('#0866FF');
         setShowFolderCreateModal(true);
     };
 
@@ -376,7 +379,7 @@ const MediaLibrary = () => {
     const openRename = (type: 'folder' | 'file', item: any) => {
         setRenameTarget({ type, id: item.id, name: item.name, color: item.color });
         setRenameInput(item.name);
-        setRenameColor(item.color || '#6366f1');
+        setRenameColor(item.color || '#0866FF');
     };
 
     const handleSaveRename = async () => {
@@ -658,7 +661,7 @@ const MediaLibrary = () => {
                         <Button
                             variant="outline"
                             onClick={() => setShowFolderCreateModal(true)}
-                            className="h-9 gap-1.5"
+                            className="h-9 text-xs gap-1.5"
                         >
                             <IconFolderPlus size={15} />
                             New Folder

@@ -17,11 +17,13 @@ class Team extends Model
         'name',
         'user_id',
         'plan_type',
-        'subscription_expires_at'
+        'subscription_expires_at',
+        'is_active'
     ];
 
     protected $casts = [
-        'subscription_expires_at' => 'datetime', // ✅ This converts the string to a Carbon object
+        'subscription_expires_at' => 'datetime',
+        'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -80,5 +82,60 @@ class Team extends Model
     public function telegramConfig()
     {
         return $this->hasOne(TelegramConfig::class);
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    public function facebookAdReports()
+    {
+        return $this->hasMany(FacebookAdReport::class);
+    }
+
+    public function qrCodes()
+    {
+        return $this->hasMany(QrCode::class);
+    }
+
+    public function adAccounts()
+    {
+        return $this->hasMany(AdAccount::class);
+    }
+
+    public function pages()
+    {
+        return $this->hasMany(Page::class);
+    }
+
+    public function mediaFolders()
+    {
+        return $this->hasMany(MediaFolder::class);
+    }
+
+    public function mediaFiles()
+    {
+        return $this->hasMany(MediaFile::class);
+    }
+
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function topUpRequests()
+    {
+        return $this->hasMany(TopUpRequest::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    public function clients()
+    {
+        return $this->hasMany(Client::class);
     }
 }

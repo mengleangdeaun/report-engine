@@ -11,7 +11,6 @@ import {
 import api from '../../../utils/api';
 import toast, { Toaster } from 'react-hot-toast';
 import usePermission from '../../../hooks/usePermission';
-import { formatNotificationTime } from '../../../utils/formatNotificationTime';
 import { formatUserDate } from '../../../utils/userDate';
 import { useTranslation } from 'react-i18next';
 interface ReportHistoryDrawerProps {
@@ -34,6 +33,8 @@ const ReportHistoryDrawer = ({ isOpen, onClose, pageId, pageName, onSelectReport
 
     const [reports, setReports] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [sharingId, setSharingId] = useState<number | null>(null);
+    const [sharedId, setSharedId] = useState<number | null>(null);
     const { can } = usePermission();
 
     useEffect(() => {
@@ -73,19 +74,41 @@ const ReportHistoryDrawer = ({ isOpen, onClose, pageId, pageName, onSelectReport
     };
 
     const handleShare = async (reportId: number) => {
+        setSharingId(reportId);
         try {
             const response = await api.post(`/reports/${reportId}/share`);
             const url = response.data.url;
 
-            // Copy to clipboard
-            await navigator.clipboard.writeText(url);
-            toast.success(tToast('public_link_copied_to_clipboard'));
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(url);
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = url;
+                textArea.style.position = "absolute";
+                textArea.style.left = "-999999px";
+                document.body.prepend(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                } catch (error) {
+                    console.error('Clipboard fallback failed', error);
+                } finally {
+                    textArea.remove();
+                }
+            }
+
+            const successMsg = tToast('public_link_copied_to_clipboard');
+            toast.success(successMsg ? successMsg : 'Public link copied to clipboard');
+
+            setSharedId(reportId);
+            setTimeout(() => setSharedId(null), 2000);
         } catch (error) {
-            toast.error(tToast('failed_to_get_share_link'));
+            const errorMsg = tToast('failed_to_get_share_link');
+            toast.error(errorMsg ? errorMsg : 'Failed to get share link');
+        } finally {
+            setSharingId(null);
         }
     };
-
-    // Use a ref to track if the initial fetch has already been initiated
 
 
     return (
@@ -214,14 +237,14 @@ const ReportHistoryDrawer = ({ isOpen, onClose, pageId, pageName, onSelectReport
                                                                         key={report.id}
                                                                         onClick={() => { onSelectReport(report); onClose(); }}
                                                                         className={`group relative rounded-xl border transition-all duration-200 p-4 flex items-center gap-3.5 cursor-pointer ${isActive
-                                                                                ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-primary scale-[1.01]'
-                                                                                : 'bg-white dark:bg-black/20 border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-md'
+                                                                            ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-primary scale-[1.01]'
+                                                                            : 'bg-white dark:bg-black/20 border-gray-200 dark:border-gray-700 hover:border-primary hover:shadow-md'
                                                                             }`}
                                                                     >
                                                                         {/* Platform Icon */}
                                                                         <div className={`p-3 rounded-xl shrink-0 transition-transform group-hover:scale-110 ${isPlatformFacebook
-                                                                                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                                                                                : 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white'
+                                                                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                                                                            : 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white'
                                                                             }`}>
                                                                             {isPlatformFacebook ? <IconBrandFacebook size={20} /> : <IconBrandTiktok size={20} />}
                                                                         </div>
@@ -256,14 +279,29 @@ const ReportHistoryDrawer = ({ isOpen, onClose, pageId, pageName, onSelectReport
 
                                                                         {can('share_report_link') && (
                                                                             <button
+                                                                                type="button"
                                                                                 onClick={(e) => {
+                                                                                    e.preventDefault();
                                                                                     e.stopPropagation();
                                                                                     handleShare(report.id);
                                                                                 }}
-                                                                                className="shrink-0 p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition-all duration-200 opacity-0 group-hover:opacity-100"
+                                                                                disabled={sharingId === report.id}
+                                                                                className={`shrink-0 p-2 rounded-lg transition-all duration-200 ${sharedId === report.id
+                                                                                        ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 opacity-100'
+                                                                                        : 'text-gray-400 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 opacity-0 group-hover:opacity-100'
+                                                                                    }`}
                                                                                 title="Copy public link"
                                                                             >
-                                                                                <IconShare size={18} />
+                                                                                {sharingId === report.id ? (
+                                                                                    <svg className="animate-spin h-[18px] w-[18px] text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                                    </svg>
+                                                                                ) : sharedId === report.id ? (
+                                                                                    <IconCheck size={18} />
+                                                                                ) : (
+                                                                                    <IconShare size={18} />
+                                                                                )}
                                                                             </button>
                                                                         )}
 
@@ -300,7 +338,9 @@ const ReportHistoryDrawer = ({ isOpen, onClose, pageId, pageName, onSelectReport
 
             </Transition>
 
-
+            <div className="!z-[9999] relative">
+                <Toaster position="top-right" />
+            </div>
 
         </>
     );

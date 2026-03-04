@@ -102,11 +102,11 @@ module.exports = {
             },
             fontFamily: {
                 nunito: ['Nunito', 'sans-serif'],
-                sans: ['system-ui', '-apple-system', 'sans-serif'],
+                sans: ['Google Sans', 'system-ui', '-apple-system', 'sans-serif'],
                 serif: ['Georgia', 'serif'],
                 mono: ['monospace'],
                 // Custom font classes
-                'font-sans': ['system-ui', '-apple-system', 'sans-serif'],
+                'font-sans': ['Google Sans', 'system-ui', '-apple-system', 'sans-serif'],
                 'font-inter': ['Inter', 'system-ui', 'sans-serif'],
                 'font-roboto': ['Roboto', 'system-ui', 'sans-serif'],
                 'font-opensans': ['Open Sans', 'system-ui', 'sans-serif'],
@@ -126,7 +126,7 @@ module.exports = {
                 'font-robotocondensed': ['Roboto Condensed', 'sans-serif'],
                 'font-google-sans': ['Google Sans', 'sans-serif'],
                 'font-dm-sans': ['DM Sans', 'sans-serif'],
-                
+
             },
             spacing: {
                 4.5: '18px',

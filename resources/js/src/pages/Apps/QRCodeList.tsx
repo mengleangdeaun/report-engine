@@ -170,6 +170,13 @@ const QRCodeFilters: React.FC<QRCodeFiltersProps> = ({
     selectedUserName,
 }) => {
     const [searchInput, setSearchInput] = useState(searchQuery);
+    const [teamMemberSearch, setTeamMemberSearch] = useState('');
+
+    const filteredTeamMembers = useMemo(() => {
+        return teamMembers.filter(member =>
+            member.name.toLowerCase().includes(teamMemberSearch.toLowerCase())
+        );
+    }, [teamMembers, teamMemberSearch]);
 
     // Sync internal state with external searchQuery (e.g., when cleared externally)
     useEffect(() => {
@@ -207,46 +214,78 @@ const QRCodeFilters: React.FC<QRCodeFiltersProps> = ({
                             <PopoverContent className="w-[255px] p-0" align="start">
                                 <div className="flex items-center justify-between px-3 py-2.5 border-b">
                                     <span className="text-xs font-semibold text-muted-foreground">Select member</span>
-                                    {filterUser !== 'all' && (
+                                    {(filterUser !== 'all' || teamMemberSearch) && (
                                         <button
-                                            onClick={onUserClear}
+                                            onClick={() => {
+                                                if (filterUser !== 'all') onUserClear();
+                                                setTeamMemberSearch('');
+                                            }}
                                             className="text-xs text-primary hover:text-primary/80 font-medium"
                                         >
                                             Clear
                                         </button>
                                     )}
                                 </div>
-                                <div className="max-h-56 overflow-y-auto p-1">
-                                    <div
-                                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
-                                        onClick={() => onUserChange('all')}
-                                    >
-                                        <div className="flex items-center justify-center w-4 h-4">
-                                            {filterUser === 'all' && <IconCheck size={14} className="text-primary" strokeWidth={3} />}
-                                        </div>
-                                        <span className={`text-sm truncate ${filterUser === 'all' ? 'font-medium' : ''}`}>
-                                            All Members
-                                        </span>
-                                    </div>
-                                    {teamMembers.map((member) => (
-                                        <div
-                                            key={member.id}
-                                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
-                                            onClick={() => onUserChange(String(member.id))}
-                                        >
-                                            <div className="flex items-center justify-center w-4 h-4">
-                                                {String(filterUser) === String(member.id) && (
-                                                    <IconCheck size={14} className="text-primary" strokeWidth={3} />
-                                                )}
-                                            </div>
-                                            <span
-                                                className={`text-sm truncate ${String(filterUser) === String(member.id) ? 'font-medium' : ''
-                                                    }`}
+                                <div className="p-2 border-b">
+                                    <div className="relative">
+                                        <IconSearch size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                        <Input
+                                            value={teamMemberSearch}
+                                            onChange={(e) => setTeamMemberSearch(e.target.value)}
+                                            placeholder="Search members..."
+                                            className="h-8 pl-8 text-xs bg-muted/50 border-transparent focus-visible:bg-background focus-visible:border-primary/50"
+                                        />
+                                        {teamMemberSearch && (
+                                            <button
+                                                onClick={() => setTeamMemberSearch('')}
+                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                             >
-                                                {member.name}
-                                            </span>
+                                                <IconX size={12} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="max-h-56 overflow-y-auto p-1">
+                                    {filteredTeamMembers.length > 0 || teamMemberSearch === '' ? (
+                                        <>
+                                            {teamMemberSearch === '' && (
+                                                <div
+                                                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
+                                                    onClick={() => onUserChange('all')}
+                                                >
+                                                    <div className="flex items-center justify-center w-4 h-4">
+                                                        {filterUser === 'all' && <IconCheck size={14} className="text-primary" strokeWidth={3} />}
+                                                    </div>
+                                                    <span className={`text-sm truncate ${filterUser === 'all' ? 'font-medium' : ''}`}>
+                                                        All Members
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {filteredTeamMembers.map((member) => (
+                                                <div
+                                                    key={member.id}
+                                                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-md hover:bg-accent cursor-pointer transition-colors"
+                                                    onClick={() => onUserChange(String(member.id))}
+                                                >
+                                                    <div className="flex items-center justify-center w-4 h-4">
+                                                        {String(filterUser) === String(member.id) && (
+                                                            <IconCheck size={14} className="text-primary" strokeWidth={3} />
+                                                        )}
+                                                    </div>
+                                                    <span
+                                                        className={`text-sm truncate ${String(filterUser) === String(member.id) ? 'font-medium' : ''
+                                                            }`}
+                                                    >
+                                                        {member.name}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </>
+                                    ) : (
+                                        <div className="py-4 text-center text-xs text-muted-foreground">
+                                            No members found.
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
                             </PopoverContent>
                         </Popover>
@@ -848,7 +887,7 @@ const StatsView: React.FC<StatsViewProps> = ({
     return (
         <div>
             <div className="mb-6">
-                <Button variant="ghost" onClick={onBack} className="gap-2 mb-3 text-muted-foreground hover:text-foreground">
+                <Button variant="outline" onClick={onBack} className="gap-2 mb-3 text-muted-foreground hover:text-foreground">
                     <IconArrowLeft size={16} /> Back to list
                 </Button>
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

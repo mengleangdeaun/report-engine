@@ -67,7 +67,7 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => {
                 </div>
             )}
             <header className="bg-white/70 dark:bg-[#0e1726]/70 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-800/50 py-3 md:py-4 sticky top-0 z-50 shadow-sm dark:shadow-gray-900/20">
-                <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
+                <div className="max-w-screen-2xl mx-auto px-4 md:px-6 flex justify-between items-center">
                     {/* Logo/Brand */}
                     <div className="flex items-center gap-2 md:gap-3">
                         <div className="w-20 h-7 md:w-24 md:h-8 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg md:rounded-xl flex items-center justify-center text-white font-bold text-sm md:text-base">
@@ -84,13 +84,13 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => {
                     {/* Action Buttons */}
                     <div className="flex items-center gap-2 md:gap-3">
                         {/* Help Button */}
-                        <button
+                        {/* <button
                             onClick={() => setShowHelp(true)}
                             className="p-1.5 md:p-2 rounded-lg md:rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-gray-800 transition-all hover:scale-105 active:scale-95"
                             aria-label="Show help guide"
                         >
                             <IconHelpCircle size={18} className="md:w-5 md:h-5 text-gray-600 dark:text-gray-400" />
-                        </button>
+                        </button> */}
 
                         {/* Theme Toggle */}
                         <button 

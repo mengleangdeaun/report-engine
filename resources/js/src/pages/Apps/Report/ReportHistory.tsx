@@ -99,6 +99,7 @@ const ReportHistory = () => {
 
   // ✅ NEW STATE for User Filter
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [teamMemberSearch, setTeamMemberSearch] = useState('');
   const [isAdminOrOwner, setIsAdminOrOwner] = useState(false);
 
   // Table State
@@ -267,6 +268,36 @@ const ReportHistory = () => {
   }, [pagination.pageIndex, pagination.pageSize, sorting, globalFilter, refreshKey, dateRange, platformFilter, selectedUsers]); // ✅ Proper dependency
 
   // --- ACTIONS ---
+  const handleShareReport = async (reportId: number) => {
+    try {
+      const response = await api.post(`/reports/${reportId}/share`);
+      const url = response.data.url;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = url;
+        textArea.style.position = "absolute";
+        textArea.style.left = "-999999px";
+        document.body.prepend(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+        } catch (error) {
+          console.error('Clipboard fallback failed', error);
+        } finally {
+          textArea.remove();
+        }
+      }
+      const successMsg = tToast('public_link_copied_to_clipboard');
+      toast.success(successMsg ? successMsg : 'Public link copied to clipboard');
+    } catch (error) {
+      const errorMsg = tToast('failed_to_get_share_link');
+      toast.error(errorMsg ? errorMsg : 'Failed to get share link');
+    }
+  };
+
   const handleDeleteClick = (id: number) => {
     setDeleteId(id);
     setIsDeleteModalOpen(true);
@@ -312,13 +343,35 @@ const ReportHistory = () => {
 
   const handleExport = async () => {
     try {
-      const params = new URLSearchParams({
-        platform: platformFilter || 'all',
-        search: globalFilter || '',
-        page_id: selectedPageId?.toString() || '',
-        start_date: dateRange?.start || '',
-        end_date: dateRange?.end || ''
-      });
+      let startStr = '';
+      let endStr = '';
+      if (dateRange?.from) {
+        const d1 = dateRange.from;
+        const d2 = dateRange.to || dateRange.from;
+        startStr = `${d1.getFullYear()}-${String(d1.getMonth() + 1).padStart(2, '0')}-${String(d1.getDate()).padStart(2, '0')}`;
+        endStr = `${d2.getFullYear()}-${String(d2.getMonth() + 1).padStart(2, '0')}-${String(d2.getDate()).padStart(2, '0')}`;
+      }
+
+      const sortField = sorting.length > 0 ? sorting[0].id : 'created_at';
+      const sortDirection = sorting.length > 0 ? (sorting[0].desc ? 'desc' : 'asc') : 'desc';
+
+      const userIdsParam = selectedUsers && selectedUsers.length > 0
+        ? selectedUsers.map(u => u.id).join(',')
+        : undefined;
+
+      const params = new URLSearchParams();
+      // Apply exact table parameters so only shown data is exported
+      params.append('page', (pagination.pageIndex + 1).toString());
+      params.append('per_page', pagination.pageSize.toString());
+
+      if (platformFilter !== 'all') params.append('platform', platformFilter);
+      if (globalFilter) params.append('search', globalFilter);
+      if (startStr) params.append('start_date', startStr);
+      if (endStr) params.append('end_date', endStr);
+      if (userIdsParam) params.append('user_ids', userIdsParam);
+      if (selectedPageId) params.append('page_id', selectedPageId.toString());
+      if (sortField) params.append('sort_by', sortField);
+      if (sortDirection) params.append('sort_dir', sortDirection);
 
       // Use axios/api instance to include your Bearer Token automatically
       const response = await api.get(`/reports/export?${params.toString()}`, {
@@ -561,6 +614,18 @@ const ReportHistory = () => {
             </button>
           </Tippy>
 
+          <Tippy content={<span className="text-xs">{tButton('share')}</span>}
+            animation="shift-away"
+            duration={200}>
+            <button
+              className="block p-2 rounded-full text-emerald-600 bg-white-light/20 dark:bg-dark/10 hover:bg-white-light/90 dark:hover:bg-dark/20"
+              onClick={() => handleShareReport(info.row.original.id)}
+              title="Share Report"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" color="" fill="none" viewBox="0 0 24 24"><path d="M13.9546 5.18341L18.9324 9.60815C19.863 10.4353 20.3283 10.8489 20.4998 11.3373C20.6503 11.7662 20.6503 12.2335 20.4998 12.6624C20.3283 13.1508 19.863 13.5644 18.9324 14.3916L13.9546 18.8163C13.5323 19.1917 13.3211 19.3794 13.1418 19.3861C12.986 19.3919 12.8364 19.3247 12.7372 19.2044C12.6231 19.0659 12.6231 18.7834 12.6231 18.2184V15.4284C10.195 15.4284 7.63044 16.2083 5.75782 17.5926C4.78293 18.3133 4.29546 18.6737 4.1098 18.6595C3.92883 18.6456 3.81398 18.575 3.72008 18.4196C3.62374 18.2603 3.70883 17.7624 3.879 16.7666C4.98397 10.3004 9.43394 8.57129 12.6231 8.57129V5.78134C12.6231 5.21632 12.6231 4.93381 12.7372 4.79531C12.8364 4.67498 12.986 4.6078 13.1418 4.61363C13.3211 4.62034 13.5323 4.80803 13.9546 5.18341Z" fill="currentColor"></path></svg>
+            </button>
+          </Tippy>
+
           <Tippy content={<span className="text-xs">{tButton('delete_report')}</span>}
             animation="shift-away"
             duration={200}>
@@ -691,6 +756,7 @@ const ReportHistory = () => {
                   className="h-8 text-xs text-muted-foreground hover:text-foreground gap-1.5"
                   onClick={() => {
                     setSelectedUsers([]);
+                    setTeamMemberSearch('');
                     setPlatformFilter('all');
                     setDateRange(undefined);
                     setGlobalFilter('');
@@ -743,7 +809,7 @@ const ReportHistory = () => {
                   )}
                   {/* Team Members Filter - Popover + Checkbox */}
                   {!isTeamMembersLoading && teamMembers.length > 0 && (
-                    <div className="space-y-2">
+                    <div>
                       <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                         <IconUsers size={13} />
                         Team Members
@@ -777,8 +843,19 @@ const ReportHistory = () => {
                               </button>
                             )}
                           </div>
+                          <div className="p-2 border-b">
+                            <div className="relative">
+                              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                              <Input
+                                placeholder="Search members..."
+                                className="h-8 pl-8 text-xs bg-muted/50 border-transparent hover:border-border focus:border-primary transition-colors focus-visible:ring-0 focus-visible:ring-offset-0"
+                                value={teamMemberSearch}
+                                onChange={(e) => setTeamMemberSearch(e.target.value)}
+                              />
+                            </div>
+                          </div>
                           <div className="max-h-56 overflow-y-auto p-1">
-                            {teamMembers.map((member) => {
+                            {teamMembers.filter(member => member.name.toLowerCase().includes(teamMemberSearch.toLowerCase())).map((member) => {
                               const isSelected = selectedUsers.some((u: any) => u.id === member.id);
                               return (
                                 <div
@@ -802,6 +879,12 @@ const ReportHistory = () => {
                                 </div>
                               );
                             })}
+
+                            {teamMembers.filter(member => member.name.toLowerCase().includes(teamMemberSearch.toLowerCase())).length === 0 && (
+                              <div className="py-4 text-center text-xs text-muted-foreground">
+                                No members found.
+                              </div>
+                            )}
                           </div>
                         </PopoverContent>
                       </Popover>
@@ -1025,8 +1108,8 @@ const ReportHistory = () => {
                     <tr>
                       <td colSpan={columns.length} className="p-16 text-center">
                         <div className="flex flex-col items-center justify-center">
-                          <div className="bg-orange-50 dark:bg-orange-900/20 p-6 rounded-full mb-4">
-                            <IconSearch size={48} className="text-orange-500" />
+                          <div className="bg-primary/10 dark:bg-primary-900/20 p-6 rounded-full mb-4">
+                            <IconSearch size={48} className="text-primary" />
                           </div>
                           <h5 className="font-bold text-xl text-gray-800 dark:text-gray-200 mb-2">No Results Found</h5>
                           <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">

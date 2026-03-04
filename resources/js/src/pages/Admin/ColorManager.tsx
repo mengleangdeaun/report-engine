@@ -15,6 +15,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
+import { Textarea } from '../../components/ui/textarea';
 
 const ColorManager = () => {
     const [colors, setColors] = useState<any[]>([]);
@@ -481,7 +482,7 @@ const ColorManager = () => {
                                             {/* Left Column: Basic Info */}
                                             <div className="lg:col-span-2 space-y-6">
                                                 {/* Basic Information */}
-                                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5">
+                                                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5">
                                                     <h3 className="font-semibold text-gray-900 dark:text-white mb-4 text-lg">
                                                         Basic Information
                                                     </h3>
@@ -491,9 +492,9 @@ const ColorManager = () => {
                                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                                 Theme Name <span className="text-red-500">*</span>
                                                             </label>
-                                                            <input 
+                                                            <Input 
                                                                 type="text" 
-                                                                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                                                className="w-full transition-all"
                                                                 value={currentColor.name}
                                                                 onChange={(e) => setCurrentColor({...currentColor, name: e.target.value})}
                                                                 placeholder="e.g., Ocean Blue"
@@ -505,8 +506,8 @@ const ColorManager = () => {
                                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                                 Description
                                                             </label>
-                                                            <textarea 
-                                                                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                                            <Textarea 
+                                                                className="w-full transition-all"
                                                                 value={currentColor.description || ''}
                                                                 onChange={(e) => setCurrentColor({...currentColor, description: e.target.value})}
                                                                 placeholder="Brief description of this color theme"
@@ -543,7 +544,7 @@ const ColorManager = () => {
                                                 </div>
 
                                                 {/* Color Configuration */}
-                                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5">
+                                                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5">
                                                     <h3 className="font-semibold text-gray-900 dark:text-white mb-4 text-lg">
                                                         Color Configuration
                                                     </h3>
@@ -582,7 +583,7 @@ const ColorManager = () => {
                                                 </div>
 
                                                 {/* Icon Configuration */}
-                                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5">
+                                                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5">
                                                     <h3 className="font-semibold text-gray-900 dark:text-white mb-4 text-lg">
                                                         Icon Configuration
                                                     </h3>
@@ -593,8 +594,8 @@ const ColorManager = () => {
                                                         </label>
                                                         <div className="relative rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 overflow-hidden">
                                                             <PerfectScrollbar className="h-[150px]">
-                                                                <textarea 
-                                                                    className="w-full px-4 py-3 bg-transparent border-0 focus:ring-0 font-mono text-sm resize-none min-h-[150px] text-gray-900 dark:text-gray-100"
+                                                                <Textarea 
+                                                                    className="w-full h-full transition-all"
                                                                     rows={4}
                                                                     placeholder='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="..."/></svg>'
                                                                     value={currentColor.default_icon_svg}
@@ -613,7 +614,7 @@ const ColorManager = () => {
                                             {/* Right Column: Preview */}
                                             <div className="space-y-6">
                                                 {/* Live Preview */}
-                                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5">
+                                                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5">
                                                     <h3 className="font-semibold text-gray-900 dark:text-white mb-4 text-lg">
                                                         Live Preview
                                                     </h3>
@@ -656,7 +657,7 @@ const ColorManager = () => {
                                                 </div>
 
                                                 {/* Status Toggle */}
-                                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5">
+                                                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-5">
                                                     <h3 className="font-semibold text-gray-900 dark:text-white mb-4 text-lg">
                                                         Status
                                                     </h3>
@@ -692,9 +693,9 @@ const ColorManager = () => {
                                             >
                                                 Cancel
                                             </button>
-                                            <button 
+                                            <Button 
                                                 onClick={handleSave} 
-                                                className="px-4 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                                                className="px-4 py-2.5 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
                                                 disabled={isSubmitting || !currentColor.name}
                                             >
                                                 {isSubmitting ? (
@@ -703,7 +704,7 @@ const ColorManager = () => {
                                                         Saving...
                                                     </span>
                                                 ) : isEditing ? 'Update Theme' : 'Create Theme'}
-                                            </button>
+                                            </Button>
                                         </div>
                                     </div>
                                 </Dialog.Panel>

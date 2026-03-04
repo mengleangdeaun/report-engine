@@ -6,13 +6,13 @@ import {
     IconBuilding, IconChartBar, IconShield, IconTicket,
     IconInfoCircle, IconX, IconSearch, IconFilter,
     IconRefresh, IconCrown, IconUser, IconKey,
-    IconAlertCircle
+    IconAlertCircle, IconPower, IconAlertTriangle
 } from '@tabler/icons-react';
 import toast from 'react-hot-toast';
 import api from '../../utils/api';
 import usePermission from '../../hooks/usePermission';
 import DeleteModal from '../../components/DeleteModal';
-import PerfectScrollbar from 'react-perfect-scrollbar';
+import { ScrollArea } from '../../components/ui/scroll-area';
 import { formatUserDate } from '../../utils/userDate';
 
 const TeamManagement = () => {
@@ -49,6 +49,13 @@ const TeamManagement = () => {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [deleteData, setDeleteData] = useState<{ type: 'member' | 'invite', id: number, name: string } | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Workspace Danger Zone State
+    const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
+    const [isTogglingActive, setIsTogglingActive] = useState(false);
+    const [deleteWorkspaceModalOpen, setDeleteWorkspaceModalOpen] = useState(false);
+    const [deleteConfirmName, setDeleteConfirmName] = useState('');
+    const [isDeletingWorkspace, setIsDeletingWorkspace] = useState(false);
 
     // Search and Filter
     const [searchTerm, setSearchTerm] = useState('');
@@ -238,7 +245,6 @@ const TeamManagement = () => {
                 permissions: selectedPerms,
                 role_name: selectedRole
             });
-
             toast.success('Access updated');
             setPermModalOpen(false);
             fetchTeamAndTemplates();
@@ -279,6 +285,37 @@ const TeamManagement = () => {
     };
 
     const formatDate = (dateString: string) => formatUserDate(dateString);
+
+    // Handle Workspace Deactivate/Activate
+    const handleToggleActive = async () => {
+        setIsTogglingActive(true);
+        try {
+            const res = await api.post('/team/toggle-active');
+            toast.success(res.data.message);
+            setDeactivateModalOpen(false);
+            fetchTeamAndTemplates();
+        } catch (e: any) {
+            toast.error(e.response?.data?.message || 'Failed to update workspace status');
+        } finally {
+            setIsTogglingActive(false);
+        }
+    };
+
+    // Handle Workspace Delete
+    const handleDeleteWorkspace = async () => {
+        setIsDeletingWorkspace(true);
+        try {
+            await api.delete('/team/destroy');
+            toast.success('Workspace deleted successfully');
+            setDeleteWorkspaceModalOpen(false);
+            // Redirect to dashboard
+            window.location.href = '/';
+        } catch (e: any) {
+            toast.error(e.response?.data?.message || 'Failed to delete workspace');
+        } finally {
+            setIsDeletingWorkspace(false);
+        }
+    };
 
     // Filter members based on search and role
     const filteredMembers = teamData?.members?.filter((member: any) => {
@@ -514,6 +551,64 @@ const TeamManagement = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Danger Zone Card — Owner Only */}
+                        {teamData?.is_owner && (
+                            <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl border-2 border-red-200 dark:border-red-500/30 shadow-sm p-6 mt-6">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
+                                        <IconAlertTriangle size={20} className="text-red-500" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-red-700 dark:text-red-400 text-lg">Danger Zone</h3>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">Irreversible and destructive actions</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {/* Deactivate */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                                        <div>
+                                            <h4 className="font-semibold text-gray-900 dark:text-white">
+                                                {teamData?.is_active ? 'Deactivate' : 'Activate'} this workspace
+                                            </h4>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                                                {teamData?.is_active
+                                                    ? 'Deactivating will hide this workspace from team members.'
+                                                    : 'Reactivate this workspace to make it visible again.'}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => setDeactivateModalOpen(true)}
+                                            className={`inline-flex items-center gap-2 px-5 py-2.5 font-medium rounded-lg transition-all shadow-sm whitespace-nowrap ${teamData?.is_active
+                                                ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                                                : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                                                }`}
+                                        >
+                                            <IconPower size={18} />
+                                            {teamData?.is_active ? 'Deactivate' : 'Activate'}
+                                        </button>
+                                    </div>
+
+                                    {/* Delete */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/5">
+                                        <div>
+                                            <h4 className="font-semibold text-red-700 dark:text-red-400">Delete this workspace</h4>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                                                Permanently delete this workspace, all members will be removed. This cannot be undone.
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => { setDeleteConfirmName(''); setDeleteWorkspaceModalOpen(true); }}
+                                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-all shadow-sm whitespace-nowrap"
+                                        >
+                                            <IconTrash size={18} />
+                                            Delete Workspace
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </Tab.Panel>
 
                     {/* ================= MEMBERS TAB ================= */}
@@ -1042,9 +1137,9 @@ const TeamManagement = () => {
                                         </div>
 
                                         {/* Permissions Grid */}
-                                        <div className="max-h-[400px] overflow-hidden">
-                                            <PerfectScrollbar>
-                                                <div className="pr-2 space-y-4">
+                                        <div className="h-[400px]">
+                                            <ScrollArea className="h-full pr-4">
+                                                <div className="space-y-4">
                                                     {groupedPermissions().map((group) => (
                                                         <div key={group.module} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                                                             <button
@@ -1110,7 +1205,7 @@ const TeamManagement = () => {
                                                         </div>
                                                     ))}
                                                 </div>
-                                            </PerfectScrollbar>
+                                            </ScrollArea>
                                         </div>
 
                                         <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-700 mt-6">
@@ -1156,6 +1251,115 @@ const TeamManagement = () => {
                 cancelButtonText="Cancel"
                 isLoading={isDeleting}
             />
+
+            {/* Deactivate/Activate Confirmation Modal */}
+            <Transition appear show={deactivateModalOpen} as={Fragment}>
+                <Dialog as="div" className="relative z-50" onClose={() => setDeactivateModalOpen(false)}>
+                    <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+                        <div className="fixed inset-0 bg-black/50" />
+                    </Transition.Child>
+                    <div className="fixed inset-0 overflow-y-auto">
+                        <div className="flex min-h-full items-center justify-center p-4">
+                            <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl transition-all">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${teamData?.is_active ? 'bg-amber-100 dark:bg-amber-500/20' : 'bg-emerald-100 dark:bg-emerald-500/20'}`}>
+                                            <IconPower size={20} className={teamData?.is_active ? 'text-amber-600' : 'text-emerald-600'} />
+                                        </div>
+                                        <Dialog.Title className="text-lg font-bold text-gray-900 dark:text-white">
+                                            {teamData?.is_active ? 'Deactivate' : 'Activate'} Workspace
+                                        </Dialog.Title>
+                                    </div>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
+                                        {teamData?.is_active
+                                            ? 'Are you sure you want to deactivate this workspace? Team members will no longer be able to access it.'
+                                            : 'Are you sure you want to reactivate this workspace? Team members will regain access.'}
+                                    </p>
+                                    <div className="flex justify-end gap-3">
+                                        <button
+                                            onClick={() => setDeactivateModalOpen(false)}
+                                            className="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleToggleActive}
+                                            disabled={isTogglingActive}
+                                            className={`px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${teamData?.is_active ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600'
+                                                }`}
+                                        >
+                                            {isTogglingActive ? (
+                                                <span className="flex items-center gap-2">
+                                                    <IconRefresh size={16} className="animate-spin" />
+                                                    Processing...
+                                                </span>
+                                            ) : teamData?.is_active ? 'Deactivate' : 'Activate'}
+                                        </button>
+                                    </div>
+                                </Dialog.Panel>
+                            </Transition.Child>
+                        </div>
+                    </div>
+                </Dialog>
+            </Transition>
+
+            {/* Delete Workspace Confirmation Modal */}
+            <Transition appear show={deleteWorkspaceModalOpen} as={Fragment}>
+                <Dialog as="div" className="relative z-50" onClose={() => setDeleteWorkspaceModalOpen(false)}>
+                    <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-200" leaveFrom="opacity-100" leaveTo="opacity-0">
+                        <div className="fixed inset-0 bg-black/50" />
+                    </Transition.Child>
+                    <div className="fixed inset-0 overflow-y-auto">
+                        <div className="flex min-h-full items-center justify-center p-4">
+                            <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
+                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl transition-all">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
+                                            <IconAlertTriangle size={20} className="text-red-600" />
+                                        </div>
+                                        <Dialog.Title className="text-lg font-bold text-gray-900 dark:text-white">
+                                            Delete Workspace
+                                        </Dialog.Title>
+                                    </div>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
+                                        This action is <strong className="text-red-600">permanent and irreversible</strong>. All members will be removed and all workspace data will be lost.
+                                    </p>
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                                        Type <strong className="text-gray-900 dark:text-white">{teamData?.team_name}</strong> to confirm:
+                                    </p>
+                                    <input
+                                        type="text"
+                                        placeholder="Type workspace name..."
+                                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all mb-6"
+                                        value={deleteConfirmName}
+                                        onChange={(e) => setDeleteConfirmName(e.target.value)}
+                                    />
+                                    <div className="flex justify-end gap-3">
+                                        <button
+                                            onClick={() => setDeleteWorkspaceModalOpen(false)}
+                                            className="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleDeleteWorkspace}
+                                            disabled={isDeletingWorkspace || deleteConfirmName !== teamData?.team_name}
+                                            className="px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors"
+                                        >
+                                            {isDeletingWorkspace ? (
+                                                <span className="flex items-center gap-2">
+                                                    <IconRefresh size={16} className="animate-spin" />
+                                                    Deleting...
+                                                </span>
+                                            ) : 'Delete Forever'}
+                                        </button>
+                                    </div>
+                                </Dialog.Panel>
+                            </Transition.Child>
+                        </div>
+                    </div>
+                </Dialog>
+            </Transition>
         </div>
     );
 };
