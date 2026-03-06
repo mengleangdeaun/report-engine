@@ -34,6 +34,8 @@ import {
 import * as TablerIcons from '@tabler/icons-react';
 import { toast } from 'react-hot-toast';
 import { ScrollArea } from '../../components/ui/scroll-area';
+import Error500 from '../Pages/Error500';
+import Error503 from '../Pages/Error503';
 
 // ------------------ Types ------------------
 interface LandingPageConfig {
@@ -513,18 +515,30 @@ const LoadingSpinner = () => (
     </div>
 );
 
-const ErrorFallback = ({ error }: { error: Error }) => (
-    <div className="min-h-screen flex items-center justify-center flex-col p-4 text-center">
-        <h2 className="text-2xl font-bold text-red-600 mb-2">Something went wrong</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">{error.message}</p>
-        <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-primary text-white rounded-full hover:bg-primary/90"
-        >
-            Retry
-        </button>
-    </div>
-);
+const ErrorFallback = ({ error }: { error: any }) => {
+    const status = error?.response?.status;
+
+    if (status === 500) {
+        return <Error500 />;
+    }
+
+    if (status === 503) {
+        return <Error503 />;
+    }
+
+    return (
+        <div className="min-h-screen flex items-center justify-center flex-col p-4 text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-2">Something went wrong</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{error.message}</p>
+            <button
+                onClick={() => window.location.reload()}
+                className="px-6 py-2 bg-primary text-white rounded-full hover:bg-primary/90"
+            >
+                Retry
+            </button>
+        </div>
+    );
+};
 
 const SectionSkeleton = () => (
     <div className="py-20 animate-pulse">
@@ -997,14 +1011,14 @@ const About = React.memo<AboutProps>(({ about }) => {
                         {/* Text Content */}
                         <div
                             className={`w-full ${!about.parallax && about.imageUrl
-                                    ? 'lg:w-1/2'
-                                    : 'lg:w-2/3 mx-auto'
+                                ? 'lg:w-1/2'
+                                : 'lg:w-2/3 mx-auto'
                                 }`}
                         >
                             <div
                                 className={`p-8 md:p-10 rounded-3xl backdrop-blur-sm border-2 border-gray-200/50 dark:border-gray-700/50 shadow-xl ${about.parallax
-                                        ? 'bg-black/40 text-white border-white/20'
-                                        : 'bg-white/80 dark:bg-gray-900/80 text-gray-900 dark:text-white'
+                                    ? 'bg-black/40 text-white border-white/20'
+                                    : 'bg-white/80 dark:bg-gray-900/80 text-gray-900 dark:text-white'
                                     }`}
                                 style={
                                     !about.parallax
@@ -1027,8 +1041,8 @@ const About = React.memo<AboutProps>(({ about }) => {
                                 {about.storyContent && (
                                     <div
                                         className={`prose prose-lg max-w-none ${about.parallax
-                                                ? 'prose-invert text-gray-200'
-                                                : 'dark:prose-invert'
+                                            ? 'prose-invert text-gray-200'
+                                            : 'dark:prose-invert'
                                             }`}
                                         dangerouslySetInnerHTML={{ __html: about.storyContent }}
                                     />

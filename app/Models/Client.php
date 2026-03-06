@@ -49,4 +49,12 @@ class Client extends Authenticatable
     {
         return $this->morphedByMany(FacebookAdReport::class, 'reportable', 'client_reports');
     }
+
+    /**
+     * Get all assigned pages.
+     */
+    public function pages()
+    {
+        return $this->morphedByMany(Page::class, 'reportable', 'client_reports');
+    }
 }

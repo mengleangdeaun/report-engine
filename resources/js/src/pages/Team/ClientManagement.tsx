@@ -5,7 +5,7 @@ import {
     IconUsers, IconCheck,
     IconInfoCircle, IconX, IconSearch,
     IconRefresh, IconPower, IconListCheck,
-    IconChevronRight, IconFileAnalytics, IconBrandFacebook
+    IconChevronRight, IconFileAnalytics, IconBrandFacebook, IconBrandTiktok, IconDeviceDesktopAnalytics
 } from '@tabler/icons-react';
 import toast from 'react-hot-toast';
 import api from '../../utils/api';
@@ -13,6 +13,7 @@ import DeleteModal from '../../components/DeleteModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const ClientManagement = () => {
     const [clients, setClients] = useState<any[]>([]);
@@ -33,9 +34,10 @@ const ClientManagement = () => {
     // Assignment Modal State
     const [assignModalOpen, setAssignModalOpen] = useState(false);
     const [selectedClient, setSelectedClient] = useState<any>(null);
-    const [availableReports, setAvailableReports] = useState<{ standard: any[], facebook: any[] }>({ standard: [], facebook: [] });
+    const [availableReports, setAvailableReports] = useState<{ standard: any[], facebook: any[], pages: any[] }>({ standard: [], facebook: [], pages: [] });
     const [selectedStandardIds, setSelectedStandardIds] = useState<number[]>([]);
     const [selectedFacebookIds, setSelectedFacebookIds] = useState<number[]>([]);
+    const [selectedPageIds, setSelectedPageIds] = useState<number[]>([]);
     const [loadingReports, setLoadingReports] = useState(false);
     const [assigning, setAssigning] = useState(false);
 
@@ -117,25 +119,25 @@ const ClientManagement = () => {
         setAssignModalOpen(true);
         await fetchAvailableReports();
 
-        // In a real app, you might want to fetch EXACT assigned IDs for this client
-        // For now, we'll assume the client object might have them or we fetch them
         try {
-            const { data } = await api.get(`/portal/reports`); // Re-using portal endpoint is risky if we are admin, but let's assume we need a specific admin-fetch-assigned endpoint or it was pre-loaded
-            // Actually, let's keep it simple: fetch assigned reports from a new endpoint if needed, or assume we start fresh for now in the demo
+            const { data } = await api.get(`/clients/${client.id}/assigned-items`);
+            setSelectedStandardIds(data.report_ids || []);
+            setSelectedFacebookIds(data.facebook_report_ids || []);
+            setSelectedPageIds(data.page_ids || []);
+        } catch (e) {
             setSelectedStandardIds([]);
             setSelectedFacebookIds([]);
-        } catch (e) { }
+            setSelectedPageIds([]);
+        }
     };
 
-    const handleToggleReport = (id: number, type: 'standard' | 'facebook') => {
+    const handleToggleReport = (id: number, type: 'standard' | 'facebook' | 'page') => {
         if (type === 'standard') {
-            setSelectedStandardIds(prev =>
-                prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-            );
+            setSelectedStandardIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+        } else if (type === 'facebook') {
+            setSelectedFacebookIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
         } else {
-            setSelectedFacebookIds(prev =>
-                prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-            );
+            setSelectedPageIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
         }
     };
 
@@ -144,9 +146,10 @@ const ClientManagement = () => {
         try {
             await api.post(`/clients/${selectedClient.id}/assign-reports`, {
                 report_ids: selectedStandardIds,
-                facebook_report_ids: selectedFacebookIds
+                facebook_report_ids: selectedFacebookIds,
+                page_ids: selectedPageIds
             });
-            toast.success('Reports assigned successfully');
+            toast.success('Reports and Pages assigned successfully');
             setAssignModalOpen(false);
             fetchClients();
         } catch (error: any) {
@@ -242,10 +245,13 @@ const ClientManagement = () => {
                                     </td>
                                     <td className="px-6 py-4 text-center">
                                         <div className="flex flex-col items-center gap-1">
+                                            <div className="badge bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400">
+                                                {client.pages_count || 0} Pages (All Reports)
+                                            </div>
                                             <div className="badge bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400">
                                                 {client.reports_count || 0} Standard
                                             </div>
-                                            <div className="badge bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400">
+                                            <div className="badge bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
                                                 {client.facebook_ad_reports_count || 0} FB Ads
                                             </div>
                                         </div>
@@ -300,7 +306,7 @@ const ClientManagement = () => {
                     <div className="fixed inset-0 overflow-y-auto">
                         <div className="flex min-h-full items-center justify-center p-4">
                             <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-xl p-6 shadow-xl transition-all border border-gray-200 dark:border-gray-700">
+                                <Dialog.Panel className="w-full max-w-md transform overflow-hidden bg-white dark:bg-gray-900 rounded-xl p-6 shadow-xl transition-all border border-gray-200 dark:border-gray-700">
                                     <div className="flex items-center justify-between mb-6">
                                         <Dialog.Title className="text-xl font-bold text-gray-900 dark:text-white">
                                             {editingClient ? 'Edit Client' : 'Add New Client'}
@@ -340,7 +346,7 @@ const ClientManagement = () => {
                                                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                             />
                                         </div>
-                                        <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+                                        <div className="flex items-center gap-3 p-3 border rounded-lg bg-gray-50 dark:bg-gray-900/50">
                                             <Checkbox
                                                 id="is_active"
                                                 checked={formData.is_active}
@@ -393,64 +399,103 @@ const ClientManagement = () => {
                                         </div>
                                     ) : (
                                         <div className="space-y-6">
+                                            {/* Pages Section */}
+                                            <div>
+                                                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                    <IconDeviceDesktopAnalytics className="text-purple-500" size={18} />
+                                                    Data Pages (All Reports)
+                                                </h3>
+                                                <ScrollArea className="h-[200px] w-full rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/10">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
+                                                        {availableReports.pages.length === 0 ? (
+                                                            <p className="text-sm text-gray-500 col-span-2 py-4 text-center italic">No pages found.</p>
+                                                        ) : availableReports.pages.map(page => (
+                                                            <div
+                                                                key={page.id}
+                                                                onClick={() => handleToggleReport(page.id, 'page')}
+                                                                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedPageIds.includes(page.id)
+                                                                    ? 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/50'
+                                                                    : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-purple-200'
+                                                                    }`}
+                                                            >
+                                                                <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors flex-shrink-0 ${selectedPageIds.includes(page.id) ? 'bg-purple-500 border-purple-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}>
+                                                                    {selectedPageIds.includes(page.id) && <IconCheck size={14} />}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="text-sm font-semibold truncate text-gray-900 dark:text-white">{page.name}</div>
+                                                                    <div className="text-[10px] text-gray-400 capitalize flex items-center gap-1">
+                                                                        {page.platform === 'facebook' ? <IconBrandFacebook size={12} className="text-blue-500" /> : <IconBrandTiktok size={12} className="text-black dark:text-white" />}
+                                                                        {page.platform}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </ScrollArea>
+                                            </div>
+
                                             {/* Standard Reports Section */}
                                             <div>
                                                 <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
                                                     <IconFileAnalytics className="text-blue-500" size={18} />
-                                                    Standard Reports
+                                                    Individual Standard Reports
                                                 </h3>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[200px] overflow-y-auto p-1">
-                                                    {availableReports.standard.length === 0 ? (
-                                                        <p className="text-sm text-gray-500 col-span-2 py-4 text-center bg-gray-50 dark:bg-gray-900/50 rounded-lg italic">No standard reports found.</p>
-                                                    ) : availableReports.standard.map(report => (
-                                                        <div
-                                                            key={report.id}
-                                                            onClick={() => handleToggleReport(report.id, 'standard')}
-                                                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedStandardIds.includes(report.id)
-                                                                ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/50'
-                                                                : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-blue-200'
-                                                                }`}
-                                                        >
-                                                            <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${selectedStandardIds.includes(report.id) ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}>
-                                                                {selectedStandardIds.includes(report.id) && <IconCheck size={14} />}
+                                                <ScrollArea className="h-[200px] w-full rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/10">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
+                                                        {availableReports.standard.length === 0 ? (
+                                                            <p className="text-sm text-gray-500 col-span-2 py-4 text-center italic">No standard reports found.</p>
+                                                        ) : availableReports.standard.map(report => (
+                                                            <div
+                                                                key={report.id}
+                                                                onClick={() => handleToggleReport(report.id, 'standard')}
+                                                                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedStandardIds.includes(report.id)
+                                                                    ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/50'
+                                                                    : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-blue-200'
+                                                                    }`}
+                                                            >
+                                                                <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors flex-shrink-0 ${selectedStandardIds.includes(report.id) ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}>
+                                                                    {selectedStandardIds.includes(report.id) && <IconCheck size={14} />}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="text-sm font-semibold truncate text-gray-900 dark:text-white">{report.page?.name || 'Standard Report'}</div>
+                                                                    <div className="text-[10px] text-gray-400 capitalize">{report.platform} • {new Date(report.created_at).toLocaleDateString()}</div>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex-1 truncate">
-                                                                <div className="text-sm font-semibold truncate">{report.page?.name || 'Standard Report'}</div>
-                                                                <div className="text-[10px] text-gray-400 capitalize">{report.platform} • {new Date(report.created_at).toLocaleDateString()}</div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                                        ))}
+                                                    </div>
+                                                </ScrollArea>
                                             </div>
 
                                             {/* Facebook Ads Reports Section */}
                                             <div>
                                                 <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
                                                     <IconBrandFacebook className="text-emerald-500" size={18} />
-                                                    Facebook Ad Reports
+                                                    Individual Meta Ad Reports
                                                 </h3>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[200px] overflow-y-auto p-1">
-                                                    {availableReports.facebook.length === 0 ? (
-                                                        <p className="text-sm text-gray-500 col-span-2 py-4 text-center bg-gray-50 dark:bg-gray-900/50 rounded-lg italic">No Facebook reports found.</p>
-                                                    ) : availableReports.facebook.map(report => (
-                                                        <div
-                                                            key={report.id}
-                                                            onClick={() => handleToggleReport(report.id, 'facebook')}
-                                                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedFacebookIds.includes(report.id)
-                                                                ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/50'
-                                                                : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-emerald-200'
-                                                                }`}
-                                                        >
-                                                            <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${selectedFacebookIds.includes(report.id) ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}>
-                                                                {selectedFacebookIds.includes(report.id) && <IconCheck size={14} />}
+                                                <ScrollArea className="h-[200px] w-full rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/10">
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
+                                                        {availableReports.facebook.length === 0 ? (
+                                                            <p className="text-sm text-gray-500 col-span-2 py-4 text-center italic">No Facebook reports found.</p>
+                                                        ) : availableReports.facebook.map(report => (
+                                                            <div
+                                                                key={report.id}
+                                                                onClick={() => handleToggleReport(report.id, 'facebook')}
+                                                                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedFacebookIds.includes(report.id)
+                                                                    ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/50'
+                                                                    : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-emerald-200'
+                                                                    }`}
+                                                            >
+                                                                <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors flex-shrink-0 ${selectedFacebookIds.includes(report.id) ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}>
+                                                                    {selectedFacebookIds.includes(report.id) && <IconCheck size={14} />}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="text-sm font-semibold truncate text-gray-900 dark:text-white">{report.account_name}</div>
+                                                                    <div className="text-[10px] text-gray-400">{new Date(report.created_at).toLocaleDateString()}</div>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex-1 truncate">
-                                                                <div className="text-sm font-semibold truncate">{report.account_name}</div>
-                                                                <div className="text-[10px] text-gray-400">{new Date(report.created_at).toLocaleDateString()}</div>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                                        ))}
+                                                    </div>
+                                                </ScrollArea>
                                             </div>
 
                                             <div className="flex gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">

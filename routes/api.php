@@ -221,6 +221,7 @@ Route::middleware(['auth:sanctum', 'workspace.active'])->group(function () {
         Route::delete('/{client}', [TeamClientController::class, 'destroy']);
         Route::get('/available-reports', [TeamClientController::class, 'getAvailableReports']);
         Route::post('/{client}/assign-reports', [TeamClientController::class, 'assignReports']);
+        Route::get('/{client}/assigned-items', [TeamClientController::class, 'getAssignedItems']);
     });
 });
 
@@ -238,6 +239,7 @@ Route::prefix('portal')->group(function () {
         Route::get('/reports', [ClientPortalController::class, 'index']);
         Route::get('/reports/{type}/{id}', [ClientPortalController::class, 'show']);
         Route::get('/reports/{type}/{id}/export', [ClientPortalController::class, 'export']);
+        Route::get('/pages/{id}', [ClientPortalController::class, 'showPage']);
         Route::post('/logout', [ClientPortalController::class, 'logout']);
     });
 });

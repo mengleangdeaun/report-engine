@@ -4,14 +4,6 @@ import { useDispatch } from 'react-redux';
 import { toggleTheme } from '../../store/themeConfigSlice';
 import store from '../../store';
 import {
-    useReactTable,
-    getCoreRowModel,
-    flexRender,
-    createColumnHelper,
-    SortingState,
-    PaginationState
-} from '@tanstack/react-table';
-import {
     IconLogout, IconFileAnalytics, IconBrandFacebook,
     IconDownload, IconEye, IconRefresh, IconSearch,
     IconHistory, IconChevronLeft, IconChevronRight,
@@ -29,6 +21,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from "../../components/ui/select";
+import { Badge } from '../../components/ui/badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "../../components/ui/table";
 import { IconSun, IconMoon } from '@tabler/icons-react';
 import AnalyticsPagination from '../../components/Analytics/AnalyticsPagination';
 
@@ -42,8 +43,8 @@ const PortalDashboard = () => {
     const [clientName, setClientName] = useState('');
 
     // --- Table State ---
-    const [sorting, setSorting] = useState<SortingState>([{ id: 'created_at', desc: true }]);
-    const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
+    const [sorting, setSorting] = useState<{ id: string, desc: boolean }>([{ id: 'created_at', desc: true }]);
+    const [pagination, setPagination] = useState<{ pageIndex: number, pageSize: number }>({ pageIndex: 0, pageSize: 10 });
     const [search, setSearch] = useState('');
     const [platformFilter, setPlatformFilter] = useState('all');
 
@@ -95,82 +96,14 @@ const PortalDashboard = () => {
     };
 
     const openReport = (report: any) => {
-        navigate(`/portal/reports/${report.type}/${report.id}`);
+        if (report.type === 'page') {
+            navigate(`/portal/pages/${report.id}`);
+        } else {
+            navigate(`/portal/reports/${report.type}/${report.id}`);
+        }
     };
 
-    // --- Table Columns ---
-    const columnHelper = createColumnHelper<any>();
-
-    const columns = [
-        columnHelper.accessor('title', {
-            header: 'Report Page / Account',
-            cell: (info) => (
-                <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${info.row.original.platform === 'facebook' ? 'bg-blue-50 text-blue-500' : 'bg-black text-white'}`}>
-                        {info.row.original.platform === 'facebook' ? <IconBrandFacebook size={20} /> : <IconBrandTiktok size={20} />}
-                    </div>
-                    <div>
-                        <div className="font-bold text-gray-900 dark:text-white line-clamp-1">
-                            {info.getValue()}
-                        </div>
-                        <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
-                            {info.row.original.platform}
-                        </div>
-                    </div>
-                </div>
-            ),
-        }),
-        columnHelper.accessor('type', {
-            header: 'Type',
-            cell: (info) => (
-                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${info.getValue() === 'facebook' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'}`}>
-                    {info.getValue()}
-                </span>
-            ),
-        }),
-        columnHelper.accessor('created_at', {
-            header: 'Generated Date',
-            cell: (info) => (
-                <div className="text-gray-500 font-medium">
-                    {info.getValue()}
-                </div>
-            ),
-        }),
-        columnHelper.display({
-            id: 'actions',
-            header: 'Actions',
-            cell: (info) => (
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => openReport(info.row.original)}
-                        className="p-2 hover:bg-primary/10 text-gray-400 hover:text-primary rounded-xl transition-all"
-                        title="View Secured Report"
-                    >
-                        <IconEye size={20} />
-                    </button>
-                    <button
-                        onClick={() => window.open(`/api/portal/reports/${info.row.original.type}/${info.row.original.id}/export?token=${localStorage.getItem('clientToken')}`, '_blank')}
-                        className="p-2 hover:bg-emerald-50 text-gray-400 hover:text-emerald-600 rounded-xl transition-all"
-                        title="Download Data"
-                    >
-                        <IconDownload size={20} />
-                    </button>
-                </div>
-            ),
-        }),
-    ];
-
-    const table = useReactTable({
-        data,
-        columns,
-        state: { pagination, sorting },
-        pageCount: Math.ceil(rowCount / pagination.pageSize),
-        manualPagination: true,
-        manualSorting: true,
-        onPaginationChange: setPagination,
-        onSortingChange: setSorting,
-        getCoreRowModel: getCoreRowModel(),
-    });
+    // Removed columnHelper and useReactTable logic.
 
     const dispatch = useDispatch();
 
@@ -215,7 +148,7 @@ const PortalDashboard = () => {
             </header>
 
             <main className="max-w-7xl mx-auto px-4 py-6">
-                <div className="relative mb-10 overflow-hidden rounded-[2rem] bg-[#0e1726] p-8 md:p-14 shadow-2xl shadow-gray-200/50 dark:shadow-none border border-white/5">
+                <div className="relative mb-10 overflow-hidden rounded-2xl bg-primary/5 dark:bg-gray-800/50 p-8 md:p-14 border border-primary/10">
                     <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary/20 to-transparent opacity-50" />
 
                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
@@ -224,21 +157,21 @@ const PortalDashboard = () => {
                                 <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
                                 <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Verified Secure Access</span>
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-[1.1] mb-6">
+                            <h1 className="text-4xl md:text-5xl font-black text-gray-900 dark:text-white tracking-tight leading-[1.1] mb-6">
                                 Dashboard <span className="text-primary">Overview</span>
                             </h1>
-                            <p className="text-gray-400 text-lg max-w-xl font-medium leading-relaxed">
-                                Welcome, <span className="text-white">{clientName}</span>.
+                            <p className="text-gray-600 dark:text-gray-400 text-lg max-w-xl font-medium leading-relaxed">
+                                Welcome, <span className="text-gray-900 dark:text-white">{clientName}</span>.
                                 Access your high-performance marketing insights and specialized data reports below.
                             </p>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full md:w-auto min-w-[320px]">
-                            <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center text-center">
-                                <div className="text-3xl font-black text-white mb-0.5">{rowCount}</div>
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-[#506690]">Total Reports</div>
+                            <div className="p-6 bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl flex flex-col items-center text-center">
+                                <div className="text-3xl font-black text-gray-900 dark:text-white mb-0.5">{rowCount}</div>
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-[#506690]">Total Reports</div>
                             </div>
-                            <div className="p-6 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center text-center">
+                            <div className="p-6 bg-white/50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl flex flex-col items-center text-center">
                                 <div className="text-3xl font-black text-primary mb-0.5">
                                     {data.filter(r => r.platform === 'facebook').length}
                                 </div>
@@ -248,7 +181,7 @@ const PortalDashboard = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-[1.5rem] p-4 border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/40 dark:shadow-none mb-10 sticky top-[6.5rem] z-30">
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/40 dark:shadow-none mb-10 sticky top-[6.5rem] z-30">
                     <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
                         <div className="flex-1 relative">
                             <IconSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={20} />
@@ -289,7 +222,7 @@ const PortalDashboard = () => {
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 rounded-[1.5rem] border border-gray-100 dark:border-gray-700 shadow-2xl shadow-gray-200/40 dark:shadow-none overflow-hidden group/table">
+                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-2xl shadow-gray-200/40 dark:shadow-none overflow-hidden group/table">
                     <div className="px-8 py-7 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                         <div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Report Catalog</h3>
@@ -301,80 +234,125 @@ const PortalDashboard = () => {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-gray-50/50 dark:bg-gray-900/30 border-b border-gray-100 dark:border-gray-700">
-                                {table.getHeaderGroups().map(headerGroup => (
-                                    <tr key={headerGroup.id}>
-                                        {headerGroup.headers.map(header => (
-                                            <th
-                                                key={header.id}
-                                                className="py-5 px-8 text-left text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] cursor-pointer hover:text-primary transition-colors select-none group/th"
-                                                onClick={header.column.getToggleSortingHandler()}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    {flexRender(header.column.columnDef.header, header.getContext())}
-                                                    <div className="flex flex-col text-gray-300 group-hover/th:text-primary transition-colors">
-                                                        {{
-                                                            asc: <IconChevronUp size={14} className="text-primary" />,
-                                                            desc: <IconChevronDown size={14} className="text-primary" />
-                                                        }[header.column.getIsSorted() as string] ?? (
-                                                                <div className="opacity-0 group-hover/th:opacity-100 transition-opacity">
-                                                                    <IconChevronUp size={14} />
-                                                                </div>
-                                                            )}
+                    <Table className="w-full">
+                        <TableHeader className="bg-gray-50/50 dark:bg-gray-900/30">
+                            <TableRow className="border-b border-gray-100 dark:border-gray-700">
+                                {[
+                                    { id: 'title', label: 'Report Page / Account' },
+                                    { id: 'type', label: 'Type' },
+                                    { id: 'created_at', label: 'Generated Date' },
+                                    { id: 'actions', label: 'Actions', sortable: false }
+                                ].map(head => (
+                                    <TableHead
+                                        key={head.id}
+                                        className={`h-auto py-5 px-8 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ${head.sortable !== false ? 'cursor-pointer hover:text-primary' : ''} transition-colors select-none group/th`}
+                                        onClick={() => {
+                                            if (head.sortable === false) return;
+                                            setSorting([{ id: head.id, desc: sorting[0]?.id === head.id ? !sorting[0]?.desc : true }]);
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            {head.label}
+                                            {head.sortable !== false && (
+                                                <div className="flex flex-col text-gray-300 group-hover/th:text-primary transition-colors">
+                                                    {sorting[0]?.id === head.id ? (
+                                                        sorting[0]?.desc ? <IconChevronDown size={14} className="text-primary" /> : <IconChevronUp size={14} className="text-primary" />
+                                                    ) : (
+                                                        <div className="opacity-0 group-hover/th:opacity-100 transition-opacity">
+                                                            <IconChevronUp size={14} />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </TableHead>
+                                ))}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-gray-50/50 dark:divide-gray-700/50">
+                            {loading ? (
+                                [...Array(5)].map((_, i) => (
+                                    <TableRow key={i} className="animate-pulse">
+                                        {[...Array(4)].map((_, j) => (
+                                            <TableCell key={j} className="py-8 px-8 border-none">
+                                                <div className="h-5 bg-gray-100 dark:bg-gray-800 rounded-full w-2/3"></div>
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ) : data.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="py-24 text-center border-none">
+                                        <div className="max-w-xs mx-auto">
+                                            <div className="w-24 h-24 bg-gray-50 dark:bg-gray-900 rounded-[2.5rem] flex items-center justify-center m-auto mb-6 shadow-inner ring-4 ring-white dark:ring-gray-800">
+                                                <IconHistory className="text-gray-200" size={48} />
+                                            </div>
+                                            <h3 className="text-2xl font-black text-gray-900 dark:text-white">Empty Catalog</h3>
+                                            <p className="text-gray-500 mt-2 font-medium">Adjust your filters or contact your coordinator to request new report assignments.</p>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                data.map((row: any) => (
+                                    <TableRow key={row.id} className="group hover:bg-primary/[0.03] dark:hover:bg-primary/5 transition-all border-none">
+                                        <TableCell className="py-7 px-8 transition-all duration-300">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${row.platform === 'facebook' ? 'bg-blue-50 text-blue-500' : 'bg-black text-white'}`}>
+                                                    {row.platform === 'facebook' ? <IconBrandFacebook size={20} /> : <IconBrandTiktok size={20} />}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-gray-900 dark:text-white line-clamp-1">
+                                                        {row.title}
+                                                    </div>
+                                                    <div className="text-xs text-gray-400 font-semibold uppercase tracking-wider">
+                                                        {row.platform}
                                                     </div>
                                                 </div>
-                                            </th>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </thead>
-                            <tbody className="divide-y divide-gray-50/50 dark:divide-gray-700/50">
-                                {loading ? (
-                                    [...Array(5)].map((_, i) => (
-                                        <tr key={i} className="animate-pulse">
-                                            {[...Array(4)].map((_, j) => (
-                                                <td key={j} className="py-8 px-8">
-                                                    <div className="h-5 bg-gray-100 dark:bg-gray-800 rounded-full w-2/3"></div>
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                ) : data.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={columns.length} className="py-24 text-center">
-                                            <div className="max-w-xs mx-auto">
-                                                <div className="w-24 h-24 bg-gray-50 dark:bg-gray-900 rounded-[2.5rem] flex items-center justify-center m-auto mb-6 shadow-inner ring-4 ring-white dark:ring-gray-800">
-                                                    <IconHistory className="text-gray-200" size={48} />
-                                                </div>
-                                                <h3 className="text-2xl font-black text-gray-900 dark:text-white">Empty Catalog</h3>
-                                                <p className="text-gray-500 mt-2 font-medium">Adjust your filters or contact your coordinator to request new report assignments.</p>
                                             </div>
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    table.getRowModel().rows.map(row => (
-                                        <tr key={row.id} className="group hover:bg-primary/[0.03] dark:hover:bg-primary/5 transition-all">
-                                            {row.getVisibleCells().map(cell => (
-                                                <td key={cell.id} className="py-7 px-8 transition-all group-hover:translate-x-1 duration-300">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                        </TableCell>
+
+                                        <TableCell className="py-7 px-8 transition-all duration-300">
+                                            {row.type === 'page' ? (
+                                                <Badge variant="accent" className="uppercase tracking-wider">
+                                                    Page Folder
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant={row.type === 'facebook' ? 'default' : 'success'} className="uppercase tracking-wider">
+                                                    {row.type} Report
+                                                </Badge>
+                                            )}
+                                        </TableCell>
+
+                                        <TableCell className="py-7 px-8 transition-all duration-300">
+                                            <div className="text-gray-500 font-medium">
+                                                {row.created_at}
+                                            </div>
+                                        </TableCell>
+
+                                        <TableCell className="py-7 px-8 transition-all  duration-300">
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => openReport(row)}
+                                                    className={`p-2 hover:bg-primary/10 text-gray-400 hover:text-primary rounded-xl transition-all ${row.type === 'page' ? 'w-full flex justify-center bg-gray-50 dark:bg-gray-800' : ''}`}
+                                                    title={row.type === 'page' ? "View Reports" : "View Secured Report"}
+                                                >
+                                                    {row.type === 'page' ? <div className="flex items-center gap-1 text-xs font-bold uppercase"><IconEye size={16} /> View All</div> : <IconEye size={20} />}
+                                                </button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
 
                     <div className="px-8 py-8 bg-gray-50/50 dark:bg-gray-900/20 border-t border-gray-100 dark:border-gray-700">
                         <AnalyticsPagination
                             currentPage={pagination.pageIndex + 1}
-                            totalPages={table.getPageCount()}
+                            totalPages={Math.ceil(rowCount / pagination.pageSize) || 1}
                             rowsPerPage={pagination.pageSize}
-                            onPageChange={(page) => table.setPageIndex(page - 1)}
-                            onRowsPerPageChange={(size) => table.setPageSize(size)}
+                            onPageChange={(page) => setPagination(prev => ({ ...prev, pageIndex: page - 1 }))}
+                            onRowsPerPageChange={(size) => setPagination({ pageIndex: 0, pageSize: size })}
                             totalItems={rowCount}
                         />
                     </div>

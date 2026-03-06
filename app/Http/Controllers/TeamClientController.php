@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use App\Models\Report;
 use App\Models\FacebookAdReport;
+use App\Models\Page;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -129,9 +130,14 @@ class TeamClientController extends Controller
             ->latest()
             ->get(['id', 'account_name', 'file_name', 'created_at']);
 
+        $pages = Page::where('team_id', $team->id)
+            ->latest()
+            ->get(['id', 'name', 'platform', 'avatar']);
+
         return response()->json([
             'standard' => $standardReports,
-            'facebook' => $facebookReports
+            'facebook' => $facebookReports,
+            'pages' => $pages,
         ]);
     }
 
@@ -145,13 +151,29 @@ class TeamClientController extends Controller
         $request->validate([
             'report_ids' => 'array',
             'facebook_report_ids' => 'array',
+            'page_ids' => 'array',
         ]);
 
         // Sync polymorphic relationships
         $client->reports()->sync($request->report_ids ?? []);
         $client->facebookAdReports()->sync($request->facebook_report_ids ?? []);
+        $client->pages()->sync($request->page_ids ?? []);
 
         return response()->json(['message' => 'Reports assigned successfully']);
+    }
+
+    /**
+     * Get assigned items for a client
+     */
+    public function getAssignedItems(Client $client)
+    {
+        $this->authorizeOwner($client);
+
+        return response()->json([
+            'report_ids' => $client->reports()->pluck('reportable_id'),
+            'facebook_report_ids' => $client->facebookAdReports()->pluck('reportable_id'),
+            'page_ids' => $client->pages()->pluck('reportable_id'),
+        ]);
     }
 
     /**

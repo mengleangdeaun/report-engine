@@ -90,10 +90,23 @@ class ClientPortalController extends Controller
             $facebookQuery->whereRaw('1 = 0');
         }
 
+        // 3. Fetch Pages Query
+        $pagesQuery = $client->pages()
+            ->select('pages.id', \DB::raw('NULL as public_uuid'), 'pages.id as page_id', 'pages.name as page_name', 'pages.platform', 'pages.created_at', \DB::raw("'page' as type"));
+
+        if ($search) {
+            $pagesQuery->where('pages.name', 'like', "%{$search}%");
+        }
+
+        if ($platform && $platform !== 'all') {
+            $pagesQuery->where('pages.platform', $platform);
+        }
+
         $standardReports = $standardQuery->get();
         $facebookReports = $facebookQuery->get();
+        $assignedPages = $pagesQuery->get();
 
-        $merged = $standardReports->concat($facebookReports);
+        $merged = $standardReports->concat($facebookReports)->concat($assignedPages);
 
         // Map for consistent frontend keys
         $merged = $merged->map(function ($r) {
@@ -105,7 +118,8 @@ class ClientPortalController extends Controller
             }
 
             return [
-                'id' => $r->public_uuid, // Use UUID as the primary identifier for frontend
+                // For pages, we use id as the identifier, for reports we use public_uuid
+                'id' => $r->type === 'page' ? (string) $r->id : $r->public_uuid, 
                 'real_id' => $r->id,
                 'type' => $r->type,
                 'title' => $title ?: 'Report #' . $r->id,
@@ -155,6 +169,37 @@ class ClientPortalController extends Controller
         }
 
         return response()->json(['message' => 'Invalid report type'], 400);
+    }
+
+    /**
+     * Show a specific page and its reports.
+     */
+    public function showPage(Request $request, $id)
+    {
+        $client = $request->user();
+
+        $page = $client->pages()
+            ->where('pages.id', $id)
+            ->firstOrFail();
+
+        // Get all reports for this page that belong to the client's team
+        // The client has access to the *entire* page, so we give them all reports for it
+        $reports = \App\Models\Report::where('page_id', $page->id)
+            ->where('team_id', $page->team_id)
+            ->latest()
+            ->get()->map(function($r) {
+                return [
+                    'id' => $r->public_uuid,
+                    'title' => 'Report #' . $r->id,
+                    'platform' => $r->platform,
+                    'created_at' => $r->created_at->format('Y-m-d H:i'),
+                ];
+            });
+
+        return response()->json([
+            'page' => $page,
+            'reports' => $reports
+        ]);
     }
 
     /**

@@ -26,6 +26,7 @@ const ClientManagement = lazy(() => import('../pages/Team/ClientManagement'));
 const PortalLogin = lazy(() => import('../pages/ClientPortal/Login'));
 const PortalDashboard = lazy(() => import('../pages/ClientPortal/Dashboard'));
 const PortalReportDetail = lazy(() => import('../pages/ClientPortal/PortalReportDetail'));
+const PortalPageDetail = lazy(() => import('../pages/ClientPortal/PageDetails'));
 
 const MustVerify = lazy(() => import('../pages/Authentication/VerifyEmail'));
 
@@ -184,6 +185,11 @@ const routes = [
     {
         path: '/portal/reports/:type/:id',
         element: <PortalReportDetail />,
+        layout: 'blank',
+    },
+    {
+        path: '/portal/pages/:id',
+        element: <PortalPageDetail />,
         layout: 'blank',
     },
 
