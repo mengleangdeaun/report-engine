@@ -599,7 +599,7 @@ const Header = React.memo<HeaderProps>(
                                     <a
                                         key={idx}
                                         href={item.link}
-                                        className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition font-medium"
+                                        className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition font-black text-xs uppercase tracking-widest"
                                     >
                                         {item.name}
                                     </a>
@@ -611,7 +611,7 @@ const Header = React.memo<HeaderProps>(
                                         <a
                                             key={s.id}
                                             href={`#${s.id}`}
-                                            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition font-medium"
+                                            className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition font-black text-xs uppercase tracking-widest"
                                         >
                                             {s.name}
                                         </a>
@@ -725,7 +725,7 @@ const Hero = React.memo<HeroProps>(({ hero, config }) => {
                     {hero.badge}
                 </span>
             )}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 text-gray-900 dark:text-white">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 text-gray-900 dark:text-white leading-[1.1]">
                 {hero.title?.split(' ').map((word, i, arr) =>
                     i === arr.length - 1 ? (
                         <span
@@ -743,7 +743,7 @@ const Hero = React.memo<HeroProps>(({ hero, config }) => {
                     )
                 )}
             </h1>
-            <p className="mt-4 text-xl md:text-2xl mb-10 text-gray-600 dark:text-gray-300">
+            <p className="mt-4 text-base sm:text-lg md:text-2xl mb-8 sm:mb-10 text-gray-600 dark:text-gray-300 leading-relaxed">
                 {hero.subtitle}
             </p>
             <div
@@ -753,7 +753,7 @@ const Hero = React.memo<HeroProps>(({ hero, config }) => {
                 {hero.primaryBtnEnabled && (
                     <NavLink
                         to={hero.primaryBtnLink || '/auth/boxed-signup'}
-                        className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-3.5 text-base font-semibold text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 group"
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-sm sm:text-base font-black uppercase tracking-widest text-white shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 group"
                         style={{ backgroundColor: `hsl(var(--public-primary))` }}
                     >
                         {hero.primaryBtnText || 'Get Started'}{' '}
@@ -763,7 +763,7 @@ const Hero = React.memo<HeroProps>(({ hero, config }) => {
                 {hero.secondaryBtnEnabled && (
                     <a
                         href={hero.secondaryBtnLink || '#features'}
-                        className="inline-flex items-center justify-center rounded-full px-8 py-3.5 text-base font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:-translate-y-0.5 transition-all duration-200"
+                        className="w-full sm:w-auto inline-flex items-center justify-center rounded-full px-8 py-4 text-sm sm:text-base font-black uppercase tracking-widest border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:-translate-y-0.5 transition-all duration-200"
                     >
                         {hero.secondaryBtnText || 'Learn More'}
                     </a>
@@ -791,7 +791,7 @@ const Hero = React.memo<HeroProps>(({ hero, config }) => {
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-20">
                 {hero.layout === 'contentLeft' || hero.layout === 'contentRight' ? (
                     <div
-                        className={`flex flex-col lg:flex-row items-center gap-12 ${hero.layout === 'contentRight' ? 'lg:flex-row-reverse' : ''
+                        className={`flex flex-col lg:flex-row items-center gap-8 sm:gap-12 ${hero.layout === 'contentRight' ? 'lg:flex-row-reverse' : ''
                             }`}
                     >
                         <div className="w-full lg:w-1/2">{heroContent}</div>
@@ -852,12 +852,12 @@ const Features = React.memo<FeaturesProps>(({ features }) => {
         >
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Header */}
-                <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-4 pb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+                <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 pb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 uppercase tracking-tight">
                         {features.title || 'Features'}
                     </h2>
                     {features.description && (
-                        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
                             {features.description}
                         </p>
                     )}
@@ -985,16 +985,16 @@ const About = React.memo<AboutProps>(({ about }) => {
 
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Header */}
-                <div className="text-center max-w-3xl mx-auto mb-16">
+                <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
                     <h2
-                        className={`text-4xl md:text-5xl font-bold pb-4 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 ${about.parallax ? '!text-white !bg-none' : ''
+                        className={`text-3xl sm:text-4xl md:text-5xl font-black pb-4 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 uppercase tracking-tight ${about.parallax ? '!text-white !bg-none' : ''
                             }`}
                     >
                         {about.title || 'About Us'}
                     </h2>
                     {about.description && (
                         <p
-                            className={`text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto ${about.parallax ? '!text-gray-200' : ''
+                            className={`text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto ${about.parallax ? '!text-gray-200' : ''
                                 }`}
                         >
                             {about.description}
@@ -1095,12 +1095,12 @@ const WhyUs = React.memo<WhyUsProps>(({ whyUs, primaryBtnLink, primaryBtnText })
         >
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Header */}
-                <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-4 pb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+                <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 pb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 uppercase tracking-tight">
                         {whyUs.title || 'Why Choose Us?'}
                     </h2>
                     {whyUs.subtitle && (
-                        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
                             {whyUs.subtitle}
                         </p>
                     )}
@@ -1168,7 +1168,7 @@ const WhyUs = React.memo<WhyUsProps>(({ whyUs, primaryBtnLink, primaryBtnText })
                             )}
                             <NavLink
                                 to={primaryBtnLink || '/auth/boxed-signup'}
-                                className="inline-block px-10 py-4 rounded-full text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-white/20"
+                                className="w-full sm:w-auto inline-flex items-center justify-center px-10 py-4 rounded-full text-white font-black uppercase tracking-widest text-sm shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-white/20"
                                 style={{
                                     backgroundColor: `hsl(var(--public-primary))`,
                                 }}
@@ -1212,12 +1212,12 @@ const Screenshots = React.memo<ScreenshotsProps>(({ screenshots }) => {
         >
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 {/* Header */}
-                <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-4 pb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+                <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-black mb-4 pb-4 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 uppercase tracking-tight">
                         {screenshots.title || 'Platform Overview'}
                     </h2>
                     {screenshots.subtitle && (
-                        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+                        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
                             {screenshots.subtitle}
                         </p>
                     )}
@@ -1243,13 +1243,13 @@ const Screenshots = React.memo<ScreenshotsProps>(({ screenshots }) => {
                             </div>
 
                             {/* Overlay - Modern glass effect */}
-                            <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                            <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 lg:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-3xl" />
                                 <div className="absolute inset-0 backdrop-blur-[2px] rounded-3xl" />
-                                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                                    <h4 className="text-xl font-bold mb-2">{img.title}</h4>
+                                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-white text-center sm:text-left">
+                                    <h4 className="text-lg sm:text-xl font-bold mb-2">{img.title}</h4>
                                     {img.description && (
-                                        <p className="text-gray-200 text-sm leading-relaxed">
+                                        <p className="text-gray-200 text-[11px] sm:text-sm leading-relaxed line-clamp-2">
                                             {img.description}
                                         </p>
                                     )}
@@ -1281,12 +1281,12 @@ const Reviews = React.memo<ReviewsProps>(({ reviews }) => {
             className="py-20 lg:py-32 bg-gray-50 dark:bg-gray-900 border-y border-gray-200 dark:border-gray-800"
         >
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+                    <h2 className="text-3xl sm:text-4xl md:text-4xl font-black mb-4 uppercase tracking-tight">
                         {reviews.title || 'What Our Customers Say'}
                     </h2>
                     {reviews.subtitle && (
-                        <p className="text-lg opacity-70">{reviews.subtitle}</p>
+                        <p className="text-base sm:text-lg opacity-70">{reviews.subtitle}</p>
                     )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -1333,11 +1333,11 @@ const FAQ = React.memo<FAQProps>(({ faq, openIndex, setOpenIndex }) => {
     return (
         <section id="faq" className="py-20 lg:py-32 bg-white dark:bg-black">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                <div className="text-center mb-12 sm:mb-16">
+                    <h2 className="text-3xl sm:text-4xl md:text-4xl font-black mb-4 uppercase tracking-tight">
                         {faq.title || 'Frequently Asked Questions'}
                     </h2>
-                    {faq.subtitle && <p className="text-lg opacity-70">{faq.subtitle}</p>}
+                    {faq.subtitle && <p className="text-base sm:text-lg opacity-70">{faq.subtitle}</p>}
                 </div>
                 <div className="space-y-4">
                     {faq.items.map((item, index) => (
@@ -1438,12 +1438,12 @@ const Contact = React.memo<ContactProps>(({ contact, companyInfo }) => {
             className="py-20 lg:py-32 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800"
         >
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                <div className="text-center mb-12 sm:mb-16">
+                    <h2 className="text-3xl sm:text-4xl md:text-4xl font-black mb-4 uppercase tracking-tight">
                         {contact.title || 'Get In Touch'}
                     </h2>
                     {contact.subtitle && (
-                        <p className="text-lg opacity-70">{contact.subtitle}</p>
+                        <p className="text-base sm:text-lg opacity-70">{contact.subtitle}</p>
                     )}
                 </div>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
@@ -1530,7 +1530,7 @@ const Contact = React.memo<ContactProps>(({ contact, companyInfo }) => {
                             <Button
                                 type="submit"
                                 disabled={isSubmitting}
-                                className="w-full mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full mt-4 disabled:opacity-50 disabled:cursor-not-allowed h-12 rounded-full font-black uppercase tracking-widest text-xs"
                                 style={{ backgroundColor: `hsl(var(--public-primary))` }}
                             >
                                 {isSubmitting ? 'Sending...' : 'Send Message'}
@@ -1615,8 +1615,8 @@ const Footer = React.memo<FooterProps>(({ config, onLegalClick }) => {
         <footer className="bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 pt-16 pb-8">
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-                    <div className="md:col-span-2">
-                        <div className="flex items-center gap-3 mb-4">
+                    <div className="md:col-span-2 text-center md:text-left">
+                        <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
                             {config.logoUrl && (
                                 <img
                                     src={config.logoUrl}
@@ -1624,37 +1624,37 @@ const Footer = React.memo<FooterProps>(({ config, onLegalClick }) => {
                                     className="h-8 w-auto grayscale opacity-70 object-contain"
                                 />
                             )}
-                            <span className="text-xl font-bold opacity-80">
+                            <span className="text-xl font-bold opacity-80 uppercase tracking-tight">
                                 {config.companyName || 'Report Maker'}
                             </span>
                         </div>
-                        <p className="opacity-60 max-w-sm mb-6">
+                        <p className="opacity-60 max-w-sm mb-6 mx-auto md:mx-0 text-sm sm:text-base">
                             {config.footer.description || config.hero?.subtitle}
                         </p>
-                        <div className="flex gap-4">
+                        <div className="flex justify-center md:justify-start gap-4">
                             {config.footer.socialLinks?.map((link, i) => (
                                 <a
                                     key={i}
                                     href={link.url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="p-2 rounded-full bg-gray-100 dark:bg-gray-900 hover:bg-primary hover:text-white transition-colors"
+                                    className="p-3 rounded-full bg-gray-100 dark:bg-gray-900 hover:bg-primary hover:text-white transition-colors"
                                 >
                                     {getSocialIcon(link.icon || (link as any).platform)}
                                 </a>
                             ))}
                         </div>
                     </div>
-                    <div>
-                        <h4 className="font-bold mb-4 text-lg">Quick Links</h4>
-                        <ul className="space-y-3">
+                    <div className="text-center md:text-left">
+                        <h4 className="font-black mb-6 text-sm uppercase tracking-widest opacity-40">Quick Links</h4>
+                        <ul className="space-y-4">
                             {config.sectionOrder
                                 .filter((s) => s.enabled && s.id !== 'hero')
                                 .map((s) => (
                                     <li key={s.id}>
                                         <a
                                             href={`#${s.id}`}
-                                            className="opacity-60 hover:opacity-100 hover:text-primary transition-opacity"
+                                            className="opacity-60 hover:opacity-100 hover:text-primary transition-opacity font-bold text-sm"
                                         >
                                             {s.name}
                                         </a>
@@ -1662,16 +1662,16 @@ const Footer = React.memo<FooterProps>(({ config, onLegalClick }) => {
                                 ))}
                         </ul>
                     </div>
-                    <div>
-                        <h4 className="font-bold mb-4 text-lg">Important Links</h4>
-                        <ul className="space-y-3">
+                    <div className="text-center md:text-left">
+                        <h4 className="font-black mb-6 text-sm uppercase tracking-widest opacity-40">Important</h4>
+                        <ul className="space-y-4">
                             {config.footer.footerLinks?.map((link, i) => (
                                 <li key={i}>
                                     <a
                                         href={link.url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="opacity-60 hover:opacity-100 hover:text-primary transition-opacity"
+                                        className="opacity-60 hover:opacity-100 hover:text-primary transition-opacity font-bold text-sm"
                                     >
                                         {link.text}
                                     </a>
@@ -1681,7 +1681,7 @@ const Footer = React.memo<FooterProps>(({ config, onLegalClick }) => {
                                 <li>
                                     <button
                                         onClick={() => onLegalClick('Terms of Service', config.termsOfService)}
-                                        className="opacity-60 hover:opacity-100 hover:text-primary transition-opacity text-left"
+                                        className="opacity-60 hover:opacity-100 hover:text-primary transition-opacity text-left font-bold text-sm"
                                     >
                                         Terms of Service
                                     </button>
@@ -1691,7 +1691,7 @@ const Footer = React.memo<FooterProps>(({ config, onLegalClick }) => {
                                 <li>
                                     <button
                                         onClick={() => onLegalClick('Privacy Policy', config.privacyPolicy)}
-                                        className="opacity-60 hover:opacity-100 hover:text-primary transition-opacity text-left"
+                                        className="opacity-60 hover:opacity-100 hover:text-primary transition-opacity text-left font-bold text-sm"
                                     >
                                         Privacy Policy
                                     </button>

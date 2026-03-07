@@ -327,4 +327,35 @@ class FacebookAdReportController extends Controller
             fclose($handle);
         }, 200, $headers);
     }
+
+    /**
+     * Generate or retrieve a public share link for a report.
+     */
+    public function generateShareLink(int $id)
+    {
+        $user = Auth::user();
+        $report = FacebookAdReport::where('team_id', $user->team_id)->findOrFail($id);
+
+        if (empty($report->public_uuid)) {
+            $report->public_uuid = (string) Str::uuid();
+            $report->save();
+        }
+
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+
+        return response()->json([
+            'uuid' => $report->public_uuid,
+            'url' => "{$frontendUrl}/share/ad-report/{$report->public_uuid}"
+        ]);
+    }
+
+    /**
+     * Get public report data by UUID.
+     */
+    public function getPublicReport(string $uuid)
+    {
+        $report = FacebookAdReport::where('public_uuid', $uuid)->firstOrFail();
+
+        return response()->json($report);
+    }
 }

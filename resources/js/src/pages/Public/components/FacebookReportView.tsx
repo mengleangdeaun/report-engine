@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import dayjs from 'dayjs';
 import { formatUserDate } from '../../../utils/userDate';
 import { useTranslation } from 'react-i18next';
 import {
@@ -8,13 +9,110 @@ import {
     IconCalendar, IconSortAscending, IconFilter,
     IconInfoCircle, IconArrowUp, IconArrowDown,
     IconPlayerPlay, IconPhoto, IconVideo, IconBrandFacebook, IconSparkles,
-    IconSearch, IconX
+    IconSearch, IconX, IconTrendingUp
 } from '@tabler/icons-react';
+import Tippy from '@tippyjs/react';
+import 'tippy.js/dist/tippy.css';
+import 'tippy.js/animations/scale.css';
 import AnalyticsStatCard from '../../../components/Analytics/AnalyticsStatCard';
 import AnalyticsChampionCard from '../../../components/Analytics/AnalyticsChampionCard';
 import AnalyticsListbox from '../../../components/Analytics/AnalyticsListbox';
 import AnalyticsPagination from '../../../components/Analytics/AnalyticsPagination';
 import AnalyticsSortHeader from '../../../components/Analytics/AnalyticsSortHeader';
+import { Input } from '../../../components/ui/input';
+
+// --- Engagement Rate Indicator ---
+const EngagementIndicator = ({ rate }: { rate: number }) => {
+    let colorClass = '';
+    let label = '';
+    let icon = null;
+
+    if (rate >= 5) {
+        colorClass = 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600';
+        label = 'Viral';
+        icon = <IconSparkles className="w-3 h-3" />;
+    } else if (rate >= 2) {
+        colorClass = 'bg-blue-50 dark:bg-blue-900/20 text-blue-600';
+        label = 'High';
+        icon = <IconTrendingUp className="w-3 h-3" />;
+    } else if (rate >= 1) {
+        colorClass = 'bg-amber-50 dark:bg-amber-900/20 text-amber-600';
+        label = 'Average';
+        icon = <IconChartBar className="w-3 h-3" />;
+    } else {
+        colorClass = 'bg-rose-50 dark:bg-rose-900/20 text-rose-600';
+        label = 'Low';
+        icon = <IconInfoCircle className="w-3 h-3" />;
+    }
+
+    return (
+        <Tippy
+            theme="light"
+            animation="scale"
+            interactive={true}
+            className="!bg-transparent !p-0"
+            content={
+                <div className="p-3 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 min-w-[220px]">
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-50 dark:border-gray-800">
+                        <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600">
+                            <IconChartBar size={14} />
+                        </div>
+                        <span className="text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white">Engagement Tiers</span>
+                    </div>
+
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-4 group">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400">Viral Performance</span>
+                            </div>
+                            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded">5% +</span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
+                                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400">High Engagement</span>
+                            </div>
+                            <span className="text-[10px] font-black text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded">2% - 5%</span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
+                                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400">Average Reach</span>
+                            </div>
+                            <span className="text-[10px] font-black text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">1% - 2%</span>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
+                                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-400">Low Interaction</span>
+                            </div>
+                            <span className="text-[10px] font-black text-rose-600 bg-rose-50 dark:bg-rose-900/20 px-1.5 py-0.5 rounded">Below 1%</span>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-gray-50 dark:border-gray-800">
+                        <p className="text-[9px] font-black text-gray-400 dark:text-gray-500 mb-1.5">Calculation Formula</p>
+                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-2 font-mono text-[9px] text-gray-600 dark:text-gray-400 leading-relaxed">
+                            (Reactions + Comments + Shares) ÷ Reach
+                        </div>
+                    </div>
+                </div>
+            }
+        >
+            <div className="flex flex-col items-center cursor-help">
+                <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 ${colorClass}`}>
+                    {icon}
+                    {rate}%
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-1 opacity-50">{label}</span>
+            </div>
+        </Tippy>
+    );
+};
 
 interface FacebookReportViewProps {
     report: any;
@@ -41,6 +139,9 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
         { value: 'reach', label: t('report.reach') || 'Reach (High to Low)' },
         { value: 'views', label: t('report.views') || 'Views (High to Low)' },
         { value: 'reactions', label: t('report.reactions') || 'Reactions' },
+        { value: 'comments', label: t('report.comments') || 'Comments' },
+        { value: 'shares', label: t('report.shares') || 'Shares' },
+        { value: 'link_clicks', label: t('report.clicks') || 'Clicks' },
         { value: 'engagement_rate', label: t('report.engagement_rate') || 'Engagement Rate' },
     ];
 
@@ -153,8 +254,8 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
             </div>
 
             {/* Range & Period Info */}
-            <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+            <div className="bg-white dark:bg-gray-900 p-5 sm:p-8 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-5 sm:p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                     <IconCalendar size={120} />
                 </div>
                 <div className="relative z-10">
@@ -167,11 +268,11 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                         <div>
                             <div className="text-[10px] font-black uppercase text-gray-400 mb-1">Start Date</div>
-                            <div className="text-base font-black text-gray-900 dark:text-white">{formatUserDate(report.start_date)}</div>
+                            <div className="text-base font-black text-gray-900 dark:text-white">{dayjs(report.start_date).format('DD MMM YYYY')}</div>
                         </div>
                         <div>
                             <div className="text-[10px] font-black uppercase text-gray-400 mb-1">End Date</div>
-                            <div className="text-base font-black text-gray-900 dark:text-white">{formatUserDate(report.end_date)}</div>
+                            <div className="text-base font-black text-gray-900 dark:text-white">{dayjs(report.end_date).format('DD MMM YYYY')}</div>
                         </div>
                         <div>
                             <div className="text-[10px] font-black uppercase text-gray-400 mb-1">Active Duration</div>
@@ -186,7 +287,7 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
             </div>
 
             {/* KPI Cards Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
                 <AnalyticsStatCard label="Reach" value={kpi?.reach} icon={<IconUsers className="w-5 h-5" />} color="text-blue-500" trend={kpi?.reach_trend} />
                 <AnalyticsStatCard label="Views" value={kpi?.views} icon={<IconEye className="w-5 h-5" />} color="text-purple-500" trend={kpi?.views_trend} />
                 <AnalyticsStatCard label="Reactions" value={kpi?.reactions} icon={<IconThumbUp className="w-5 h-5" />} color="text-rose-500" trend={kpi?.reactions_trend} />
@@ -197,11 +298,11 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
 
             {/* Champions Section */}
             <div>
-                <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-black uppercase text-gray-400 dark:text-gray-500 px-1">Performance Champions</h3>
-                    <div className="h-px flex-1 bg-gray-100 dark:bg-gray-800 ml-5 hidden md:block"></div>
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                    <h3 className="text-[10px] sm:text-xs md:text-sm font-black uppercase text-gray-400 dark:text-gray-500 px-1 tracking-[0.2em]">Performance Champions</h3>
+                    <div className="h-px flex-1 bg-gray-100 dark:bg-gray-800 ml-4 hidden sm:block"></div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     <AnalyticsChampionCard title="Most Viewed Content" post={champions?.highest_view} icon={<IconEye className="w-7 h-7" />} metricLabel="Views" metricValue={(champions?.highest_view?.views || 0).toLocaleString()} platformColor="blue" />
                     <AnalyticsChampionCard title="Highest Engagement" post={champions?.highest_engagement} icon={<IconSparkles className="w-7 h-7" />} metricLabel="ER%" metricValue={`${champions?.highest_engagement?.engagement_rate || 0}%`} platformColor="emerald" />
                     <AnalyticsChampionCard title="Conversation Driver" post={champions?.highest_comments} icon={<IconMessage className="w-7 h-7" />} metricLabel="Comments" metricValue={(champions?.highest_comments?.comments || 0).toLocaleString()} platformColor="pink" />
@@ -210,67 +311,71 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
             </div>
 
             {/* Content Explorer */}
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-8 shadow-sm">
-                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 mb-10">
-                    <div className="flex-1">
-                        <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-blue-600">
-                                <IconSearch size={20} />
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-5 sm:p-8 shadow-sm">
+                <div className="flex flex-col gap-4 sm:gap-6 mb-6 sm:mb-8">
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                        <div className="flex-1 shrink-0">
+                            <h3 className="text-base sm:text-lg font-black text-gray-900 dark:text-white flex items-center gap-2.5">
+                                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center text-blue-600">
+                                    <IconSearch size={14} className="sm:w-4 sm:h-4" />
+                                </div>
+                                Dataset Explorer
+                            </h3>
+                            <p className="text-[11px] sm:text-xs text-gray-400 dark:text-gray-500 font-medium mt-1">
+                                Analyzing <span className="text-gray-900 dark:text-white font-bold">{filteredPosts.length}</span> results
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full xl:w-auto">
+                            {/* Search Input - Premium Focus */}
+                            <div className="relative group w-full sm:flex-1 xl:w-64">
+                                <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 group-focus-within:text-primary transition-colors" />
+                                <Input
+                                    type="text"
+                                    placeholder="Search content..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-9 pr-8 bg-gray-50/50 dark:bg-gray-800/30 border border-gray-100 dark:border-gray-800 rounded-lg text-[11px] sm:text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary/10 focus:border-primary transition-all"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                    >
+                                        <IconX size={12} />
+                                    </button>
+                                )}
                             </div>
-                            Dataset Explorer
-                        </h3>
-                        <p className="text-sm text-gray-400 dark:text-gray-500 font-medium mt-1">
-                            Analyzing <span className="text-gray-900 dark:text-white font-bold">{filteredPosts.length}</span> results
-                        </p>
+
+                            {/* Type Toggles */}
+                            <div className="flex items-center gap-1 p-1 bg-gray-50/50 dark:bg-gray-800/30 rounded-lg border border-gray-100 dark:border-gray-800 w-full sm:w-auto overflow-x-auto scrollbar-none">
+                                {postTypeOptions.map(({ value, label, icon: Icon, count }) => {
+                                    const isActive = showPostTypes.includes(value);
+                                    return (
+                                        <button
+                                            key={value}
+                                            onClick={() => togglePostType(value)}
+                                            className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${isActive
+                                                ? 'bg-white dark:bg-gray-700 text-primary shadow-sm border border-gray-100 dark:border-gray-600'
+                                                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                                                }`}
+                                        >
+                                            <Icon size={12} />
+                                            {label}
+                                            <span className={`text-[8px] px-1 py-0.5 rounded ${isActive ? 'bg-blue-50 dark:bg-blue-900/30 text-primary' : 'bg-gray-200 dark:bg-gray-800 text-gray-500 opacity-50'} transition-colors ml-0.5`}>
+                                                {count}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4">
-                        {/* Search Input - Premium Focus */}
-                        <div className="relative group w-full md:w-72">
-                            <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="Search content text..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-11 pr-10 py-3 bg-gray-50/50 dark:bg-gray-800/30 border border-gray-100 dark:border-gray-800 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all shadow-sm"
-                            />
-                            {searchQuery && (
-                                <button
-                                    onClick={() => setSearchQuery('')}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                                >
-                                    <IconX size={16} />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Type Toggles */}
-                        <div className="flex items-center gap-1 p-1 bg-gray-50/50 dark:bg-gray-800/30 rounded-xl border border-gray-100 dark:border-gray-800">
-                            {postTypeOptions.map(({ value, label, icon: Icon, count }) => {
-                                const isActive = showPostTypes.includes(value);
-                                return (
-                                    <button
-                                        key={value}
-                                        onClick={() => togglePostType(value)}
-                                        className={`flex items-center gap-2.5 px-3.5 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${isActive
-                                            ? 'bg-white dark:bg-gray-700 text-primary shadow-sm border border-gray-100 dark:border-gray-600'
-                                            : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                                            }`}
-                                    >
-                                        <Icon size={14} />
-                                        {label}
-                                        <span className={`text-[9px] px-1.5 py-0.5 rounded-md ${isActive ? 'bg-blue-50 dark:bg-blue-900/30 text-primary' : 'bg-gray-200 dark:bg-gray-800 text-gray-500 opacity-50'} transition-colors ml-0.5`}>
-                                            {count}
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <AnalyticsListbox value={sortBy} onChange={setSortBy} options={sortOptions} icon={IconSortAscending} className="w-48" />
-                            <AnalyticsListbox value={rowsPerPage} onChange={setRowsPerPage} options={rowsPerPageOptions} className="w-36" />
+                    <div className="flex xl:justify-end">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <AnalyticsListbox value={sortBy} onChange={setSortBy} options={sortOptions} icon={IconSortAscending} className="flex-1 sm:w-40" />
+                            <AnalyticsListbox value={rowsPerPage} onChange={setRowsPerPage} options={rowsPerPageOptions} className="flex-1 sm:w-40" />
                         </div>
                     </div>
                 </div>
@@ -280,50 +385,48 @@ const FacebookReportView = ({ report, pageName }: FacebookReportViewProps) => {
                         <thead>
                             <tr className="border-b border-gray-50 dark:border-gray-800">
                                 <AnalyticsSortHeader label="Content Body" sortKey="title" currentSort={sortBy} sortDirection={sortDirection} onSort={handleSort} />
-                                <th className="px-6 py-4 font-black text-[10px] uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 text-center">Format</th>
+                                <th className="px-4 py-3 sm:px-6 sm:py-4 font-black text-[10px] uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 text-center">Format</th>
                                 <AnalyticsSortHeader label="Published" sortKey="date" currentSort={sortBy} sortDirection={sortDirection} onSort={handleSort} align="right" />
                                 <AnalyticsSortHeader label="Reach" sortKey="reach" currentSort={sortBy} sortDirection={sortDirection} onSort={handleSort} align="right" />
                                 <AnalyticsSortHeader label="Views" sortKey="views" currentSort={sortBy} sortDirection={sortDirection} onSort={handleSort} align="right" />
+                                <AnalyticsSortHeader label="Reaction" sortKey="reactions" currentSort={sortBy} sortDirection={sortDirection} onSort={handleSort} align="right" />
+                                <AnalyticsSortHeader label="Comment" sortKey="comments" currentSort={sortBy} sortDirection={sortDirection} onSort={handleSort} align="right" />
+                                <AnalyticsSortHeader label="Share" sortKey="shares" currentSort={sortBy} sortDirection={sortDirection} onSort={handleSort} align="right" />
+                                <AnalyticsSortHeader label="Click" sortKey="link_clicks" currentSort={sortBy} sortDirection={sortDirection} onSort={handleSort} align="right" />
                                 <AnalyticsSortHeader label="ER%" sortKey="engagement_rate" currentSort={sortBy} sortDirection={sortDirection} onSort={handleSort} align="right" />
-                                <th className="px-6 py-4"></th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                             {paginatedPosts.map((post: any, i: number) => (
                                 <tr key={i} className="group hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-all duration-300">
-                                    <td className="px-6 py-6 max-w-sm">
-                                        <div className="text-sm font-black text-gray-900 dark:text-white truncate group-hover:text-primary transition-colors">{post.title || "(No Caption)"}</div>
+                                    <td className="px-4 py-4 sm:px-6 sm:py-6 max-w-sm">
+                                        <a
+                                            href={post.link}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-sm font-black text-gray-900 dark:text-white truncate block hover:text-primary hover:underline transition-all"
+                                        >
+                                            {post.title || "(No Caption)"}
+                                        </a>
                                     </td>
-                                    <td className="px-6 py-6 text-center">
+                                    <td className="px-4 py-4 sm:px-6 sm:py-6 text-center">
                                         <span className={`px-3 py-1 text-[9px] font-black uppercase bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-lg tracking-wider`}>
                                             {post.type}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-6 text-right font-bold text-xs text-gray-400 dark:text-gray-500 uppercase">{post.date}</td>
-                                    <td className="px-6 py-6 text-right font-black text-sm text-gray-900 dark:text-white">{(post.reach || 0).toLocaleString()}</td>
-                                    <td className="px-6 py-6 text-right">
+                                    <td className="px-4 py-4 sm:px-6 sm:py-6 text-right font-bold text-xs text-gray-400 dark:text-gray-500 uppercase">{dayjs(post.date).format('DD MMM YYYY')}</td>
+                                    <td className="px-4 py-4 sm:px-6 sm:py-6 text-right font-black text-sm text-gray-900 dark:text-white">{(post.reach || 0).toLocaleString()}</td>
+                                    <td className="px-4 py-4 sm:px-6 sm:py-6 text-right">
                                         <div className="flex flex-col items-end">
-                                            <span className="text-sm font-black text-purple-600 dark:text-purple-400">{(post.views || 0).toLocaleString()}</span>
-                                            {post.views > (post.reach || 0) && (
-                                                <span className="text-[10px] text-green-500 flex items-center gap-0.5 mt-0.5">
-                                                    <IconArrowUp className="w-3 h-3" />
-                                                    {((post.views / (post.reach || 1)) * 100).toFixed(0)}%
-                                                </span>
-                                            )}
+                                            <span className="text-sm font-black text-blue-600 dark:text-blue-400">{(post.views || 0).toLocaleString()}</span>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-6 text-right">
-                                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black ${post.engagement_rate >= 5 ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' :
-                                            post.engagement_rate >= 2 ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' :
-                                                'bg-rose-50 dark:bg-rose-900/20 text-rose-600'
-                                            }`}>
-                                            {post.engagement_rate}%
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-6 text-right">
-                                        <a href={post.link} target="_blank" rel="noreferrer" className="w-10 h-10 inline-flex items-center justify-center bg-gray-50 dark:bg-gray-800 text-gray-400 hover:text-primary hover:bg-white dark:hover:bg-gray-700 rounded-xl transition-all shadow-sm hover:shadow-md">
-                                            <IconExternalLink size={18} />
-                                        </a>
+                                    <td className="px-4 py-4 sm:px-6 sm:py-6 text-right font-black text-sm text-gray-900 dark:text-white">{(post.reactions || 0).toLocaleString()}</td>
+                                    <td className="px-4 py-4 sm:px-6 sm:py-6 text-right font-black text-sm text-gray-900 dark:text-white">{(post.comments || 0).toLocaleString()}</td>
+                                    <td className="px-4 py-4 sm:px-6 sm:py-6 text-right font-black text-sm text-gray-900 dark:text-white">{(post.shares || 0).toLocaleString()}</td>
+                                    <td className="px-4 py-4 sm:px-6 sm:py-6 text-right font-black text-sm text-gray-900 dark:text-white">{(post.link_clicks || 0).toLocaleString()}</td>
+                                    <td className="px-4 py-4 sm:px-6 sm:py-6 text-right">
+                                        <EngagementIndicator rate={post.engagement_rate || 0} />
                                     </td>
                                 </tr>
                             ))}

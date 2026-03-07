@@ -362,7 +362,7 @@ const Sidebar = () => {
                                             <NavLink to="/team/settings">{t('team_member')}</NavLink>
                                         </li>
                                         <li>
-                                            <NavLink to="/team/clients">Manage Client</NavLink>
+                                            <NavLink to="/team/clients">{t('manage_client')}</NavLink>
                                         </li>
                                         <li>
                                             <NavLink to="/apps/settings/roles">{t('workspace_role')}</NavLink>

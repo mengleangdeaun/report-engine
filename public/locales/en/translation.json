@@ -148,6 +148,7 @@
   "qr_code_generator": "QR Code Generator",
   "create_qr": "Create QR",
   "qr_list": "QR List",
+  "manage_client": "Manage Client",
   "time": {
     "just_now": "Just now",
     "minute_ago": "{{count}} min ago",

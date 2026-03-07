@@ -1,9 +1,6 @@
 import path from 'path';
 import { lazy } from 'react';
 const Index = lazy(() => import('../pages/Index'));
-const Analytics = lazy(() => import('../pages/Analytics'));
-const Finance = lazy(() => import('../pages/Finance'));
-const Crypto = lazy(() => import('../pages/Crypto'));
 const Todolist = lazy(() => import('../pages/Apps/Todolist'));
 
 const ReportGenerator = lazy(() => import('../pages/Apps/Report/ReportGenerator'));
@@ -17,6 +14,7 @@ const QRCodeList = lazy(() => import('../pages/Apps/QRCodeList'));
 const MediaLibrary = lazy(() => import('../pages/Apps/MediaLibrary/MediaLibrary'));
 
 const PublicReportView = lazy(() => import('../pages/Public/PublicReportView'));
+const PublicAdReportView = lazy(() => import('../pages/Public/PublicAdReportView'));
 const PublicReportDashboard = lazy(() => import('../pages/Public/PublicLayout'));
 const PublicPageDashboard = lazy(() => import('../pages/Public/components/PublicPageDashboard'));
 const PublicLandingPage = lazy(() => import('../pages/Public/PublicLandingPage'));
@@ -37,20 +35,6 @@ const WorkspaceRoles = lazy(() => import('../pages/Settings/WorkspaceRoles'));
 const UserPreferences = lazy(() => import('../pages/Settings/UserPreferences'));
 
 
-const Mailbox = lazy(() => import('../pages/Apps/Mailbox'));
-const Notes = lazy(() => import('../pages/Apps/Notes'));
-const Contacts = lazy(() => import('../pages/Apps/Contacts'));
-const Chat = lazy(() => import('../pages/Apps/Chat'));
-const Scrumboard = lazy(() => import('../pages/Apps/Scrumboard'));
-const Calendar = lazy(() => import('../pages/Apps/Calendar'));
-const List = lazy(() => import('../pages/Apps/Invoice/List'));
-const Preview = lazy(() => import('../pages/Apps/Invoice/Preview'));
-const Add = lazy(() => import('../pages/Apps/Invoice/Add'));
-const Edit = lazy(() => import('../pages/Apps/Invoice/Edit'));
-const Widgets = lazy(() => import('../pages/Widgets'));
-const FontIcons = lazy(() => import('../pages/FontIcons'));
-const DragAndDrop = lazy(() => import('../pages/DragAndDrop'));
-const Tables = lazy(() => import('../pages/Tables'));
 
 const Profile = lazy(() => import('../pages/Users/ProfileSetting'));
 const KnowledgeBase = lazy(() => import('../pages/Pages/KnowledgeBase'));
@@ -94,9 +78,7 @@ const Dashboard = lazy(() => import('../pages/Dashboard'));
 const UserDashboard = lazy(() => import('../pages/UserDashboard'));
 const ReportHistory = lazy(() => import('../pages/Apps/Report/ReportHistory'));
 
-const About = lazy(() => import('../pages/About'));
 const Error = lazy(() => import('../components/Error'));
-const Charts = lazy(() => import('../pages/Charts'));
 const ProtectedRoute = lazy(() => import('../components/ProtectedRoute'));
 
 // Helper Component to Decide Dashboard
@@ -128,16 +110,6 @@ const routes = [
         path: '/dashboard',
         element: <Dashboard />,
     },
-    // analytics page
-    {
-        path: '/analytics',
-        element: <Analytics />,
-    },
-    // finance page
-    {
-        path: '/finance',
-        element: <Finance />,
-    },
     // 1. The Main Dashboard (Splits traffic)
     {
         path: '/',
@@ -157,7 +129,11 @@ const routes = [
         element: <PublicReportView />,
         layout: 'blank'
     },
-
+    {
+        path: '/share/ad-report/:uuid',
+        element: <PublicAdReportView />,
+        layout: 'blank'
+    },
     {
         path: '/share/page/:token',
         element: <PublicPageDashboard />,
@@ -307,10 +283,6 @@ const routes = [
 
     // crypto page
     {
-        path: '/crypto',
-        element: <Crypto />,
-    },
-    {
         path: '/apps/report/history',
         element: <ReportHistory />,
     },
@@ -375,74 +347,6 @@ const routes = [
     {
         path: '/apps/qr-code/list',
         element: <QRCodeList />,
-    },
-    {
-        path: '/apps/notes',
-        element: <Notes />,
-    },
-    {
-        path: '/apps/contacts',
-        element: <Contacts />,
-    },
-    {
-        path: '/apps/mailbox',
-        element: <Mailbox />,
-    },
-    {
-        path: '/apps/invoice/list',
-        element: <List />,
-    },
-    // Apps page
-    {
-        path: '/apps/chat',
-        element: <Chat />,
-    },
-    {
-        path: '/apps/scrumboard',
-        element: <Scrumboard />,
-    },
-    {
-        path: '/apps/calendar',
-        element: <Calendar />,
-    },
-    // preview page
-    {
-        path: '/apps/invoice/preview',
-        element: <Preview />,
-    },
-    {
-        path: '/apps/invoice/add',
-        element: <Add />,
-    },
-    {
-        path: '/apps/invoice/edit',
-        element: <Edit />,
-    },
-
-    // charts page
-    {
-        path: '/charts',
-        element: <Charts />,
-    },
-    // widgets page
-    {
-        path: '/widgets',
-        element: <Widgets />,
-    },
-    //  font-icons page
-    {
-        path: '/font-icons',
-        element: <FontIcons />,
-    },
-    //  Drag And Drop page
-    {
-        path: '/dragndrop',
-        element: <DragAndDrop />,
-    },
-    //  Tables page
-    {
-        path: '/tables',
-        element: <Tables />,
     },
 
     // Users page
@@ -559,11 +463,6 @@ const routes = [
     {
         path: '/workspace-inactive',
         element: <WorkspaceInactive />,
-        layout: 'blank',
-    },
-    {
-        path: '/about',
-        element: <About />,
         layout: 'blank',
     },
     {

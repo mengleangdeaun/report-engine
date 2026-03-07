@@ -209,8 +209,8 @@ const PublicPageDashboard = () => {
                 whileTap={{ scale: 0.98 }}
                 onClick={onClick}
                 className={`w-full text-left p-3 rounded-lg border transition-all duration-300 group ${isActive
-                        ? 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 border-blue-300 dark:border-blue-700 shadow-lg shadow-blue-500/10'
-                        : 'bg-gray-50/50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
+                    ? 'bg-gradient-to-r from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 border-blue-300 dark:border-blue-700 shadow-lg shadow-blue-500/10'
+                    : 'bg-gray-50/50 dark:bg-gray-800/30 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
                     }`}
             >
                 <div className="flex items-start justify-between mb-3">
@@ -414,7 +414,7 @@ const PublicPageDashboard = () => {
                                         initial={{ opacity: 0, y: 20, scale: 0.95 }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                                        className="absolute bottom-20 right-0 w-[320px] max-h-[70vh] overflow-hidden shadow-2xl rounded-2xl"
+                                        className="absolute bottom-20 right-0 w-[calc(100vw-3rem)] sm:w-[320px] max-w-[320px] max-h-[70vh] overflow-hidden shadow-2xl rounded-2xl"
                                     >
                                         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-5 h-full">
                                             <HistoryContent />
@@ -423,14 +423,13 @@ const PublicPageDashboard = () => {
                                 )}
                             </AnimatePresence>
 
-
                             <motion.button
                                 whileHover={{ scale: 1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => setIsHistoryOpen(!isHistoryOpen)}
                                 className={`w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ${isHistoryOpen
-                                        ? 'bg-gradient-to-br from-rose-500 to-pink-500 rotate-180'
-                                        : 'bg-gradient-to-br from-blue-500 to-blue-600'
+                                    ? 'bg-gradient-to-br from-rose-500 to-pink-500 rotate-180'
+                                    : 'bg-gradient-to-br from-blue-500 to-blue-600'
                                     }`}
                             >
                                 {isHistoryOpen ? (
@@ -443,49 +442,6 @@ const PublicPageDashboard = () => {
                     </>
                 )}
             </div>
-
-            {/* Footer Instructions */}
-            {/* <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
-                <div className="max-w-4xl mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="flex items-start gap-3">
-                            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                                <IconInfoCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Data Freshness</h4>
-                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                    Reports update automatically. Last sync: {formatUserDate(new Date())}
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-3">
-                            <div className="p-2 bg-emerald-100 dark:bg-emerald-900 rounded-lg">
-                                <IconShare className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Sharing</h4>
-                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                    This link provides read-only access. All data is secure.
-                                </p>
-                            </div>
-                        </div>
-                        
-                        <div className="flex items-start gap-3">
-                            <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                                <IconHelpCircle className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">Need Help?</h4>
-                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                    Contact your analytics manager for detailed explanations.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div> */}
         </PublicLayout>
     );
 };

@@ -29,14 +29,14 @@ const AnalyticsListbox = ({
     return (
         <div className={`flex flex-col gap-1.5 ${className}`}>
             {label && (
-                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 ml-1">
+                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500 ml-1">
                     {label}
                 </label>
             )
             }
             <Listbox value={value} onChange={onChange}>
                 <div className="relative">
-                    <Listbox.Button className="relative w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg pl-4 pr-10 py-3 text-left focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all group hover:border-gray-300 dark:hover:border-gray-700 shadow-sm">
+                    <Listbox.Button className="relative w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg pl-4 pr-10 py-2 text-left focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all group hover:border-gray-300 dark:hover:border-gray-700 shadow-sm">
                         <div className="flex items-center gap-2.5">
                             {Icon && <Icon className="w-4 h-4 text-gray-400 group-hover:text-primary transition-colors" />}
                             <span className="text-sm font-bold text-gray-900 dark:text-white truncate">
@@ -44,7 +44,7 @@ const AnalyticsListbox = ({
                             </span>
                         </div>
                         <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <IconChevronDown className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
+                            <IconChevronDown className="w-4 h-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
                         </span>
                     </Listbox.Button>
                     <Transition
@@ -59,7 +59,7 @@ const AnalyticsListbox = ({
                                     key={option.value}
                                     value={option.value}
                                     className={({ active }) =>
-                                        `cursor-pointer select-none relative px-4 py-3 rounded-md text-sm transition-all mb-1 last:mb-0 ${active ? 'bg-primary/10 text-primary font-bold' : 'text-gray-600 dark:text-gray-300'
+                                        `cursor-pointer select-none relative px-4 py-2 rounded-md text-sm transition-all mb-1 last:mb-0 ${active ? 'bg-primary/10 text-primary font-bold' : 'text-gray-600 dark:text-gray-300'
                                         }`
                                     }
                                 >

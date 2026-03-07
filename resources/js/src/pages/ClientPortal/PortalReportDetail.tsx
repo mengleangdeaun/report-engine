@@ -108,7 +108,7 @@ const PortalReportDetail = () => {
 
             <main className="max-w-7xl mx-auto px-4 py-8 md:py-12">
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    {type === 'facebook' ? (
+                    {report.platform === 'facebook' ? (
                         <FacebookReportView report={report} pageName={pageName} />
                     ) : (
                         <TikTokReportView report={report} pageName={pageName} />
@@ -121,7 +121,7 @@ const PortalReportDetail = () => {
                     <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary/40">
                         <IconDeviceDesktopAnalytics size={24} />
                     </div>
-                    <p className="text-gray-400 text-[10px] uppercase font-black tracking-[0.4em]">Report Engine Enterprise</p>
+                    <p className="text-gray-400 text-[10px] uppercase font-black tracking-[0.4em]">Report Engine</p>
                     <p className="text-gray-500 text-xs font-medium opacity-60 max-w-md">
                         This document contains confidential proprietary analytics data protected by secure tunneling.
                         Unauthorized reproduction is strictly prohibited.

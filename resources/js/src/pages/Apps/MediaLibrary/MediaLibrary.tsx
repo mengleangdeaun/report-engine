@@ -474,7 +474,7 @@ const MediaLibrary = () => {
             <aside className="w-60 shrink-0 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col overflow-y-auto">
                 <div className="p-5 border-b border-gray-100 dark:border-gray-800">
                     <h2 className="font-bold text-gray-800 dark:text-white text-sm flex items-center gap-2">
-                        <IconFolderOpen size={18} className="text-indigo-500" />
+                        <IconFolderOpen size={18} className="text-primary" />
                         Media Library
                     </h2>
                 </div>
@@ -704,14 +704,14 @@ const MediaLibrary = () => {
                                     </>
                                 ) : (
                                     <>
-                                        <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-950/30 rounded-2xl flex items-center justify-center mb-4">
-                                            <IconUpload size={28} className="text-indigo-400" />
+                                        <div className="w-16 h-16 bg-primary/10 dark:bg-primary/950/30 rounded-2xl flex items-center justify-center mb-4">
+                                            <IconUpload size={28} className="text-primary" />
                                         </div>
                                         <p className="text-gray-600 dark:text-gray-400 font-medium">{favoriteFilter ? 'No favorites yet' : 'No files here yet'}</p>
                                         <p className="text-sm text-gray-400 mt-1">{favoriteFilter ? 'Star your important files to find them easily' : 'Click the button below to upload your first file'}</p>
                                         {!favoriteFilter && (
                                             <button onClick={() => setShowUploadModal(true)}
-                                                className="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm rounded-lg hover:bg-indigo-700 transition-all shadow-sm">
+                                                className="mt-4 px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-all shadow-sm">
                                                 Upload Files
                                             </button>
                                         )}
@@ -964,7 +964,7 @@ const MediaLibrary = () => {
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <IconUpload size={20} className="text-indigo-500" />
+                            <IconUpload size={20} className="text-primary" />
                             Upload Files
                         </DialogTitle>
                         <DialogDescription>
@@ -974,7 +974,7 @@ const MediaLibrary = () => {
 
                     <div
                         className={`mt-4 border-2 border-dashed rounded-xl p-10 text-center transition-all cursor-pointer
-                            ${isDragging ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-200 dark:border-gray-800 hover:border-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+                            ${isDragging ? 'border-primary bg-primary/50 dark:bg-primary/10' : 'border-gray-200 dark:border-gray-800 hover:border-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
                         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                         onDragLeave={() => setIsDragging(false)}
                         onDrop={(e) => {
@@ -983,8 +983,8 @@ const MediaLibrary = () => {
                         onClick={() => fileInputRef.current?.click()}
                     >
                         <div className="flex flex-col items-center justify-center gap-3">
-                            <div className={`p-4 rounded-full ${isDragging ? 'bg-indigo-100 dark:bg-indigo-900/40' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                                <IconUpload size={32} className={isDragging ? 'text-indigo-600' : 'text-gray-400'} />
+                            <div className={`p-4 rounded-full ${isDragging ? 'bg-primary/10 dark:bg-primary/10' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                                <IconUpload size={32} className={isDragging ? 'text-primary' : 'text-gray-400'} />
                             </div>
                             <div>
                                 <p className="font-semibold text-gray-700 dark:text-gray-200">
@@ -1013,12 +1013,11 @@ const MediaLibrary = () => {
                     {uploading && (
                         <div className="mt-4 flex flex-col gap-2">
                             <div className="flex justify-between items-center text-xs">
-                                <span className="font-medium text-indigo-600">Uploading file...</span>
-                                <span className="animate-pulse">◌</span>
+                                <span className="font-medium text-primary">Uploading file...</span>
                             </div>
                             <div className="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full overflow-hidden">
                                 <motion.div
-                                    className="bg-indigo-600 h-full"
+                                    className="bg-primary h-full"
                                     initial={{ width: '0%' }}
                                     animate={{ width: '100%' }}
                                     transition={{ duration: 1.5, repeat: Infinity }}

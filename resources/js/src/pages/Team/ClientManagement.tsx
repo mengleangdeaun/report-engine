@@ -11,6 +11,13 @@ import toast from 'react-hot-toast';
 import api from '../../utils/api';
 import DeleteModal from '../../components/DeleteModal';
 import { Button } from '@/components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -19,6 +26,7 @@ const ClientManagement = () => {
     const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
 
     // Add/Edit Modal State
     const [clientModalOpen, setClientModalOpen] = useState(false);
@@ -47,6 +55,7 @@ const ClientManagement = () => {
     const [deleting, setDeleting] = useState(false);
 
     const fetchClients = async () => {
+        setLoading(true);
         try {
             const { data } = await api.get('/clients');
             setClients(data);
@@ -173,10 +182,15 @@ const ClientManagement = () => {
         }
     };
 
-    const filteredClients = clients.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredClients = clients.filter(c => {
+        const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.email.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'all' ? true :
+            statusFilter === 'active' ? c.is_active :
+                !c.is_active;
+
+        return matchesSearch && matchesStatus;
+    });
 
     return (
         <div>
@@ -197,17 +211,49 @@ const ClientManagement = () => {
                 </button>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center gap-4">
                     <div className="relative flex-1">
                         <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                        <input
+                        <Input
                             type="text"
                             placeholder="Search by name or email..."
-                            className="form-input pl-10 h-10 w-full"
+                            className="pl-10 pr-10 h-10 w-full dark:bg-gray-900/90 dark:text-white"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                                title="Clear search"
+                            >
+                                <IconX size={16} />
+                            </button>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="w-full sm:w-[180px]">
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger className="h-10 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+                                    <SelectValue placeholder="All Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Status</SelectItem>
+                                    <SelectItem value="active">Active</SelectItem>
+                                    <SelectItem value="inactive">Inactive</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button
+                            onClick={fetchClients}
+                            variant="outline"
+                            className="h-10 px-4 gap-2 "
+                            title="Refresh List"
+                        >
+                            <IconRefresh size={18} className={loading ? 'animate-spin' : ''} />
+                            <span className="hidden sm:inline">Refresh</span>
+                        </Button>
                     </div>
                 </div>
 
@@ -233,8 +279,27 @@ const ClientManagement = () => {
                                 </tr>
                             ) : filteredClients.length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="px-6 py-10 text-center text-gray-500">
-                                        No clients found.
+                                    <td colSpan={4} className="px-6 py-20 text-center">
+                                        <div className="max-w-sm mx-auto flex flex-col items-center">
+                                            <div className="w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-[2rem] flex items-center justify-center mb-6 shadow-inner ring-4 ring-white dark:ring-gray-800">
+                                                <IconSearch className="text-gray-300 dark:text-gray-600" size={40} />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No clients found</h3>
+                                            <p className="text-gray-500 mb-6 font-medium">We couldn't find any clients matching your search or filter criteria.</p>
+                                            {(searchTerm || statusFilter !== 'all') && (
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setSearchTerm('');
+                                                        setStatusFilter('all');
+                                                    }}
+                                                    className="gap-2"
+                                                >
+                                                    <IconX size={16} />
+                                                    Clear Filters
+                                                </Button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ) : filteredClients.map((client) => (
@@ -381,7 +446,7 @@ const ClientManagement = () => {
                     <div className="fixed inset-0 overflow-y-auto">
                         <div className="flex min-h-full items-center justify-center p-4">
                             <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-                                <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl transition-all border border-gray-200 dark:border-gray-700">
+                                <Dialog.Panel className="w-full max-w-6xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl transition-all border border-gray-200 dark:border-gray-700">
                                     <div className="flex items-center justify-between mb-6">
                                         <div>
                                             <Dialog.Title className="text-xl font-bold text-gray-900 dark:text-white">Assign Reports</Dialog.Title>
@@ -398,115 +463,129 @@ const ClientManagement = () => {
                                             <p className="mt-4 text-gray-500">Loading available reports...</p>
                                         </div>
                                     ) : (
-                                        <div className="space-y-6">
-                                            {/* Pages Section */}
-                                            <div>
-                                                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                    <IconDeviceDesktopAnalytics className="text-purple-500" size={18} />
-                                                    Data Pages (All Reports)
-                                                </h3>
-                                                <ScrollArea className="h-[200px] w-full rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/10">
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
-                                                        {availableReports.pages.length === 0 ? (
-                                                            <p className="text-sm text-gray-500 col-span-2 py-4 text-center italic">No pages found.</p>
-                                                        ) : availableReports.pages.map(page => (
-                                                            <div
-                                                                key={page.id}
-                                                                onClick={() => handleToggleReport(page.id, 'page')}
-                                                                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedPageIds.includes(page.id)
-                                                                    ? 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/50'
-                                                                    : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-purple-200'
-                                                                    }`}
-                                                            >
-                                                                <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors flex-shrink-0 ${selectedPageIds.includes(page.id) ? 'bg-purple-500 border-purple-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}>
-                                                                    {selectedPageIds.includes(page.id) && <IconCheck size={14} />}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="text-sm font-semibold truncate text-gray-900 dark:text-white">{page.name}</div>
-                                                                    <div className="text-[10px] text-gray-400 capitalize flex items-center gap-1">
-                                                                        {page.platform === 'facebook' ? <IconBrandFacebook size={12} className="text-blue-500" /> : <IconBrandTiktok size={12} className="text-black dark:text-white" />}
-                                                                        {page.platform}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </ScrollArea>
-                                            </div>
+                                        <div className="flex flex-col h-full">
+                                            {(() => {
+                                                const visibleStandardReports = selectedPageIds.length > 0
+                                                    ? availableReports.standard.filter(r => selectedPageIds.includes(r.page_id))
+                                                    : availableReports.standard;
 
-                                            {/* Standard Reports Section */}
-                                            <div>
-                                                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                    <IconFileAnalytics className="text-blue-500" size={18} />
-                                                    Individual Standard Reports
-                                                </h3>
-                                                <ScrollArea className="h-[200px] w-full rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/10">
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
-                                                        {availableReports.standard.length === 0 ? (
-                                                            <p className="text-sm text-gray-500 col-span-2 py-4 text-center italic">No standard reports found.</p>
-                                                        ) : availableReports.standard.map(report => (
-                                                            <div
-                                                                key={report.id}
-                                                                onClick={() => handleToggleReport(report.id, 'standard')}
-                                                                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedStandardIds.includes(report.id)
-                                                                    ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/50'
-                                                                    : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-blue-200'
-                                                                    }`}
-                                                            >
-                                                                <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors flex-shrink-0 ${selectedStandardIds.includes(report.id) ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}>
-                                                                    {selectedStandardIds.includes(report.id) && <IconCheck size={14} />}
+                                                return (
+                                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                                                        {/* Pages Section */}
+                                                        <div className="flex flex-col h-[400px]">
+                                                            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                                <IconDeviceDesktopAnalytics className="text-purple-500" size={18} />
+                                                                Data Pages (All Reports)
+                                                            </h3>
+                                                            <ScrollArea className="flex-1 w-full rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/10">
+                                                                <div className="flex flex-col gap-3 p-3">
+                                                                    {availableReports.pages.length === 0 ? (
+                                                                        <p className="text-sm text-gray-500 py-4 text-center italic">No pages found.</p>
+                                                                    ) : availableReports.pages.map(page => (
+                                                                        <div
+                                                                            key={page.id}
+                                                                            onClick={() => handleToggleReport(page.id, 'page')}
+                                                                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedPageIds.includes(page.id)
+                                                                                ? 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/50'
+                                                                                : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-purple-200'
+                                                                                }`}
+                                                                        >
+                                                                            <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors flex-shrink-0 ${selectedPageIds.includes(page.id) ? 'bg-purple-500 border-purple-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}>
+                                                                                {selectedPageIds.includes(page.id) && <IconCheck size={14} />}
+                                                                            </div>
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="text-sm font-semibold truncate text-gray-900 dark:text-white">{page.name}</div>
+                                                                                <div className="text-[10px] text-gray-400 capitalize flex items-center gap-1">
+                                                                                    {page.platform === 'facebook' ? <IconBrandFacebook size={12} className="text-blue-500" /> : <IconBrandTiktok size={12} className="text-black dark:text-white" />}
+                                                                                    {page.platform}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="text-sm font-semibold truncate text-gray-900 dark:text-white">{report.page?.name || 'Standard Report'}</div>
-                                                                    <div className="text-[10px] text-gray-400 capitalize">{report.platform} • {new Date(report.created_at).toLocaleDateString()}</div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </ScrollArea>
-                                            </div>
+                                                            </ScrollArea>
+                                                        </div>
 
-                                            {/* Facebook Ads Reports Section */}
-                                            <div>
-                                                <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                    <IconBrandFacebook className="text-emerald-500" size={18} />
-                                                    Individual Meta Ad Reports
-                                                </h3>
-                                                <ScrollArea className="h-[200px] w-full rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/10">
-                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3">
-                                                        {availableReports.facebook.length === 0 ? (
-                                                            <p className="text-sm text-gray-500 col-span-2 py-4 text-center italic">No Facebook reports found.</p>
-                                                        ) : availableReports.facebook.map(report => (
-                                                            <div
-                                                                key={report.id}
-                                                                onClick={() => handleToggleReport(report.id, 'facebook')}
-                                                                className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedFacebookIds.includes(report.id)
-                                                                    ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/50'
-                                                                    : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-emerald-200'
-                                                                    }`}
-                                                            >
-                                                                <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors flex-shrink-0 ${selectedFacebookIds.includes(report.id) ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}>
-                                                                    {selectedFacebookIds.includes(report.id) && <IconCheck size={14} />}
+                                                        {/* Content Performance Section */}
+                                                        <div className="flex flex-col h-[400px]">
+                                                            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                                <IconFileAnalytics className="text-blue-500" size={18} />
+                                                                Content Performance
+                                                            </h3>
+                                                            <ScrollArea className="flex-1 w-full rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/10">
+                                                                <div className="flex flex-col gap-3 p-3">
+                                                                    {visibleStandardReports.length === 0 ? (
+                                                                        <p className="text-sm text-gray-500 py-4 text-center italic">No content performance reports found.</p>
+                                                                    ) : visibleStandardReports.map(report => (
+                                                                        <div
+                                                                            key={report.id}
+                                                                            onClick={() => handleToggleReport(report.id, 'standard')}
+                                                                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedStandardIds.includes(report.id)
+                                                                                ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/50'
+                                                                                : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-blue-200'
+                                                                                }`}
+                                                                        >
+                                                                            <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors flex-shrink-0 ${selectedStandardIds.includes(report.id) ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}>
+                                                                                {selectedStandardIds.includes(report.id) && <IconCheck size={14} />}
+                                                                            </div>
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="text-sm font-semibold truncate text-gray-900 dark:text-white">{report.page?.name || 'Content Report'}</div>
+                                                                                <div className="text-[10px] text-gray-400 capitalize flex items-center gap-1">
+                                                                                    {(report.page?.platform || report.platform || '').toLowerCase() === 'facebook'
+                                                                                        ? <IconBrandFacebook size={12} className="text-blue-500" />
+                                                                                        : <IconBrandTiktok size={12} className="text-black dark:text-white" />}
+                                                                                    {report.page?.platform || report.platform || 'Unknown'} • {new Date(report.created_at).toLocaleDateString()}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="text-sm font-semibold truncate text-gray-900 dark:text-white">{report.account_name}</div>
-                                                                    <div className="text-[10px] text-gray-400">{new Date(report.created_at).toLocaleDateString()}</div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </ScrollArea>
-                                            </div>
+                                                            </ScrollArea>
+                                                        </div>
 
-                                            <div className="flex gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
-                                                <button type="button" onClick={() => setAssignModalOpen(false)} className="btn btn-outline-danger flex-1">Cancel</button>
-                                                <button
+                                                        {/* Facebook Ads Reports Section */}
+                                                        <div className="flex flex-col h-[400px]">
+                                                            <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                                <IconBrandFacebook className="text-emerald-500" size={18} />
+                                                                Facebook Ads Performance
+                                                            </h3>
+                                                            <ScrollArea className="flex-1 w-full rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/10">
+                                                                <div className="flex flex-col gap-3 p-3">
+                                                                    {availableReports.facebook.length === 0 ? (
+                                                                        <p className="text-sm text-gray-500 py-4 text-center italic">No Facebook reports found.</p>
+                                                                    ) : availableReports.facebook.map(report => (
+                                                                        <div
+                                                                            key={report.id}
+                                                                            onClick={() => handleToggleReport(report.id, 'facebook')}
+                                                                            className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedFacebookIds.includes(report.id)
+                                                                                ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/50'
+                                                                                : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-emerald-200'
+                                                                                }`}
+                                                                        >
+                                                                            <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors flex-shrink-0 ${selectedFacebookIds.includes(report.id) ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600'}`}>
+                                                                                {selectedFacebookIds.includes(report.id) && <IconCheck size={14} />}
+                                                                            </div>
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="text-sm font-semibold truncate text-gray-900 dark:text-white">{report.account_name}</div>
+                                                                                <div className="text-[10px] text-gray-400">{new Date(report.created_at).toLocaleDateString()}</div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </ScrollArea>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
+                                                <Button variant="outline" type="button" onClick={() => setAssignModalOpen(false)}>Cancel</Button>
+                                                <Button
                                                     onClick={handleAssignReports}
                                                     disabled={assigning}
-                                                    className="btn btn-primary flex-1"
                                                 >
-                                                    {assigning ? <IconRefresh className="animate-spin" size={18} /> : 'Confirm Assignments'}
-                                                </button>
+                                                    {assigning ? <IconRefresh className="animate-spin mr-2" size={18} /> : 'Confirm Assignments'}
+                                                </Button>
                                             </div>
                                         </div>
                                     )}

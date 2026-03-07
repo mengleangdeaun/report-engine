@@ -71,50 +71,50 @@ const FacebookPublicView = ({ data }: { data: any }) => {
         <div className="space-y-8 animate-in fade-in duration-500">
 
             {/* --- SECTION 1: KEY METRICS --- */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                 <AnalyticsStatCard
-                    label="Estimated Reach"
+                    label="Reach"
                     value={kpi.reach || data.total_reach}
-                    icon={<IconChartBar className="w-6 h-6" />}
+                    icon={<IconChartBar className="w-5 h-5" />}
                     color="text-blue-500"
                     trend={kpi.reach_trend}
                 />
                 <AnalyticsStatCard
-                    label="Total Content Views"
+                    label="Views"
                     value={kpi.views || data.total_views}
-                    icon={<IconEye className="w-6 h-6" />}
+                    icon={<IconEye className="w-5 h-5" />}
                     color="text-indigo-500"
                     trend={kpi.views_trend}
                 />
                 <AnalyticsStatCard
-                    label="Total Reactions"
+                    label="Reactions"
                     value={kpi.reactions || data.total_reactions}
-                    icon={<IconThumbUp className="w-6 h-6" />}
+                    icon={<IconThumbUp className="w-5 h-5" />}
                     color="text-sky-500"
                     trend={kpi.reactions_trend}
                 />
                 <AnalyticsStatCard
-                    label="Total Shares"
+                    label="Shares"
                     value={kpi.shares || data.total_shares}
-                    icon={<IconShare className="w-6 h-6" />}
+                    icon={<IconShare className="w-5 h-5" />}
                     color="text-gray-500"
                     trend={kpi.shares_trend}
                 />
                 <AnalyticsStatCard
                     label="Link Clicks"
                     value={kpi.link_clicks || data.total_clicks}
-                    icon={<IconClick className="w-6 h-6" />}
+                    icon={<IconClick className="w-5 h-5" />}
                     color="text-orange-500"
                     trend={kpi.clicks_trend}
                 />
             </div>
 
             {/* --- SECTION 2: CHAMPIONS --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <AnalyticsChampionCard
                     title="Highest Engagement"
                     post={champions.highest_engagement}
-                    icon={<IconSparkles className="w-7 h-7" />}
+                    icon={<IconSparkles className="w-6 h-6 sm:w-7 sm:h-7" />}
                     metricLabel="Engagement Rate"
                     metricValue={`${champions.highest_engagement?.engagement_rate || 0}%`}
                     platformColor="blue"
@@ -122,7 +122,7 @@ const FacebookPublicView = ({ data }: { data: any }) => {
                 <AnalyticsChampionCard
                     title="Peak Awareness (Reach)"
                     post={champions.highest_reach}
-                    icon={<IconChartBar className="w-7 h-7" />}
+                    icon={<IconChartBar className="w-6 h-6 sm:w-7 sm:h-7" />}
                     metricLabel="Reach"
                     metricValue={(champions.highest_reach?.reach || 0).toLocaleString()}
                     platformColor="emerald"
@@ -130,33 +130,33 @@ const FacebookPublicView = ({ data }: { data: any }) => {
             </div>
 
             {/* --- SECTION 3: CONTENT HISTORY TABLE --- */}
-            <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-100 dark:border-gray-800 p-8 shadow-sm">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                    <div>
-                        <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-[2rem] border border-gray-100 dark:border-gray-800 p-4 sm:p-8 shadow-sm">
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
+                    <div className="flex-1 shrink-0">
+                        <h3 className="text-base sm:text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
                             Content Performance
-                            <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-800">
+                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-800">
                                 Live Analysis
                             </span>
                         </h3>
-                        <p className="text-sm text-gray-400 dark:text-gray-500 font-medium mt-1">
+                        <p className="text-[11px] sm:text-sm text-gray-400 dark:text-gray-500 font-medium mt-1">
                             Analyzed performance for {rawPosts.length} posts in this period.
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full xl:w-auto">
                         <AnalyticsListbox
                             value={sortBy}
                             onChange={(val) => { setSortBy(val); setCurrentPage(1); }}
                             options={sortOptions}
                             icon={IconSortAscending}
-                            className="w-48"
+                            className="w-full sm:w-48"
                         />
                         <AnalyticsListbox
                             value={rowsPerPage}
                             onChange={(val) => { setRowsPerPage(val); setCurrentPage(1); }}
                             options={rowsPerPageOptions}
-                            className="w-36"
+                            className="w-full sm:w-36"
                         />
                     </div>
                 </div>

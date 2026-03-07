@@ -1,4 +1,5 @@
 import React from 'react';
+import dayjs from 'dayjs';
 import { IconTrophy, IconExternalLink, IconCalendar } from '@tabler/icons-react';
 
 interface AnalyticsChampionCardProps {
@@ -76,35 +77,46 @@ const AnalyticsChampionCard = ({
             href={post.link}
             target="_blank"
             rel="noopener noreferrer"
-            className={`group bg-gradient-to-br ${colorSet.bg} p-6 rounded-2xl border border-gray-100 dark:border-gray-800 ${colorSet.border} flex gap-5 items-center transition-all duration-300 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 active:scale-[0.99] ${className}`}
+            className={`group bg-gradient-to-br ${colorSet.bg} p-4 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-800 ${colorSet.border} flex flex-col sm:flex-row gap-3 sm:gap-5 items-start sm:items-center transition-all duration-300 hover:shadow-xl hover:shadow-gray-200/50 dark:hover:shadow-gray-900/50 active:scale-[0.99] ${className}`}
         >
-            <div className={`w-14 h-14 ${colorSet.iconBg} ${colorSet.text} rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110`}>
-                {icon}
+            <div className="flex items-center justify-between w-full sm:w-auto">
+                <div className={`w-11 h-11 sm:w-14 sm:h-14 shrink-0 ${colorSet.iconBg} ${colorSet.text} rounded-xl sm:rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110`}>
+                    {React.cloneElement(icon as React.ReactElement, { className: 'w-5 h-5 sm:w-7 sm:h-7' })}
+                </div>
+                <div className="sm:hidden flex-1 px-3">
+                    <div className={`flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.15em] ${colorSet.text}`}>
+                        <IconTrophy className="w-3 h-3" />
+                        {title}
+                    </div>
+                </div>
+                <div className="sm:hidden w-8 h-8 shrink-0 bg-white/60 dark:bg-white/5 rounded-lg flex items-center justify-center text-gray-400 group-hover:text-primary transition-all">
+                    <IconExternalLink size={14} />
+                </div>
             </div>
 
-            <div className="flex-1 min-w-0">
-                <div className={`flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${colorSet.text} mb-1.5`}>
+            <div className="flex-1 min-w-0 w-full">
+                <div className={`hidden sm:flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${colorSet.text} mb-1.5`}>
                     <IconTrophy className="w-3.5 h-3.5" />
                     {title}
                 </div>
 
-                <h4 className="text-base font-black text-gray-900 dark:text-white truncate mb-2 leading-tight group-hover:translate-x-1 transition-transform">
+                <h4 className="text-sm sm:text-base font-black text-gray-900 dark:text-white truncate mb-1 sm:mb-2 leading-tight group-hover:translate-x-1 transition-transform">
                     {post.title || "No Title Provided"}
                 </h4>
 
-                <div className="flex items-center gap-3 text-[11px] font-bold">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] sm:text-[11px] font-bold">
                     <div className="flex items-center text-gray-400">
                         <IconCalendar className="w-3 h-3 mr-1" />
-                        {post.date}
+                        {dayjs(post.date).format('DD MMM YYYY')}
                     </div>
-                    <div className="w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
+                    <div className="hidden sm:block w-1 h-1 bg-gray-300 dark:bg-gray-700 rounded-full" />
                     <div className={colorSet.text}>
-                        {metricLabel}: <span className="text-[13px]">{metricValue}</span>
+                        {metricLabel}: <span className="text-xs sm:text-[13px]">{metricValue}</span>
                     </div>
                 </div>
             </div>
 
-            <div className="w-10 h-10 bg-white/60 dark:bg-white/5 rounded-xl flex items-center justify-center text-gray-400 group-hover:text-primary group-hover:bg-white dark:group-hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0">
+            <div className="hidden sm:flex w-10 h-10 shrink-0 bg-white/60 dark:bg-white/5 rounded-xl items-center justify-center text-gray-400 group-hover:text-primary group-hover:bg-white dark:group-hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0">
                 <IconExternalLink size={20} />
             </div>
         </a>

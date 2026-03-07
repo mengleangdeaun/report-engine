@@ -44,7 +44,7 @@ const PublicReportView = () => {
     const isFB = report.platform === 'facebook';
 
     return (
-        <div className="min-h-screen bg-gray-50/50 p-4 md:p-8 font-sans">
+        <div className="min-h-screen bg-gray-50/50 p-3 sm:p-5 md:p-8 font-sans">
 
             <style>{`
     @media print {
@@ -98,41 +98,40 @@ const PublicReportView = () => {
             <div className="max-w-6xl mx-auto">
 
                 {/* --- SHARED HEADER (Same for both) --- */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="flex items-center gap-5">
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6 sm:mb-8 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
+                    <div className="flex flex-col sm:flex-row items-center text-center sm:text-left gap-4 sm:gap-5">
                         <div className="relative">
                             {/* Logo */}
-                            <div className="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100">
                                 {page.avatar ? (
                                     <img src={getStoragePath(page.avatar)} className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
+                                    <div className="w-full h-full flex items-center justify-center text-xl sm:text-2xl font-bold text-gray-400">
                                         {(page.name || 'R').charAt(0)}
                                     </div>
                                 )}
                             </div>
                             {/* Platform Icon Badge */}
-                            <div className={`absolute -bottom-1 -right-1 p-1.5 rounded-full text-white border-2 border-white ${isFB ? 'bg-blue-600' : 'bg-black'}`}>
-                                {isFB ? <IconBrandFacebook size={16} /> : <IconBrandTiktok size={16} />}
+                            <div className={`absolute -bottom-1 -right-1 p-1 sm:p-1.5 rounded-full text-white border-2 border-white ${isFB ? 'bg-blue-600' : 'bg-black'}`}>
+                                {isFB ? <IconBrandFacebook size={14} className="sm:w-4 sm:h-4" /> : <IconBrandTiktok size={14} className="sm:w-4 sm:h-4" />}
                             </div>
                         </div>
 
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-800">{page.name || 'Analytics Report'}</h1>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mt-1">
-                                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase ${isFB ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-black'}`}>
+                            <h1 className="text-xl sm:text-2xl font-bold text-gray-800 leading-tight">{page.name || 'Analytics Report'}</h1>
+                            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 sm:gap-3 text-[11px] sm:text-sm text-gray-500 mt-1">
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${isFB ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-black'}`}>
                                     {report.platform}
                                 </span>
-                                <span>•</span>
-                                <span>{formatUserDate(report.created_at)}</span>
+                                <span className="hidden sm:inline">•</span>
+                                <span className="font-medium">{formatUserDate(report.created_at)}</span>
                             </div>
                         </div>
                     </div>
 
                     <button
                         onClick={() => window.print()}
-                        // ✅ Added 'print:hidden'
-                        className="btn btn-dark btn-sm flex items-center gap-2 shadow-lg shadow-gray-900/10 print:hidden"
+                        className="w-full md:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-gray-900/10 hover:bg-gray-800 transition-all active:scale-95 print:hidden"
                     >
                         <IconDownload size={18} /> Download PDF
                     </button>
@@ -149,8 +148,8 @@ const PublicReportView = () => {
             </div>
 
             <div className="text-center mt-10 text-gray-400 text-xs">
-                <small> Generated by Report Maker </small>
-                <p>Powered by Degrand Solution</p>
+                <small> Generated by Report Engine </small>
+                <p>Made with ❤️ by Mengleang Deaun</p>
             </div>
 
             {/* ✅ PRINT ONLY FOOTER (Visible only on PDF) */}

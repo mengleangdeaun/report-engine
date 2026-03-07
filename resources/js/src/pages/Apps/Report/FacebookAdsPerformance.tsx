@@ -38,7 +38,8 @@ import {
     IconDownload,
     IconUsers,
     IconFilter,
-    IconFilterOff
+    IconFilterOff,
+    IconShare
 } from '@tabler/icons-react';
 import DeleteModal from '../../../components/DeleteModal';
 
@@ -264,6 +265,18 @@ const FacebookAdsPerformance = () => {
         }
     };
 
+    const handleShare = async (reportId: number) => {
+        const toastId = toast.loading('Generating share link...');
+        try {
+            const res = await api.post(`/ad-reports/${reportId}/share`);
+            const { url } = res.data;
+            await navigator.clipboard.writeText(url);
+            toast.success('Public link copied to clipboard!', { id: toastId });
+        } catch (error) {
+            toast.error('Failed to generate share link.', { id: toastId });
+        }
+    };
+
     const formatDate = (dateString: string) => {
         return formatUserDate(dateString);
     };
@@ -336,6 +349,11 @@ const FacebookAdsPerformance = () => {
                     <Tippy content="Export CSV">
                         <button className="p-2 rounded-full text-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100" onClick={() => handleExport(info.row.original.id)}>
                             <IconDownload size={18} />
+                        </button>
+                    </Tippy>
+                    <Tippy content="Share Report">
+                        <button className="p-2 rounded-full text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100" onClick={() => handleShare(info.row.original.id)}>
+                            <IconShare size={18} />
                         </button>
                     </Tippy>
                     <Tippy content="Delete">

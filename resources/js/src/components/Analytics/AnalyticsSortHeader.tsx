@@ -29,7 +29,7 @@ const AnalyticsSortHeader = ({
     };
 
     return (
-        <th className={`px-6 py-4 transition-colors ${className}`}>
+        <th className={`px-4 py-3 sm:px-6 sm:py-4 transition-colors ${className}`}>
             <button
                 onClick={() => onSort(sortKey)}
                 className={`group flex items-center gap-1.5 w-full font-black text-[10px] uppercase tracking-[0.15em] transition-all hover:text-primary ${alignmentClasses[align]} ${isActive ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`}

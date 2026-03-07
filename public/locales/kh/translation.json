@@ -148,6 +148,7 @@
   "qr_code_generator": "បង្កើត QR Code",
   "create_qr": "បង្កើត QR",
   "qr_list": "បញ្ជី QR",
+  "manage_client": "បញ្ជីអតិថិជន",
   "time": {
     "just_now": "អម្បាញ់មិញ",
     "minute_ago": "{{count}} នាទីមុន",

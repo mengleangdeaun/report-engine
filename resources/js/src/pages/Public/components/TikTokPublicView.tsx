@@ -104,50 +104,50 @@ const TikTokPublicView = ({ data }: { data: any }) => {
         <div className="space-y-8 animate-in fade-in duration-500">
 
             {/* --- SECTION 1: KEY METRICS --- */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                 <AnalyticsStatCard
-                    label="Video Views"
+                    label="Views"
                     value={kpi.views || data.total_views}
-                    icon={<IconPlayerPlay className="w-6 h-6" />}
+                    icon={<IconPlayerPlay className="w-5 h-5" />}
                     color="text-black dark:text-white"
                     trend={kpi.views_trend}
                 />
                 <AnalyticsStatCard
-                    label="Total Likes"
+                    label="Likes"
                     value={kpi.likes || data.total_likes}
-                    icon={<IconHeart className="w-6 h-6" />}
+                    icon={<IconHeart className="w-5 h-5" />}
                     color="text-pink-500"
                     trend={kpi.likes_trend}
                 />
                 <AnalyticsStatCard
                     label="Comments"
                     value={kpi.comments || data.total_comments}
-                    icon={<IconMessageDots className="w-6 h-6" />}
+                    icon={<IconMessageDots className="w-5 h-5" />}
                     color="text-teal-500"
                     trend={kpi.comments_trend}
                 />
                 <AnalyticsStatCard
-                    label="Total Shares"
+                    label="Shares"
                     value={kpi.shares || data.total_shares}
-                    icon={<IconShare className="w-6 h-6" />}
+                    icon={<IconShare className="w-5 h-5" />}
                     color="text-blue-500"
                     trend={kpi.shares_trend}
                 />
                 <AnalyticsStatCard
-                    label="Video Saves"
+                    label="Saves"
                     value={kpi.saves || data.total_saves}
-                    icon={<IconBookmark className="w-6 h-6" />}
+                    icon={<IconBookmark className="w-5 h-5" />}
                     color="text-amber-500"
                     trend={kpi.saves_trend}
                 />
             </div>
 
             {/* --- SECTION 2: HIGHLIGHTS (CHAMPIONS) --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <AnalyticsChampionCard
                     title="Most Viewed Video"
                     post={champions.highest_view}
-                    icon={<IconEye className="w-7 h-7" />}
+                    icon={<IconEye className="w-6 h-6 sm:w-7 sm:h-7" />}
                     metricLabel="Total Views"
                     metricValue={(champions.highest_view?.views || 0).toLocaleString()}
                     platformColor="blue"
@@ -155,7 +155,7 @@ const TikTokPublicView = ({ data }: { data: any }) => {
                 <AnalyticsChampionCard
                     title="Viral Potential (High ER)"
                     post={champions.highest_engagement}
-                    icon={<IconSparkles className="w-7 h-7" />}
+                    icon={<IconSparkles className="w-6 h-6 sm:w-7 sm:h-7" />}
                     metricLabel="Engagement"
                     metricValue={`${champions.highest_engagement?.engagement_rate || 0}%`}
                     platformColor="pink"
@@ -163,33 +163,33 @@ const TikTokPublicView = ({ data }: { data: any }) => {
             </div>
 
             {/* --- SECTION 3: VIDEO PERFORMANCE TABLE --- */}
-            <div className="bg-white dark:bg-gray-900 rounded-[2rem] border border-gray-100 dark:border-gray-800 p-8 shadow-sm">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                    <div>
-                        <h3 className="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-[2rem] border border-gray-100 dark:border-gray-800 p-4 sm:p-8 shadow-sm">
+                <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-6 mb-6 sm:mb-8">
+                    <div className="flex-1 shrink-0">
+                        <h3 className="text-base sm:text-xl font-black text-gray-900 dark:text-white flex items-center gap-2">
                             Video Intelligence
-                            <span className="text-[10px] font-black uppercase tracking-widest bg-pink-50 dark:bg-pink-900/20 text-pink-600 px-2 py-0.5 rounded-full border border-pink-100 dark:border-pink-800">
+                            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest bg-pink-50 dark:bg-pink-900/20 text-pink-600 px-2 py-0.5 rounded-full border border-pink-100 dark:border-pink-800">
                                 Fresh Data
                             </span>
                         </h3>
-                        <p className="text-sm text-gray-400 dark:text-gray-500 font-medium mt-1">
+                        <p className="text-[11px] sm:text-sm text-gray-400 dark:text-gray-500 font-medium mt-1">
                             Tracking {rawPosts.length} videos from the latest reporting cycle.
                         </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full xl:w-auto">
                         <AnalyticsListbox
                             value={sortBy}
                             onChange={(val) => { setSortBy(val); setCurrentPage(1); }}
                             options={sortOptions}
                             icon={IconSortAscending}
-                            className="w-48"
+                            className="w-full sm:w-48"
                         />
                         <AnalyticsListbox
                             value={rowsPerPage}
                             onChange={(val) => { setRowsPerPage(val); setCurrentPage(1); }}
                             options={rowsPerPageOptions}
-                            className="w-36"
+                            className="w-full sm:w-36"
                         />
                     </div>
                 </div>

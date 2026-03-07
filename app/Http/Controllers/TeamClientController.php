@@ -25,7 +25,7 @@ class TeamClientController extends Controller
         }
 
         $clients = $team->clients()
-            ->withCount(['reports', 'facebookAdReports'])
+            ->withCount(['reports', 'facebookAdReports', 'pages'])
             ->latest()
             ->get();
 
@@ -122,9 +122,9 @@ class TeamClientController extends Controller
         $team = Auth::user()->currentTeam;
 
         $standardReports = Report::where('team_id', $team->id)
-            ->with('page:id,name')
+            ->with('page:id,name,platform')
             ->latest()
-            ->get(['id', 'page_id', 'created_at']);
+            ->get(['id', 'page_id', 'platform', 'created_at']);
 
         $facebookReports = FacebookAdReport::where('team_id', $team->id)
             ->latest()

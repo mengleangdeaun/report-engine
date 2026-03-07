@@ -51,6 +51,7 @@ Route::get('/auth/google', [AuthController::class, 'redirectToGoogle']);
 
 Route::get('/auth/google/callback', [AuthController::class, 'handleGoogleCallback']);
 Route::get('/public/reports/{uuid}', [ReportController::class, 'getPublicReport']);
+Route::get('/public/ad-reports/{uuid}', [FacebookAdReportController::class, 'getPublicReport']);
 Route::get('/public/share/{token}', [PublicReportController::class, 'getPublicPageHistory']);
 Route::post('/public/share/{token}/exact-location', [PublicReportController::class, 'updateExactLocation']);
 
@@ -124,6 +125,7 @@ Route::middleware(['auth:sanctum', 'workspace.active'])->group(function () {
     Route::get('/ad-reports/{id}', [FacebookAdReportController::class, 'show']);
     Route::put('/ad-reports/{id}/preferences', [FacebookAdReportController::class, 'updatePreferences']);
     Route::get('/ad-reports/{id}/export', [FacebookAdReportController::class, 'exportCsv']);
+    Route::post('/ad-reports/{id}/share', [FacebookAdReportController::class, 'generateShareLink']);
     Route::delete('/ad-reports/{id}', [FacebookAdReportController::class, 'destroy']);
     Route::get('/ad-accounts', [FacebookAdReportController::class, 'adAccounts']);
 

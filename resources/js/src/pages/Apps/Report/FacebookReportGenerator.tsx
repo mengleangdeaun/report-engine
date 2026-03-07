@@ -33,7 +33,13 @@ import MediaSelectorModal from '../../../components/Media/MediaSelectorModal';
 import { Button } from '../../../components/ui/button';
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Label } from "../../../components/ui/label";
-
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/select";
 
 const getTypeIcon = (type: string) => {
   if (!type) return <IconPhoto size={16} className="text-gray-400" />;
@@ -102,6 +108,12 @@ const FacebookReportGenerator = () => {
   const [isFromHistory, setIsFromHistory] = useState(false);
   const [currentReportId, setCurrentReportId] = useState<number | null>(location.state?.currentReportId || null);
 
+  // Table State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [sortKey, setSortKey] = useState<string>('date');
+  const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const backPath = location.state?.backPath || '/apps/report/history';
@@ -130,13 +142,68 @@ const FacebookReportGenerator = () => {
   }, [location]);
 
   // --- COMPUTED DATA ---
-  const displayedPosts = useMemo(() => {
+  const filteredAndSortedPosts = useMemo(() => {
     if (!reportData?.posts) return [];
-    const start = (page - 1) * pageSize;
-    return reportData.posts.slice(start, start + pageSize);
-  }, [reportData, page, pageSize]);
 
-  const totalPages = reportData?.posts ? Math.ceil(reportData.posts.length / pageSize) : 0;
+    let result = [...reportData.posts];
+
+    // 1. Search
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(post =>
+        (post.title || '').toLowerCase().includes(q)
+      );
+    }
+
+    // 2. Filter
+    if (typeFilter !== 'all') {
+      result = result.filter(post => {
+        const t = (post.type || '').toLowerCase();
+        if (typeFilter === 'reel') return t.includes('reel');
+        if (typeFilter === 'video') return t.includes('video');
+        if (typeFilter === 'photo') return !t.includes('reel') && !t.includes('video');
+        return true;
+      });
+    }
+
+    // 3. Sort
+    result.sort((a, b) => {
+      let valA = a[sortKey];
+      let valB = b[sortKey];
+
+      // Handle nulls
+      if (valA == null) valA = '';
+      if (valB == null) valB = '';
+
+      // Numeric vs String sorting
+      if (typeof valA === 'number' && typeof valB === 'number') {
+        return sortDir === 'asc' ? valA - valB : valB - valA;
+      }
+
+      // Date sorting (assuming YYYY-MM-DD or similar string representation)
+      if (sortKey === 'date') {
+        const dateA = new Date(valA).getTime();
+        const dateB = new Date(valB).getTime();
+        return sortDir === 'asc' ? dateA - dateB : dateB - dateA;
+      }
+
+      const strA = String(valA).toLowerCase();
+      const strB = String(valB).toLowerCase();
+
+      if (strA < strB) return sortDir === 'asc' ? -1 : 1;
+      if (strA > strB) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return result;
+  }, [reportData, searchQuery, typeFilter, sortKey, sortDir]);
+
+  const displayedPosts = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredAndSortedPosts.slice(start, start + pageSize);
+  }, [filteredAndSortedPosts, page, pageSize]);
+
+  const totalPages = filteredAndSortedPosts.length ? Math.ceil(filteredAndSortedPosts.length / pageSize) : 0;
 
   // --- API CALLS ---
   const fetchPageNames = async () => {
@@ -855,7 +922,7 @@ const FacebookReportGenerator = () => {
                   <div>
                     <h4 className="text-sm font-semibold text-blue-100 uppercase tracking-wider">Reporting Period</h4>
                     <div className="lg:text-2xl text-lg font-bold mt-1">
-                      {reportData?.period?.start || 'N/A'} — {reportData?.period?.end || 'N/A'}
+                      {reportData?.period?.start ? formatUserDate(reportData.period.start) : 'N/A'} — {reportData?.period?.end ? formatUserDate(reportData.period.end) : 'N/A'}
                     </div>
                   </div>
                 </div>
@@ -1157,30 +1224,84 @@ const FacebookReportGenerator = () => {
 
           {/* 4. CONTENT TABLE (Paginated & Clean) */}
           <div className="panel p-0 overflow-hidden print:shadow-none print:border-none">
-            <div className="p-5 border-b dark:border-gray-700 flex justify-between items-center no-print">
-              <h3 className="text-lg font-bold">Complete Content Analysis</h3>
-              <div className="flex gap-2">
-                <Tippy content="Export as Excel"
-                  theme='success'
-                  animation="shift-away"
-                  trigger="mouseenter"
-                  duration={200}
-                  hideOnClick={true} >
-                  <button className="btn btn-sm btn-outline-success gap-2" onClick={exportCSV}>
-                    <IconFileSpreadsheet size={16} /> CSV
-                  </button>
-                </Tippy>
+            <div className="p-5 border-b dark:border-gray-700">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4 no-print">
+                <h3 className="text-lg font-bold">Complete Content Analysis</h3>
+                <div className="flex gap-2">
+                  <Tippy content="Export as Excel"
+                    theme='success'
+                    animation="shift-away"
+                    trigger="mouseenter"
+                    duration={200}
+                    hideOnClick={true} >
+                    <button className="btn btn-sm btn-outline-success gap-2" onClick={exportCSV}>
+                      <IconFileSpreadsheet size={16} /> CSV
+                    </button>
+                  </Tippy>
+                </div>
+              </div>
 
-                <Tippy content="Print as PDF"
-                  theme='primary'
-                  animation="shift-away"
-                  trigger="mouseenter"
-                  duration={200}
-                  hideOnClick={true}>
-                  <button className="btn btn-sm btn-outline-primary gap-2" onClick={() => window.print()}>
-                    <IconPrinter size={16} /> PDF
-                  </button>
-                </Tippy>
+              {/* Table Controls (Search, Filter, Per Page) */}
+              <div className="flex flex-col md:flex-row gap-4 no-print">
+                {/* Search */}
+                <div className="flex-1">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="form-input w-full pl-10 bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                      placeholder="Search by title..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setPage(1); // Reset to first page on search
+                      }}
+                    />
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                      <IconFileSearch size={16} className="text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filters Row */}
+                <div className="flex gap-3 items-center">
+                  {/* Type Filter */}
+                  <Select
+                    value={typeFilter}
+                    onValueChange={(value) => {
+                      setTypeFilter(value);
+                      setPage(1); // Reset to first page
+                    }}
+                  >
+                    <SelectTrigger className="w-36 bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded-lg text-sm h-[38px]">
+                      <SelectValue placeholder="All Types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="photo">Photos</SelectItem>
+                      <SelectItem value="video">Videos</SelectItem>
+                      <SelectItem value="reel">Reels</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Per Page */}
+                  <Select
+                    value={pageSize.toString()}
+                    onValueChange={(value) => {
+                      setPageSize(Number(value));
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-36 bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold h-[38px]">
+                      <SelectValue placeholder="10 per page" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10 per page</SelectItem>
+                      <SelectItem value="25">25 per page</SelectItem>
+                      <SelectItem value="50">50 per page</SelectItem>
+                      <SelectItem value="100">100 per page</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
@@ -1189,14 +1310,39 @@ const FacebookReportGenerator = () => {
               <table className="table-striped table-hover w-full text-left">
                 <thead>
                   <tr className="bg-gray-50 dark:bg-gray-700">
-                    <th className="p-3">Content Title</th>
-                    <th className="p-3 text-center">Type</th>
-                    <th className="p-3 text-right">Views</th>
-                    <th className="p-3 text-right">Reach</th>
-                    <th className="p-3 text-right">Reactions</th>
-                    <th className="p-3 text-right">Comments</th>
-                    <th className="p-3 text-right">Shares</th>
-                    <th className="p-3 text-right">Clicks</th>
+                    {[
+                      { key: 'title', label: 'Content Title', align: 'left' },
+                      { key: 'type', label: 'Type', align: 'center' },
+                      { key: 'views', label: 'Views', align: 'right' },
+                      { key: 'reach', label: 'Reach', align: 'right' },
+                      { key: 'reactions', label: 'Reactions', align: 'right' },
+                      { key: 'comments', label: 'Comments', align: 'right' },
+                      { key: 'shares', label: 'Shares', align: 'right' },
+                      { key: 'link_clicks', label: 'Clicks', align: 'right' },
+                    ].map((col) => (
+                      <th
+                        key={col.key}
+                        className={`p-3 cursor-pointer group hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'
+                          }`}
+                        onClick={() => {
+                          if (sortKey === col.key) {
+                            setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+                          } else {
+                            setSortKey(col.key);
+                            setSortDir('desc'); // Default to desc when changing columns
+                          }
+                        }}
+                      >
+                        <div className={`flex items-center gap-1 ${col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start'
+                          }`}>
+                          {col.label}
+                          <span className={`flex flex-col leading-none text-[8px] ${sortKey === col.key ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}>
+                            <IconChevronUp size={12} className={sortKey === col.key && sortDir === 'asc' ? 'text-blue-600' : 'text-gray-400'} />
+                            <IconChevronDown size={12} className={`-mt-1 ${sortKey === col.key && sortDir === 'desc' ? 'text-blue-600' : 'text-gray-400'}`} />
+                          </span>
+                        </div>
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -1224,52 +1370,13 @@ const FacebookReportGenerator = () => {
             {/* PAGINATION (Hidden on Print) */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-6 py-5 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50/80 to-gray-100/80 dark:from-gray-800/50 dark:to-gray-900/50 rounded-b-xl no-print">
 
-              {/* Left section: Rows per page selector */}
-              <div className="flex items-center gap-3">
-                <div className="relative w-20">
-                  <Listbox value={pageSize} onChange={setPageSize}>
-                    <div className="relative">
-                      <Listbox.Button className="relative w-full cursor-pointer rounded-md bg-white dark:bg-gray-700 py-1.5 pl-3 pr-8 text-left shadow-sm border border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
-                        <span className="block truncate font-semibold text-gray-900 dark:text-white">{pageSize}</span>
-                        <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                          <IconChevronUp className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                        </span>
-                      </Listbox.Button>
-                      <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-                        <Listbox.Options className="absolute bottom-full mb-2 max-h-60 w-full overflow-auto rounded-md bg-white dark:bg-gray-700 py-1 shadow-2xl ring-1 ring-black/5 dark:ring-white/10 focus:outline-none z-50">
-                          {[10, 25, 50, 100].map((size) => (
-                            <Listbox.Option
-                              key={size}
-                              className={({ active }) =>
-                                `relative cursor-pointer select-none py-2 pl-8 pr-4 transition-colors duration-150 ${active
-                                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                                  : 'text-gray-900 dark:text-gray-100'
-                                }`
-                              }
-                              value={size}
-                            >
-                              {({ selected }) => (
-                                <>
-                                  <span className={`block truncate ${selected ? 'font-semibold' : 'font-normal'}`}>
-                                    {size}
-                                  </span>
-                                  {selected && (
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-2 text-blue-600 dark:text-blue-400">
-                                      <IconCheck className="h-5 w-5" />
-                                    </span>
-                                  )}
-                                </>
-                              )}
-                            </Listbox.Option>
-                          ))}
-                        </Listbox.Options>
-                      </Transition>
-                    </div>
-                  </Listbox>
-                </div>
+              <div className="flex-1">
+                <span className="text-sm font-medium text-gray-500">
+                  Showing {filteredAndSortedPosts.length ? Math.min((page - 1) * pageSize + 1, filteredAndSortedPosts.length) : 0} to {Math.min(page * pageSize, filteredAndSortedPosts.length)} of {filteredAndSortedPosts.length} entries
+                </span>
               </div>
 
-              {/* Right section: Navigation */}
+              {/* Navigation */}
               <div className="flex items-center gap-2">
                 {/* First page */}
                 <button
@@ -1306,7 +1413,7 @@ const FacebookReportGenerator = () => {
                   type="button"
                   className="p-2 rounded-md w-8 h-8 flex items-center justify-center transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent text-gray-700 dark:text-gray-300"
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
+                  disabled={page === totalPages || totalPages === 0}
                   title="Next page"
                 >
                   <IconChevronRight size={18} />
@@ -1317,7 +1424,7 @@ const FacebookReportGenerator = () => {
                   type="button"
                   className="p-2 rounded-md w-8 h-8 flex items-center justify-center transition-all duration-200 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent text-gray-700 dark:text-gray-300"
                   onClick={() => setPage(totalPages)}
-                  disabled={page === totalPages}
+                  disabled={page === totalPages || totalPages === 0}
                   title="Last page"
                 >
                   <IconChevronsRight size={18} />
